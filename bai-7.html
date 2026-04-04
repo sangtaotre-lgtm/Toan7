@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 7: Tập Hợp Các Số Thực</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: { fontCache: 'global', scale: 1.1 },
+            options: { renderActions: { addMenu: [] } }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body { font-family: 'Comfortaa', cursive !important; scroll-behavior: smooth; line-height: 1.8; }
+        body *:not(svg):not(svg *):not(mjx-container):not(mjx-container *) {
+            font-family: 'Comfortaa', cursive !important;
+        }
+        mjx-container {
+            display: inline-block !important;
+            vertical-align: middle !important;
+            margin: 0 0.15em !important;
+            line-height: 0 !important;
+        }
+        mjx-container svg {
+            overflow: visible !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+        }
+        mjx-container svg path {
+            shape-rendering: geometricPrecision !important;
+            stroke: none !important;
+        }
+
+        nav {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .section-dashed { border: 3px dashed #cbd5e1; border-radius: 24px; transition: border-color 0.3s; }
+        .section-dashed:hover { border-color: #3b82f6; }
+
+        .check-btn { transition: all 0.2s; cursor: pointer; border: 2px solid #e2e8f0; }
+        .selected-true  { background-color: #22c55e !important; color: white !important; border-color: #16a34a !important; }
+        .selected-false { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+        .correct-highlight { border: 3px solid #22c55e !important; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
+
+        .mcq-option { border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s; border-radius: 16px; }
+        .mcq-option.selected { border-color: #3b82f6; background-color: #eff6ff; }
+        .mcq-option.correct  { border-color: #22c55e; background-color: #dcfce7; color: #166534; }
+        .mcq-option.wrong    { border-color: #ef4444; background-color: #fee2e2; color: #991b1b; }
+
+        .fill-input { border-bottom: 2px dashed #3b82f6; outline: none; text-align: center; width: 120px; font-weight: bold; color: #2563eb; background: transparent; }
+        .fill-correct { background-color: #dcfce7; border-color: #22c55e; border-style: solid; }
+        .fill-wrong   { background-color: #fee2e2; border-color: #ef4444; border-style: solid; }
+
+        .feedback-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border-left: 4px solid #ef4444; background-color: #fffafb; font-size: 0.85rem; }
+        .hint-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border: 1px dashed #eab308; background-color: #fefce8; color: #854d0e; font-size: 0.85rem; }
+
+        #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .loader { border: 6px solid #f3f3f3; border-top: 6px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+        .hint-btn { display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; border: 2px solid #f59e0b; padding: 6px 12px; border-radius: 12px; color: #92400e; font-size: 0.75rem; font-weight: bold; transition: all 0.2s; margin-left: 8px; cursor: pointer; }
+        .hint-btn:hover { background: #fde68a; transform: translateY(-1px); }
+
+        @keyframes bounce-in { 0%{transform:scale(0.9);opacity:0} 50%{transform:scale(1.05)} 100%{transform:scale(1);opacity:1} }
+        .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
+
+        .level-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+        .level-nhan-biet  { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .level-thong-hieu { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .level-van-dung   { background: #fecaca; color: #991b1b; border: 1px solid #ef4444; }
+
+        .score-excellent { background: linear-gradient(135deg,#10b981,#059669); color:white; animation: pulse-scale 1s ease-in-out infinite; }
+        .score-good      { background: linear-gradient(135deg,#3b82f6,#2563eb); color:white; }
+        .score-average   { background: linear-gradient(135deg,#f59e0b,#d97706); color:white; }
+        .score-low       { background: linear-gradient(135deg,#ef4444,#dc2626); color:white; }
+        @keyframes pulse-scale { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+        .download-btn { background: linear-gradient(135deg,#8b5cf6,#6366f1); color:white; padding:10px 20px; border-radius:16px; font-weight:bold; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(139,92,246,0.3); font-size:0.875rem; }
+        .download-btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(139,92,246,0.4); }
+        .download-btn:active { transform:translateY(0); }
+
+        /* CHATBOT */
+        #chatbot-container { position:fixed; top:50%; right:20px; transform:translateY(-50%); z-index:1000; }
+        #chatbot-toggle { width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); border:none; cursor:pointer; box-shadow:0 8px 24px rgba(0,106,255,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:32px; transition:all 0.3s; position:relative; }
+        #chatbot-toggle:hover { transform:scale(1.1); box-shadow:0 12px 32px rgba(0,106,255,0.6); }
+        .chatbot-label { position:absolute; bottom:-28px; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; padding:4px 12px; border-radius:12px; font-size:10px; font-weight:bold; white-space:nowrap; box-shadow:0 4px 12px rgba(0,106,255,0.3); }
+        #chatbot-window { display:none; position:fixed; top:50%; right:100px; transform:translateY(-50%); width:340px; height:480px; background:white; border-radius:20px; box-shadow:0 8px 32px rgba(0,0,0,0.15); flex-direction:column; overflow:hidden; animation:slideUp 0.3s ease-out; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        #chatbot-header { background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+        #chatbot-close { background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s; }
+        #chatbot-close:hover { background:rgba(255,255,255,0.2); }
+        #chatbot-messages { flex:1; overflow-y:auto; padding:16px; background:#f8fafc; }
+        .chat-message { margin-bottom:12px; animation:fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .chat-message.bot { display:flex; gap:8px; }
+        .chat-message.user { display:flex; justify-content:flex-end; }
+        .message-content { padding:10px 14px; border-radius:16px; max-width:75%; font-size:0.9rem; line-height:1.4; }
+        .chat-message.bot .message-content { background:white; color:#1e293b; border:1px solid #e2e8f0; }
+        .chat-message.user .message-content { background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; }
+        .bot-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        #chatbot-input-area { padding:12px; border-top:1px solid #e2e8f0; background:white; display:flex; gap:8px; }
+        #chatbot-input { flex:1; padding:10px 14px; border:1px solid #e2e8f0; border-radius:20px; outline:none; font-size:0.9rem; transition:border-color 0.2s; }
+        #chatbot-input:focus { border-color:#00B2FF; }
+        #chatbot-send { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); border:none; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; transition:all 0.2s; }
+        #chatbot-send:hover { transform:scale(1.05); }
+        .quick-questions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .quick-question-btn { padding:6px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; font-size:0.75rem; cursor:pointer; transition:all 0.2s; color:#1e40af; }
+        .quick-question-btn:hover { background:#dbeafe; transform:translateY(-1px); }
+
+        /* ===================== GAME: PHÂN LOẠI SỐ THỰC ===================== */
+        .classify-card {
+            cursor: grab;
+            user-select: none;
+            border: 2px solid #6366f1;
+            border-radius: 14px;
+            background: white;
+            padding: 10px 16px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: #3730a3;
+            box-shadow: 0 3px 10px rgba(99,102,241,0.15);
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 70px;
+            text-align: center;
+        }
+        .classify-card:hover { transform: scale(1.07); box-shadow: 0 6px 18px rgba(99,102,241,0.28); }
+        .classify-card.dragging { opacity: 0.45; cursor: grabbing; transform: scale(1.1); }
+        .classify-card.placed-correct { background: #dcfce7; border-color: #22c55e; color: #166534; cursor: default; pointer-events: none; }
+        .classify-card.placed-wrong   { animation: shake-cl 0.4s ease; }
+
+        .classify-zone {
+            min-height: 64px;
+            border: 2px dashed #a5b4fc;
+            border-radius: 16px;
+            background: #f5f3ff;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            transition: all 0.2s;
+        }
+        .classify-zone.drag-over { background: #ede9fe; border-color: #6366f1; border-style: solid; transform: scale(1.01); }
+        .classify-zone.zone-correct { background: #dcfce7; border-color: #22c55e; border-style: solid; }
+        .classify-zone.zone-wrong   { background: #fee2e2; border-color: #ef4444; border-style: solid; animation: shake-cl 0.4s ease; }
+
+        .card-pool {
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+            border: 2px solid #c7d2fe;
+            border-radius: 18px;
+            padding: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            min-height: 64px;
+        }
+
+        .zone-label {
+            font-size: 0.72rem;
+            font-weight: bold;
+            color: #4338ca;
+            background: #e0e7ff;
+            border-radius: 8px;
+            padding: 2px 10px;
+            display: block;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        @keyframes shake-cl {
+            0%,100%{transform:translateX(0)}
+            20%{transform:translateX(-7px)}
+            40%{transform:translateX(7px)}
+            60%{transform:translateX(-4px)}
+            80%{transform:translateX(4px)}
+        }
+
+        @keyframes pop-cl {
+            0%{transform:scale(1)} 50%{transform:scale(1.15)} 100%{transform:scale(1)}
+        }
+
+        /* touch clone */
+        #cl-touch-clone { position:fixed; pointer-events:none; z-index:9999; opacity:0.85; transform:scale(1.1); transition:none; display:none; }
+
+        @media (max-width: 640px) {
+            #chatbot-window { width:calc(100vw - 40px); height:60vh; top:50%; right:20px; transform:translateY(-50%); }
+        }
+
+        /* ===== BỔ SUNG: STATS BAR ===== */
+        #stats-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .stat-item { display: flex; align-items: center; gap: 4px; background: #eff6ff; border: 1px solid #bfdbfe; padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: bold; color: #1e40af; }
+        .stat-item span.val { font-size: 0.85rem; font-weight: 900; color: #1d4ed8; }
+        /* ===== BỔ SUNG: LIKE BUTTON ===== */
+        #like-btn { background: #fff0f0; border: 1px solid #fca5a5; color: #dc2626; border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: bold; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+        #like-btn:hover { background: #fee2e2; }
+        #like-btn.liked { background: #ef4444; border-color: #ef4444; color: white; animation: likeAnim 0.4s ease; }
+        @keyframes likeAnim { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        /* ===== BỔ SUNG: PROGRESS CHART ===== */
+        #progress-panel { background: white; border-radius: 20px; padding: 20px; border: 2px dashed #3b82f6; }
+        #progress-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; padding: 8px 0; }
+        .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; gap: 4px; }
+        .bar { width: 100%; min-height: 4px; border-radius: 6px 6px 0 0; transition: height 0.5s ease; }
+        .bar-label { font-size: 0.65rem; color: #64748b; text-align: center; }
+        .bar-score { font-size: 0.7rem; font-weight: bold; color: #1e40af; }
+        .trend-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .trend-up { background: #dcfce7; color: #166534; }
+        .trend-down { background: #fee2e2; color: #991b1b; }
+        .trend-same { background: #f1f5f9; color: #475569; }
+        /* ===== KẾT THÚC BỔ SUNG CSS ===== */
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 text-slate-800">
+
+    <nav class="p-4 shadow-sm mb-6">
+        <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <a href="index.html" class="flex items-center gap-2 text-orange-600 font-bold hover:opacity-80 transition-opacity shrink-0">
+                <span class="text-xl">🏠</span>
+                <span class="hidden sm:inline">Trang chủ</span>
+            </a>
+            <!-- BỔ SUNG: STATS INLINE -->
+            <div id="stats-bar" class="flex items-center gap-2 flex-wrap">
+                <div class="stat-item">👁️ <span class="val" id="visit-count">0</span></div>
+                <div class="stat-item">📝 <span class="val" id="attempt-count">0</span> lần</div>
+                <div class="stat-item">⭐ <span class="val" id="best-score">--</span></div>
+                <button id="like-btn" onclick="toggleLike()">❤️ <span id="like-count">0</span></button>
+            </div>
+            <!-- KẾT THÚC BỔ SUNG -->
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest hidden md:block">Toán 7 - Bài 7 ✨</div>
+        </div>
+    </nav>
+
+    <div id="loading-overlay">
+        <div class="loader mb-4"></div>
+        <p class="font-bold text-blue-600 animate-pulse">Đang tạo đề mới...</p>
+    </div>
+
+    <!-- Touch drag clone -->
+    <div id="cl-touch-clone"></div>
+
+    <div class="max-w-4xl mx-auto px-3 md:px-6 space-y-12">
+
+        <!-- TIÊU ĐỀ -->
+        <div class="text-center py-6">
+            <h1 class="text-3xl md:text-4xl font-black text-teal-600 uppercase tracking-tighter flex items-center justify-center gap-3 flex-wrap">
+                <span>ℝ</span> Bài 7: Tập Hợp Các Số Thực <span>✏️</span>
+            </h1>
+            <p class="text-slate-500 font-bold mt-2">Kết nối tri thức - Toán 7</p>
+            <!-- COUNTAPI GLOBAL VIEW COUNTER - hiển thị lượt xem toàn cầu -->
+            <p id="global-view-badge" class="text-slate-400 text-sm font-bold mt-1">👁 Đang tải...</p>
+            <!-- END COUNTAPI GLOBAL VIEW COUNTER -->
+        </div>
+
+        <!-- BỔ SUNG: TIẾN BỘ HỌC TẬP -->
+        <div id="progress-panel" class="hidden">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h2 class="text-lg font-bold text-blue-800">📈 Tiến Bộ Học Tập</h2>
+                <div id="trend-display"></div>
+            </div>
+            <div id="progress-chart"></div>
+            <div id="progress-stats" class="mt-3 grid grid-cols-3 gap-3 text-center text-sm"></div>
+        </div>
+        <!-- KẾT THÚC BỔ SUNG -->
+
+        <!-- KIẾN THỨC -->
+        <div id="capture-knowledge" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-blue-800">📖 Kiến Thức Trọng Tâm</h2>
+                <button onclick="downloadKnowledgePDF()" class="download-btn">
+                    <span>📥</span> Tải Offline
+                </button>
+            </div>
+
+            <!-- VIDEO -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🎬</span>
+                    <h3 class="font-bold text-blue-700 text-base">Video Bài Học</h3>
+                    <span class="text-xs bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">YouTube</span>
+                </div>
+                <div class="relative w-full rounded-2xl overflow-hidden border-2 border-blue-100 shadow-md bg-black" style="aspect-ratio:16/9;">
+                    <iframe src="https://www.youtube.com/embed/lzwc1hiHDjI"
+                        title="Video Bài Học - Tập hợp các số thực"
+                        class="w-full h-full" style="width:100%;height:100%;position:absolute;top:0;left:0;"
+                        frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen>
+                    </iframe>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 text-center">💡 Xem video trước khi làm bài tập bên dưới</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <!-- Ô 1 -->
+                <div class="bg-teal-50/60 p-5 rounded-2xl border border-teal-100 space-y-3">
+                    <h3 class="font-bold text-teal-700">1. Tập hợp số thực \(\mathbb{R}\)</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• <strong>Số thực</strong> gồm tất cả số hữu tỉ và số vô tỉ</li>
+                        <li>• \(\mathbb{R} = \mathbb{Q} \cup \mathbb{I}\) &nbsp;(\(\mathbb{I}\) là tập số vô tỉ)</li>
+                        <li>• Mọi số thực đều biểu diễn được trên trục số</li>
+                        <li>• Trục số thực: mỗi điểm ↔ một số thực duy nhất</li>
+                    </ul>
+                </div>
+                <!-- Ô 2 -->
+                <div class="bg-blue-50/60 p-5 rounded-2xl border border-blue-100 space-y-3">
+                    <h3 class="font-bold text-blue-700">2. Quan hệ các tập hợp số</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• \(\mathbb{N} \subset \mathbb{Z} \subset \mathbb{Q} \subset \mathbb{R}\)</li>
+                        <li>• \(\mathbb{I} \subset \mathbb{R}\) nhưng \(\mathbb{I} \cap \mathbb{Q} = \varnothing\)</li>
+                        <li>• Ví dụ số hữu tỉ: \(-3,\ \dfrac{1}{2},\ 0{,}25,\ 0{,}(3)\)</li>
+                        <li>• Ví dụ số vô tỉ: \(\sqrt{2},\ \sqrt{3},\ \pi,\ \sqrt{5}\)</li>
+                    </ul>
+                </div>
+                <!-- Ô 3 -->
+                <div class="bg-purple-50/60 p-5 rounded-2xl border border-purple-100 space-y-3">
+                    <h3 class="font-bold text-purple-700">3. Giá trị tuyệt đối của số thực</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• \(|a| = a\) nếu \(a \geq 0\)</li>
+                        <li>• \(|a| = -a\) nếu \(a &lt; 0\)</li>
+                        <li>• \(|a| \geq 0\) với mọi \(a \in \mathbb{R}\)</li>
+                        <li>• Ví dụ: \(|{-5}| = 5\),&nbsp; \(|\sqrt{2}| = \sqrt{2}\),&nbsp; \(|0| = 0\)</li>
+                        <li>• Ý nghĩa: khoảng cách từ điểm \(a\) đến gốc \(O\)</li>
+                    </ul>
+                </div>
+                <!-- Ô 4 -->
+                <div class="bg-orange-50/60 p-5 rounded-2xl border border-orange-100 space-y-3">
+                    <h3 class="font-bold text-orange-700">4. So sánh và biểu diễn số thực</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• Với mọi \(a, b \in \mathbb{R}\): hoặc \(a &lt; b\), \(a = b\), \(a &gt; b\)</li>
+                        <li>• Trên trục số: số bên trái &lt; số bên phải</li>
+                        <li>• \(1 &lt; \sqrt{2} &lt; \sqrt{3} &lt; 2\)</li>
+                        <li>• \(\sqrt{2} \approx 1{,}414\),&nbsp; \(\sqrt{3} \approx 1{,}732\),&nbsp; \(\pi \approx 3{,}14\)</li>
+                        <li>• Tập \(\mathbb{R}\) được sắp thứ tự toàn phần</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Sơ đồ Venn minh hoạ quan hệ các tập số -->
+            <div class="mt-6 p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-teal-50 border border-teal-100">
+                <h3 class="font-bold text-teal-700 mb-4 text-center text-base">🗺️ Sơ đồ quan hệ các tập hợp số</h3>
+                <div class="flex justify-center">
+                    <div class="relative" style="width:340px;height:200px;">
+                        <!-- ℝ -->
+                        <div class="absolute inset-0 rounded-2xl border-4 border-teal-400 bg-teal-50/40 flex items-start justify-end p-2">
+                            <span class="text-teal-600 font-black text-lg">\(\mathbb{R}\)</span>
+                        </div>
+                        <!-- ℚ -->
+                        <div class="absolute rounded-xl border-4 border-blue-400 bg-blue-50/50" style="left:8px;top:18px;width:200px;height:168px;">
+                            <span class="absolute top-1 right-2 text-blue-600 font-black">\(\mathbb{Q}\)</span>
+                            <!-- ℤ -->
+                            <div class="absolute rounded-lg border-4 border-indigo-400 bg-indigo-50/60" style="left:8px;top:28px;width:120px;height:120px;">
+                                <span class="absolute top-1 right-2 text-indigo-600 font-black text-sm">\(\mathbb{Z}\)</span>
+                                <!-- ℕ -->
+                                <div class="absolute rounded-lg border-4 border-violet-400 bg-violet-50/70 flex items-center justify-center" style="left:8px;top:28px;width:60px;height:70px;">
+                                    <span class="text-violet-600 font-black text-sm">\(\mathbb{N}\)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- ℐ -->
+                        <div class="absolute rounded-xl border-4 border-orange-400 bg-orange-50/50 flex items-center justify-center" style="right:8px;top:18px;width:112px;height:168px;">
+                            <div class="text-center">
+                                <div class="text-orange-600 font-black">\(\mathbb{I}\)</div>
+                                <div class="text-xs text-orange-500 font-bold mt-1">số vô tỉ</div>
+                                <div class="text-xs text-orange-400 mt-1">\(\sqrt{2}, \pi\)…</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== TRÒ CHƠI: PHÂN LOẠI SỐ THỰC ===================== -->
+        <div class="bg-white p-8 section-dashed shadow-md" id="classify-game-section">
+            <h2 class="text-2xl font-black text-teal-600 flex items-center gap-3 mb-2">
+                <span class="text-3xl">🎯</span> PHÂN LOẠI SỐ THỰC
+            </h2>
+            <p class="text-slate-600 mb-1 font-medium">
+                Kéo thả mỗi số vào đúng tập hợp của nó: <strong>Số tự nhiên</strong>, <strong>Số nguyên âm</strong>, <strong>Số hữu tỉ (không nguyên)</strong> hoặc <strong>Số vô tỉ</strong>!
+            </p>
+            <p class="text-xs text-teal-500 font-bold mb-5">🖱️ Kéo thả bằng chuột hoặc chạm-giữ trên điện thoại</p>
+
+            <!-- Kho thẻ -->
+            <div class="mb-6">
+                <p class="text-sm font-bold text-teal-700 mb-2">📦 Các số cần phân loại:</p>
+                <div class="card-pool" id="cl-card-pool"></div>
+            </div>
+
+            <!-- 4 vùng thả -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div>
+                    <span class="zone-label">🟢 Số tự nhiên \(\mathbb{N}\)</span>
+                    <div class="classify-zone" id="zone-N"
+                        ondragover="clDragOver(event,'N')" ondragleave="clDragLeave(event,'N')" ondrop="clDrop(event,'N')">
+                        <span class="text-xs text-indigo-300 italic" id="zone-N-hint">Thả vào đây</span>
+                    </div>
+                </div>
+                <div>
+                    <span class="zone-label">🔵 Số nguyên âm \(\mathbb{Z}^-\)</span>
+                    <div class="classify-zone" id="zone-Zneg"
+                        ondragover="clDragOver(event,'Zneg')" ondragleave="clDragLeave(event,'Zneg')" ondrop="clDrop(event,'Zneg')">
+                        <span class="text-xs text-indigo-300 italic" id="zone-Zneg-hint">Thả vào đây</span>
+                    </div>
+                </div>
+                <div>
+                    <span class="zone-label">🟡 Hữu tỉ (không nguyên)</span>
+                    <div class="classify-zone" id="zone-Q"
+                        ondragover="clDragOver(event,'Q')" ondragleave="clDragLeave(event,'Q')" ondrop="clDrop(event,'Q')">
+                        <span class="text-xs text-indigo-300 italic" id="zone-Q-hint">Thả vào đây</span>
+                    </div>
+                </div>
+                <div>
+                    <span class="zone-label">🟠 Số vô tỉ \(\mathbb{I}\)</span>
+                    <div class="classify-zone" id="zone-I"
+                        ondragover="clDragOver(event,'I')" ondragleave="clDragLeave(event,'I')" ondrop="clDrop(event,'I')">
+                        <span class="text-xs text-indigo-300 italic" id="zone-I-hint">Thả vào đây</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tiến độ -->
+            <div class="flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-bold text-teal-700">Tiến độ:</span>
+                    <div class="w-40 bg-teal-100 rounded-full h-3">
+                        <div id="cl-progress" class="bg-teal-500 h-3 rounded-full transition-all duration-500" style="width:0%"></div>
+                    </div>
+                    <span id="cl-score-label" class="text-sm font-bold text-teal-600">0/12</span>
+                </div>
+                <button onclick="resetClassifyGame()" class="bg-teal-100 hover:bg-teal-200 text-teal-700 font-bold py-2 px-5 rounded-xl transition-all border border-teal-200 text-sm">
+                    🔄 Chơi lại
+                </button>
+            </div>
+
+            <!-- Phần thưởng -->
+            <div id="cl-reward" class="hidden text-center space-y-4 py-8 animate-bounce-in mt-4">
+                <div class="text-6xl">🏆</div>
+                <h3 class="text-2xl font-black text-teal-600">PHÂN LOẠI HOÀN HẢO! 🎉</h3>
+                <p class="text-blue-600 font-bold animate-pulse">Bộ não số học siêu đỉnh — tiếp tục thôi! 👇</p>
+            </div>
+        </div>
+
+        <!-- MCQ -->
+        <div id="capture-mcq" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">📝 PHẦN 1: Trắc nghiệm (15 câu)</h2>
+                <button onclick="downloadMCQImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="mcq-container" class="space-y-8"></div>
+        </div>
+
+        <!-- T/F -->
+        <div id="capture-tf" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">✔️ PHẦN 2: Đúng/Sai (5 câu)</h2>
+                <button onclick="downloadTFImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="tf-container" class="space-y-10"></div>
+        </div>
+
+        <!-- FILL -->
+        <div id="capture-fill" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">🖋️ PHẦN 3: Điền đáp án (5 câu)</h2>
+                <button onclick="downloadFillImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="fill-container" class="space-y-6"></div>
+        </div>
+
+        <!-- NỘP BÀI -->
+        <div class="text-center py-12">
+            <button id="submit-btn" onclick="checkResults()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-16 rounded-full shadow-2xl transition-all active:scale-95 text-xl tracking-widest flex items-center gap-4 mx-auto">
+                <span>📤</span> NỘP BÀI
+            </button>
+            <div id="result-board" class="mt-8 hidden">
+                <div class="bg-white section-dashed p-8 inline-block shadow-xl w-full max-w-2xl">
+                    <div id="score-text" class="text-4xl font-black mb-2 p-6 rounded-2xl"></div>
+                    <div id="score-message" class="text-lg font-bold mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT -->
+    <div id="chatbot-container">
+        <button id="chatbot-toggle" onclick="toggleChatbot()">
+            💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>
+        </button>
+        <div id="chatbot-window">
+            <div id="chatbot-header">
+                <div>
+                    <div style="font-weight:bold;font-size:1rem;">Trợ lý Toán học</div>
+                    <div style="font-size:0.75rem;opacity:0.9;">Hỗ trợ 24/7</div>
+                </div>
+                <button id="chatbot-close" onclick="toggleChatbot()">×</button>
+            </div>
+            <div id="chatbot-messages">
+                <div class="chat-message bot">
+                    <div class="bot-avatar">💬</div>
+                    <div>
+                        <div class="message-content">
+                            Xin chào! Tôi có thể giúp bạn về <strong>tập hợp các số thực</strong>. Hãy hỏi tôi bất cứ điều gì!
+                        </div>
+                        <div class="quick-questions">
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Số thực là gì?')">Số thực?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Quan hệ các tập hợp số?')">Quan hệ tập hợp?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Giá trị tuyệt đối là gì?')">Giá trị tuyệt đối?</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chatbot-input-area">
+                <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button id="chatbot-send" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ======================== GAME: PHÂN LOẠI SỐ THỰC ========================
+    // zone: 'N' = số tự nhiên, 'Zneg' = số nguyên âm, 'Q' = hữu tỉ không nguyên, 'I' = vô tỉ
+    const CL_CARDS = [
+        { id:'cl1',  label:'0',             zone:'N',    tip:'0 ∈ ℕ' },
+        { id:'cl2',  label:'5',             zone:'N',    tip:'5 ∈ ℕ' },
+        { id:'cl3',  label:'12',            zone:'N',    tip:'12 ∈ ℕ' },
+        { id:'cl4',  label:'−3',            zone:'Zneg', tip:'−3 ∈ ℤ⁻' },
+        { id:'cl5',  label:'−7',            zone:'Zneg', tip:'−7 ∈ ℤ⁻' },
+        { id:'cl6',  label:'1/2',           zone:'Q',    tip:'1/2 ∈ ℚ, không nguyên' },
+        { id:'cl7',  label:'−2/3',          zone:'Q',    tip:'−2/3 ∈ ℚ, không nguyên' },
+        { id:'cl8',  label:'0,(3)',          zone:'Q',    tip:'0,(3) = 1/3 ∈ ℚ' },
+        { id:'cl9',  label:'√2',            zone:'I',    tip:'√2 là số vô tỉ' },
+        { id:'cl10', label:'√5',            zone:'I',    tip:'√5 là số vô tỉ' },
+        { id:'cl11', label:'π',             zone:'I',    tip:'π là số vô tỉ' },
+        { id:'cl12', label:'√3',            zone:'I',    tip:'√3 là số vô tỉ' },
+    ];
+
+    let clDragId = null;
+    let clPlaced = 0;
+    const clTotal = CL_CARDS.length;
+
+    // MathJax label map cho các thẻ cần ký hiệu toán
+    const CL_MATHJAX = {
+        '1/2':   '\\(\\dfrac{1}{2}\\)',
+        '−2/3':  '\\(-\\dfrac{2}{3}\\)',
+        '0,(3)': '\\(0{,}(3)\\)',
+        '√2':    '\\(\\sqrt{2}\\)',
+        '√5':    '\\(\\sqrt{5}\\)',
+        '√3':    '\\(\\sqrt{3}\\)',
+        'π':     '\\(\\pi\\)',
+        '−3':    '\\(-3\\)',
+        '−7':    '\\(-7\\)',
+    };
+
+    function clDisplayLabel(label) {
+        return CL_MATHJAX[label] || label;
+    }
+
+    function shuffleArr(arr) {
+        const a = [...arr];
+        for (let i = a.length-1; i>0; i--) {
+            const j = Math.floor(Math.random()*(i+1));
+            [a[i],a[j]] = [a[j],a[i]];
+        }
+        return a;
+    }
+
+    function initClassifyGame() {
+        clPlaced = 0;
+        clDragId = null;
+        updateClProgress();
+        document.getElementById('cl-reward').classList.add('hidden');
+
+        // Render thẻ
+        const pool = document.getElementById('cl-card-pool');
+        pool.innerHTML = '';
+        shuffleArr(CL_CARDS).forEach(card => {
+            const el = document.createElement('div');
+            el.id = 'clcard-' + card.id;
+            el.className = 'classify-card';
+            el.innerHTML = clDisplayLabel(card.label);
+            el.draggable = true;
+            el.title = card.tip;
+            el.addEventListener('dragstart', e => {
+                clDragId = card.id;
+                setTimeout(()=>el.classList.add('dragging'), 0);
+            });
+            el.addEventListener('dragend', ()=>el.classList.remove('dragging'));
+            el.addEventListener('touchstart', clTouchStart, {passive:true});
+            el.addEventListener('touchmove',  clTouchMove,  {passive:false});
+            el.addEventListener('touchend',   clTouchEnd);
+            pool.appendChild(el);
+        });
+
+        // Reset zones
+        ['N','Zneg','Q','I'].forEach(z => {
+            const dz = document.getElementById('zone-'+z);
+            // Xóa thẻ đã thả, giữ hint
+            dz.querySelectorAll('.classify-card').forEach(c=>c.remove());
+            dz.className = 'classify-zone';
+            const hint = document.getElementById('zone-'+z+'-hint');
+            if (hint) hint.style.display = '';
+        });
+
+        if (window.MathJax) MathJax.typeset([pool]);
+    }
+
+    function updateClProgress() {
+        const pct = (clPlaced / clTotal) * 100;
+        document.getElementById('cl-progress').style.width = pct + '%';
+        document.getElementById('cl-score-label').textContent = clPlaced + '/' + clTotal;
+    }
+
+    // ---- Desktop Drag ----
+    function clDragOver(e, zone) {
+        e.preventDefault();
+        document.getElementById('zone-'+zone).classList.add('drag-over');
+    }
+    function clDragLeave(e, zone) {
+        document.getElementById('zone-'+zone).classList.remove('drag-over');
+    }
+    function clDrop(e, zone) {
+        e.preventDefault();
+        document.getElementById('zone-'+zone).classList.remove('drag-over');
+        if (!clDragId) return;
+        clPlaceCard(clDragId, zone);
+        clDragId = null;
+    }
+
+    // ---- Mobile Touch ----
+    let clTouchCardEl = null, clTouchCloneEl = null, clTouchCardId = null;
+
+    function clTouchStart(e) {
+        clTouchCardEl = e.currentTarget;
+        clTouchCardId = clTouchCardEl.id.replace('clcard-','');
+        const clone = document.getElementById('cl-touch-clone');
+        clone.innerHTML = clTouchCardEl.innerHTML;
+        clone.className = 'classify-card';
+        clone.style.display = 'inline-flex';
+        const t = e.touches[0];
+        clone.style.left = (t.clientX - 40) + 'px';
+        clone.style.top  = (t.clientY - 20) + 'px';
+        clTouchCloneEl = clone;
+    }
+    function clTouchMove(e) {
+        e.preventDefault();
+        if (!clTouchCloneEl) return;
+        const t = e.touches[0];
+        clTouchCloneEl.style.left = (t.clientX - 40) + 'px';
+        clTouchCloneEl.style.top  = (t.clientY - 20) + 'px';
+        ['N','Zneg','Q','I'].forEach(z => {
+            const dz = document.getElementById('zone-'+z);
+            const r  = dz.getBoundingClientRect();
+            const inside = t.clientX>=r.left && t.clientX<=r.right && t.clientY>=r.top && t.clientY<=r.bottom;
+            dz.classList.toggle('drag-over', inside);
+        });
+    }
+    function clTouchEnd(e) {
+        if (clTouchCloneEl) { clTouchCloneEl.style.display = 'none'; }
+        if (!clTouchCardId) return;
+        const t = e.changedTouches[0];
+        let dropped = false;
+        ['N','Zneg','Q','I'].forEach(z => {
+            const dz = document.getElementById('zone-'+z);
+            dz.classList.remove('drag-over');
+            const r = dz.getBoundingClientRect();
+            if (!dropped && t.clientX>=r.left && t.clientX<=r.right && t.clientY>=r.top && t.clientY<=r.bottom) {
+                clPlaceCard(clTouchCardId, z);
+                dropped = true;
+            }
+        });
+        clTouchCardId = null;
+    }
+
+    // ---- Xử lý thả ----
+    function clPlaceCard(cardId, zone) {
+        const cardData = CL_CARDS.find(c => c.id === cardId);
+        if (!cardData) return;
+        const cardEl = document.getElementById('clcard-' + cardId);
+        if (!cardEl || cardEl.classList.contains('placed-correct')) return;
+
+        const dz = document.getElementById('zone-' + zone);
+
+        if (cardData.zone === zone) {
+            // ✅ Đúng
+            cardEl.classList.add('placed-correct');
+            cardEl.draggable = false;
+            cardEl.removeEventListener('touchstart', clTouchStart);
+            cardEl.removeEventListener('touchmove',  clTouchMove);
+            cardEl.removeEventListener('touchend',   clTouchEnd);
+
+            // Di chuyển thẻ sang zone
+            const placed = cardEl.cloneNode(true);
+            placed.classList.add('placed-correct');
+            placed.style.cursor = 'default';
+            placed.draggable = false;
+            dz.appendChild(placed);
+
+            // Ẩn hint
+            const hint = document.getElementById('zone-'+zone+'-hint');
+            if (hint) hint.style.display = 'none';
+
+            // Xoá khỏi pool
+            cardEl.style.transition = 'all 0.3s';
+            cardEl.style.opacity = '0';
+            cardEl.style.transform = 'scale(0.7)';
+            setTimeout(()=>cardEl.remove(), 300);
+
+            dz.classList.add('zone-correct');
+            setTimeout(()=>dz.classList.remove('zone-correct'), 700);
+
+            confetti({ particleCount: 28, spread: 50, origin: { y: 0.65 }, colors: ['#14b8a6','#22c55e','#f59e0b'] });
+            clPlaced++;
+            updateClProgress();
+
+            if (window.MathJax) MathJax.typeset([dz]);
+
+            if (clPlaced === clTotal) {
+                setTimeout(()=>{
+                    document.getElementById('cl-reward').classList.remove('hidden');
+                    confetti({ particleCount: 220, spread: 200, colors: ['#14b8a6','#3b82f6','#22c55e','#f59e0b'] });
+                    setTimeout(()=>confetti({ particleCount: 160, spread: 170, origin: { y: 0.3 } }), 600);
+                }, 400);
+            }
+        } else {
+            // ❌ Sai
+            dz.classList.add('zone-wrong');
+            setTimeout(()=>dz.classList.remove('zone-wrong'), 600);
+            cardEl.classList.add('placed-wrong');
+            setTimeout(()=>cardEl.classList.remove('placed-wrong'), 500);
+        }
+    }
+
+    function resetClassifyGame() { initClassifyGame(); }
+
+    // ======================== QUESTION BANKS ========================
+    const QUESTION_BANK = {
+        nb: [
+            {
+                q: "Tập hợp số thực \\(\\mathbb{R}\\) bao gồm:",
+                opts: ["Tất cả số hữu tỉ và số vô tỉ","Chỉ số hữu tỉ","Chỉ số nguyên","Chỉ số tự nhiên và số nguyên"],
+                ans: 0,
+                exp: "\\(\\mathbb{R} = \\mathbb{Q} \\cup \\mathbb{I}\\), gồm tất cả số hữu tỉ và số vô tỉ.",
+                hint: "ℝ = ℚ ∪ ℐ"
+            },
+            {
+                q: "Khẳng định nào sau đây đúng về quan hệ các tập số?",
+                opts: ["\\(\\mathbb{N} \\subset \\mathbb{Z} \\subset \\mathbb{Q} \\subset \\mathbb{R}\\)","\\(\\mathbb{Z} \\subset \\mathbb{N} \\subset \\mathbb{Q}\\)","\\(\\mathbb{Q} \\subset \\mathbb{Z}\\)","\\(\\mathbb{R} \\subset \\mathbb{Q}\\)"],
+                ans: 0,
+                exp: "Đúng thứ tự chứa nhau: \\(\\mathbb{N} \\subset \\mathbb{Z} \\subset \\mathbb{Q} \\subset \\mathbb{R}\\).",
+                hint: "Tự nhiên ⊂ Nguyên ⊂ Hữu tỉ ⊂ Thực"
+            },
+            {
+                q: "\\(|-7|\\) bằng:",
+                opts: ["\\(7\\)","\\(-7\\)","\\(0\\)","\\(49\\)"],
+                ans: 0,
+                exp: "\\(|-7| = 7\\) vì \\(-7 < 0\\) nên \\(|-7| = -(-7) = 7\\).",
+                hint: "GTTĐ của số âm = số dương tương ứng"
+            },
+            {
+                q: "Số nào sau đây thuộc \\(\\mathbb{Q}\\) nhưng không thuộc \\(\\mathbb{Z}\\)?",
+                opts: ["\\(\\dfrac{3}{5}\\)","\\(-4\\)","\\(\\sqrt{3}\\)","\\(0\\)"],
+                ans: 0,
+                exp: "\\(\\frac{3}{5}\\) là số hữu tỉ nhưng không phải số nguyên. Còn \\(-4, 0 \\in \\mathbb{Z}\\) và \\(\\sqrt{3} \\in \\mathbb{I}\\).",
+                hint: "Số nguyên đều là số hữu tỉ nhưng ngược lại không đúng"
+            },
+            {
+                q: "\\(\\sqrt{2}\\) thuộc tập hợp nào?",
+                opts: ["\\(\\mathbb{I}\\) (số vô tỉ)","\\(\\mathbb{Q}\\) (số hữu tỉ)","\\(\\mathbb{Z}\\) (số nguyên)","\\(\\mathbb{N}\\) (số tự nhiên)"],
+                ans: 0,
+                exp: "\\(\\sqrt{2} = 1{,}41421\\ldots\\) là thập phân vô hạn không tuần hoàn nên là số vô tỉ.",
+                hint: "Không viết được dưới dạng p/q"
+            },
+            {
+                q: "Giá trị tuyệt đối \\(|a|\\) khi \\(a < 0\\) là:",
+                opts: ["\\(-a\\)","\\(a\\)","\\(0\\)","\\(a^2\\)"],
+                ans: 0,
+                exp: "Theo định nghĩa: khi \\(a < 0\\), \\(|a| = -a > 0\\).",
+                hint: "Định nghĩa GTTĐ: |a| = a nếu a≥0, |a| = −a nếu a<0"
+            },
+            {
+                q: "Số nào sau đây là số thực nhưng không phải số hữu tỉ?",
+                opts: ["\\(\\pi\\)","\\(0{,}25\\)","\\(-\\dfrac{1}{3}\\)","\\(100\\)"],
+                ans: 0,
+                exp: "\\(\\pi \\in \\mathbb{I} \\subset \\mathbb{R}\\) là số vô tỉ. Còn \\(0{,}25,\\ -\\frac{1}{3},\\ 100 \\in \\mathbb{Q}\\).",
+                hint: "Số vô tỉ ∈ ℝ nhưng ∉ ℚ"
+            }
+        ],
+        th: [
+            {
+                q: "Trên trục số, số nào nằm bên trái \\(\\sqrt{3}\\)?",
+                opts: ["\\(1{,}7\\)","\\(1{,}8\\)","\\(2\\)","\\(\\sqrt{4}\\)"],
+                ans: 0,
+                exp: "\\(\\sqrt{3} \\approx 1{,}732\\). Chỉ \\(1{,}7 < 1{,}732\\), các số còn lại đều lớn hơn.",
+                hint: "√3 ≈ 1,732; số nhỏ hơn nằm bên trái"
+            },
+            {
+                q: "\\(|3 - 5|\\) bằng:",
+                opts: ["\\(2\\)","\\(-2\\)","\\(8\\)","\\(15\\)"],
+                ans: 0,
+                exp: "\\(|3-5| = |-2| = 2\\).",
+                hint: "Tính trong ngoặc trước, rồi lấy GTTĐ"
+            },
+            {
+                q: "Khẳng định nào SAI?",
+                opts: ["\\(\\sqrt{4} \\in \\mathbb{I}\\)","\\(\\sqrt{4} \\in \\mathbb{N}\\)","\\(\\sqrt{4} \\in \\mathbb{Z}\\)","\\(\\sqrt{4} \\in \\mathbb{Q}\\)"],
+                ans: 0,
+                exp: "\\(\\sqrt{4} = 2 \\in \\mathbb{N} \\subset \\mathbb{Z} \\subset \\mathbb{Q} \\subset \\mathbb{R}\\), nhưng \\(2 \\notin \\mathbb{I}\\) vì 2 là số hữu tỉ.",
+                hint: "√4 = 2 là số nguyên, không phải số vô tỉ"
+            },
+            {
+                q: "Sắp xếp theo thứ tự tăng dần: \\(\\sqrt{2},\\ 1{,}5,\\ \\sqrt{3},\\ 1{,}8\\)",
+                opts: ["\\(1{,}5 < \\sqrt{2} < 1{,}8 < \\sqrt{3}\\)","\\(\\sqrt{2} < 1{,}5 < 1{,}8 < \\sqrt{3}\\)","\\(1{,}5 < 1{,}8 < \\sqrt{2} < \\sqrt{3}\\)","\\(\\sqrt{3} < 1{,}8 < \\sqrt{2} < 1{,}5\\)"],
+                ans: 0,
+                exp: "\\(\\sqrt{2}\\approx1{,}414,\\ \\sqrt{3}\\approx1{,}732\\). Thứ tự: \\(1{,}5 < \\sqrt{2}\\approx1{,}414\\)... thực ra \\(1{,}414<1{,}5<1{,}732<1{,}8\\). Vậy \\(1{,}5 < \\sqrt{2}\\) SAI — thứ đúng là \\(\\sqrt{2} < 1{,}5 < \\sqrt{3} < 1{,}8\\).",
+                ans: 1,
+                exp: "\\(\\sqrt{2}\\approx1{,}414 < 1{,}5 < \\sqrt{3}\\approx1{,}732 < 1{,}8\\).",
+                hint: "√2 ≈ 1,414; √3 ≈ 1,732"
+            },
+            {
+                q: "\\(|x| = 3\\) có bao nhiêu nghiệm thực?",
+                opts: ["\\(2\\) nghiệm: \\(x=3\\) và \\(x=-3\\)","\\(1\\) nghiệm: \\(x=3\\)","\\(0\\) nghiệm","\\(3\\) nghiệm"],
+                ans: 0,
+                exp: "\\(|x|=3 \\Leftrightarrow x=3\\) hoặc \\(x=-3\\). Có 2 nghiệm.",
+                hint: "|x| = a ⟺ x = a hoặc x = −a (a > 0)"
+            },
+            {
+                q: "Tìm \\(x\\) biết \\(|x - 2| = 5\\):",
+                opts: ["\\(x=7\\) hoặc \\(x=-3\\)","\\(x=3\\) hoặc \\(x=-7\\)","\\(x=7\\)","\\(x=-3\\)"],
+                ans: 0,
+                exp: "\\(|x-2|=5 \\Leftrightarrow x-2=5\\) hoặc \\(x-2=-5 \\Leftrightarrow x=7\\) hoặc \\(x=-3\\).",
+                hint: "|x−2| = 5 ⟺ x−2 = 5 hoặc x−2 = −5"
+            }
+        ],
+        vd: [
+            {
+                q: "Trong các số \\(-\\sqrt{5},\\ 0,\\ \\dfrac{2}{3},\\ \\sqrt{9},\\ \\pi\\), có bao nhiêu số hữu tỉ?",
+                opts: ["\\(3\\)","\\(2\\)","\\(4\\)","\\(1\\)"],
+                ans: 0,
+                exp: "\\(0 \\in \\mathbb{Q}\\), \\(\\frac{2}{3} \\in \\mathbb{Q}\\), \\(\\sqrt{9}=3 \\in \\mathbb{Q}\\). Còn \\(-\\sqrt{5}\\) và \\(\\pi\\) là số vô tỉ. Vậy có 3 số hữu tỉ.",
+                hint: "Kiểm tra từng số: hữu tỉ hay vô tỉ?"
+            },
+            {
+                q: "Biết \\(|2x - 1| = 3\\). Tổng các nghiệm của phương trình là:",
+                opts: ["\\(1\\)","\\(2\\)","\\(-1\\)","\\(4\\)"],
+                ans: 0,
+                exp: "\\(2x-1=3 \\Rightarrow x=2\\); \\(2x-1=-3 \\Rightarrow x=-1\\). Tổng: \\(2+(-1)=1\\).",
+                hint: "Giải hai trường hợp rồi cộng nghiệm"
+            },
+            {
+                q: "Khẳng định nào ĐÚNG?",
+                opts: ["Mọi số vô tỉ đều là số thực","Mọi số thực đều là số hữu tỉ","\\(\\mathbb{Q}\\) và \\(\\mathbb{I}\\) có phần tử chung","\\(\\sqrt{4} \\in \\mathbb{I}\\)"],
+                ans: 0,
+                exp: "\\(\\mathbb{I} \\subset \\mathbb{R}\\) nên mọi số vô tỉ đều là số thực. Các khẳng định kia đều sai.",
+                hint: "ℐ ⊂ ℝ, ℚ ∩ ℐ = ∅"
+            }
+        ]
+    };
+
+    // Sửa lại câu sắp xếp (ans bị ghi đè ở trên)
+    QUESTION_BANK.th[3] = {
+        q: "Sắp xếp theo thứ tự tăng dần: \\(\\sqrt{2},\\ 1{,}5,\\ \\sqrt{3},\\ 1{,}8\\)",
+        opts: ["\\(\\sqrt{2} < 1{,}5 < \\sqrt{3} < 1{,}8\\)","\\(1{,}5 < \\sqrt{2} < 1{,}8 < \\sqrt{3}\\)","\\(1{,}5 < 1{,}8 < \\sqrt{2} < \\sqrt{3}\\)","\\(\\sqrt{3} < 1{,}8 < \\sqrt{2} < 1{,}5\\)"],
+        ans: 0,
+        exp: "\\(\\sqrt{2}\\approx1{,}414 < 1{,}5 < \\sqrt{3}\\approx1{,}732 < 1{,}8\\).",
+        hint: "√2 ≈ 1,414; √3 ≈ 1,732"
+    };
+
+    const TF_BANK = [
+        {
+            q: "Phân loại số vào các tập hợp",
+            items: [
+                {t:"a) \\(0 \\in \\mathbb{N}\\)", a:true,  exp:"Đúng! 0 là số tự nhiên nhỏ nhất", h:"ℕ = {0, 1, 2, 3, …}"},
+                {t:"b) \\(-5 \\in \\mathbb{N}\\)", a:false, exp:"Sai! \\(-5 \\in \\mathbb{Z}\\) nhưng \\(-5 \\notin \\mathbb{N}\\) (số tự nhiên không âm)", h:"Số tự nhiên ≥ 0"},
+                {t:"c) \\(\\dfrac{2}{3} \\in \\mathbb{Q}\\)", a:true,  exp:"Đúng! \\(\\frac{2}{3}\\) viết được dạng phân số nên là số hữu tỉ", h:"Phân số = số hữu tỉ"},
+                {t:"d) \\(\\sqrt{5} \\in \\mathbb{Q}\\)", a:false, exp:"Sai! \\(\\sqrt{5}\\) là số vô tỉ, không viết được dưới dạng phân số", h:"√5 ≈ 2,2360… không tuần hoàn"}
+            ]
+        },
+        {
+            q: "Quan hệ giữa các tập hợp số",
+            items: [
+                {t:"a) \\(\\mathbb{Z} \\subset \\mathbb{Q}\\)", a:true,  exp:"Đúng! Mọi số nguyên đều là số hữu tỉ (viết được dưới dạng \\(\\frac{n}{1}\\))", h:"n = n/1 ∈ ℚ"},
+                {t:"b) \\(\\mathbb{Q} \\subset \\mathbb{Z}\\)", a:false, exp:"Sai! Ví dụ \\(\\frac{1}{2} \\in \\mathbb{Q}\\) nhưng \\(\\frac{1}{2} \\notin \\mathbb{Z}\\)", h:"1/2 không phải số nguyên"},
+                {t:"c) \\(\\mathbb{Q} \\cap \\mathbb{I} = \\varnothing\\)", a:true,  exp:"Đúng! Không có số nào vừa là số hữu tỉ vừa là số vô tỉ", h:"Hai tập này rời nhau hoàn toàn"},
+                {t:"d) \\(\\mathbb{N} \\subset \\mathbb{R}\\)", a:true,  exp:"Đúng! \\(\\mathbb{N} \\subset \\mathbb{Z} \\subset \\mathbb{Q} \\subset \\mathbb{R}\\)", h:"Mọi số tự nhiên đều là số thực"}
+            ]
+        },
+        {
+            q: "Giá trị tuyệt đối",
+            items: [
+                {t:"a) \\(|-3{,}5| = 3{,}5\\)", a:true,  exp:"Đúng! \\(-3{,}5 < 0\\) nên \\(|-3{,}5| = -(-3{,}5) = 3{,}5\\)", h:"GTTĐ số âm = số dương tương ứng"},
+                {t:"b) \\(|0| = 0\\)", a:true,  exp:"Đúng! \\(|0| = 0\\) theo định nghĩa", h:"0 ≥ 0 nên |0| = 0"},
+                {t:"c) Với mọi \\(a \\in \\mathbb{R}\\): \\(|a| > 0\\)", a:false, exp:"Sai! Khi \\(a=0\\) thì \\(|0|=0\\), không lớn hơn 0", h:"Cần là |a| ≥ 0, trường hợp a=0 thì |a|=0"},
+                {t:"d) \\(|{-\\sqrt{2}}| = \\sqrt{2}\\)", a:true,  exp:"Đúng! \\(\\sqrt{2} > 0\\) nên \\(|-\\sqrt{2}| = \\sqrt{2}\\)", h:"√2 > 0"}
+            ]
+        },
+        {
+            q: "So sánh số thực",
+            items: [
+                {t:"a) \\(\\sqrt{3} > 1{,}7\\)", a:true,  exp:"Đúng! \\(\\sqrt{3}\\approx1{,}732 > 1{,}7\\)", h:"√3 ≈ 1,732"},
+                {t:"b) \\(\\pi < 3{,}14\\)", a:false, exp:"Sai! \\(\\pi\\approx3{,}14159 > 3{,}14\\)", h:"π ≈ 3,14159…"},
+                {t:"c) \\(-\\sqrt{5} < -2\\)", a:false, exp:"Sai! \\(\\sqrt{5}\\approx2{,}236\\) nên \\(-\\sqrt{5}\\approx-2{,}236 < -2\\). Đây là đúng!", a:true, exp:"Đúng! \\(-\\sqrt{5}\\approx-2{,}236 < -2\\)", h:"−√5 ≈ −2,236 < −2"},
+                {t:"d) Trên trục số, điểm biểu diễn số \\(-3\\) nằm bên trái điểm \\(-1\\)", a:true,  exp:"Đúng! \\(-3 < -1\\) nên \\(-3\\) nằm bên trái \\(-1\\)", h:"Số nhỏ hơn nằm bên trái"}
+            ]
+        },
+        {
+            q: "Biểu diễn và vận dụng",
+            items: [
+                {t:"a) Mọi điểm trên trục số đều biểu diễn một số thực", a:true,  exp:"Đúng! Trục số thực và \\(\\mathbb{R}\\) tương ứng 1-1", h:"Mỗi điểm ↔ một số thực duy nhất"},
+                {t:"b) Có số thực nào không biểu diễn được trên trục số", a:false, exp:"Sai! Mọi số thực đều có điểm tương ứng trên trục số", h:"Tính chất của trục số thực"},
+                {t:"c) \\(|a - b|\\) là khoảng cách giữa hai điểm \\(a\\) và \\(b\\) trên trục số", a:true,  exp:"Đúng! Khoảng cách giữa \\(a\\) và \\(b\\) là \\(|a-b|\\)", h:"Khoảng cách = |a − b|"},
+                {t:"d) \\(|x| = -1\\) có nghiệm \\(x = -1\\)", a:false, exp:"Sai! \\(|x| \\geq 0\\) với mọi \\(x\\), nên phương trình \\(|x|=-1\\) vô nghiệm", h:"GTTĐ luôn ≥ 0, không thể = −1"}
+            ]
+        }
+    ];
+
+    // Sửa mệnh đề c bảng so sánh
+    TF_BANK[3].items[2] = {t:"c) \\(-\\sqrt{5} < -2\\)", a:true, exp:"Đúng! \\(\\sqrt{5}\\approx2{,}236\\) nên \\(-\\sqrt{5}\\approx-2{,}236 < -2\\)", h:"−√5 ≈ −2,236 < −2"};
+
+    const FILL_BANK = [
+        {q:"\\(|-8| =\\)", a:"8", exp:"\\(|-8|=8\\) vì \\(-8<0\\) nên \\(|-8|=-(-8)=8\\)", hint:"GTTĐ số âm = số dương tương ứng"},
+        {q:"\\(\\sqrt{9} \\in \\mathbb{?}\\) (điền tên tập hợp nhỏ nhất chứa nó: N, Z, Q hay I)", a:"N", exp:"\\(\\sqrt{9}=3 \\in \\mathbb{N}\\)", hint:"√9 = 3 là số tự nhiên"},
+        {q:"\\(|x|=4\\) có nghiệm \\(x=4\\) và \\(x=\\)?", a:"-4", exp:"\\(|x|=4 \\Leftrightarrow x=4\\) hoặc \\(x=-4\\)", hint:"|x| = a ⟺ x = ±a"},
+        {q:"Điền dấu ⊂ hoặc ⊄: \\(\\mathbb{Q} \\ ? \\ \\mathbb{R}\\)", a:"⊂", exp:"\\(\\mathbb{Q} \\subset \\mathbb{R}\\) vì mọi số hữu tỉ đều là số thực", hint:"ℚ nằm trong ℝ"},
+        {q:"\\(-\\sqrt{3}\\) là số ... (hữu tỉ / vô tỉ):", a:"vô tỉ", exp:"\\(\\sqrt{3}\\) là số vô tỉ nên \\(-\\sqrt{3}\\) cũng là số vô tỉ", hint:"Dấu âm không đổi tính hữu tỉ/vô tỉ"},
+        {q:"\\(|2-7| =\\)", a:"5", exp:"\\(|2-7|=|-5|=5\\)", hint:"Tính trong ngoặc trước"},
+        {q:"Số nguyên âm lớn nhất là:", a:"-1", exp:"Số nguyên âm lớn nhất là \\(-1\\) (gần 0 nhất về bên phải)", hint:"Số nguyên âm gần 0 nhất"},
+        {q:"\\(0{,}\\overline{3} = 0{,}(3)\\) thuộc tập \\(\\mathbb{?}\\) (N, Z, Q, I)", a:"Q", exp:"\\(0{,}(3)=\\frac{1}{3} \\in \\mathbb{Q}\\), là số hữu tỉ", hint:"Thập phân tuần hoàn = số hữu tỉ"},
+        {q:"\\(|{-0{,}5}| =\\)", a:"0.5", exp:"\\(|-0{,}5|=0{,}5\\)", hint:"GTTĐ của −0,5"},
+        {q:"Tìm \\(x\\) biết \\(|x|=0\\):", a:"0", exp:"\\(|x|=0 \\Leftrightarrow x=0\\)", hint:"Chỉ có 0 có GTTĐ bằng 0"},
+        {q:"\\(\\pi\\) thuộc tập \\(\\mathbb{?}\\) (Q hay I)", a:"I", exp:"\\(\\pi\\) là số vô tỉ, \\(\\pi \\in \\mathbb{I}\\)", hint:"π = 3,14159… không tuần hoàn"},
+        {q:"Điền: \\(\\mathbb{N} \\subset \\mathbb{Z} \\subset \\mathbb{?} \\subset \\mathbb{R}\\)", a:"Q", exp:"Thứ tự đúng: \\(\\mathbb{N}\\subset\\mathbb{Z}\\subset\\mathbb{Q}\\subset\\mathbb{R}\\)", hint:"Số nguyên ⊂ số hữu tỉ ⊂ số thực"}
+    ];
+
+    // ======================== MAIN QUIZ ========================
+    let MCQ=[], TF=[], FILL=[];
+    let userMcq = Array(15).fill(null);
+    let userTf  = Array(5).fill(null).map(()=>Array(4).fill(null));
+    let submitted = false;
+
+    function shuffle(arr) {
+        for (let i=arr.length-1;i>0;i--) {
+            const j=Math.floor(Math.random()*(i+1));
+            [arr[i],arr[j]]=[arr[j],arr[i]];
+        }
+    }
+
+    function generateQuestions() {
+        MCQ=[];
+        const nb=[...QUESTION_BANK.nb]; shuffle(nb);
+        for (let i=0;i<7;i++) MCQ.push({...nb[i%nb.length], l:'nb'});
+        const th=[...QUESTION_BANK.th]; shuffle(th);
+        for (let i=0;i<5;i++) MCQ.push({...th[i%th.length], l:'th'});
+        const vd=[...QUESTION_BANK.vd]; shuffle(vd);
+        for (let i=0;i<3;i++) MCQ.push({...vd[i%vd.length], l:'vd'});
+        const tfPool=[...TF_BANK]; shuffle(tfPool); TF=tfPool.slice(0,5);
+        const fillPool=[...FILL_BANK]; shuffle(fillPool); FILL=fillPool.slice(0,5);
+    }
+
+    function init() { generateQuestions(); renderAll(); initStats(); }
+
+    function toggleHint(id) {
+        const el=document.getElementById(id);
+        el.style.display=el.style.display==='block'?'none':'block';
+    }
+
+    function renderAll() {
+        const mcqBox=document.getElementById('mcq-container');
+        mcqBox.innerHTML='';
+        MCQ.forEach((d,i)=>{
+            if (!d||!d.q) return;
+            let badge='';
+            if (d.l==='nb') badge='<span class="level-badge level-nhan-biet">NHẬN BIẾT</span>';
+            else if (d.l==='th') badge='<span class="level-badge level-thong-hieu">THÔNG HIỂU</span>';
+            else badge='<span class="level-badge level-van-dung">VẬN DỤNG</span>';
+            const opts=(d.opts||[]).map((o,j)=>
+                `<div onclick="setMcq(${i},${j})" id="mcq-${i}-${j}" class="mcq-option p-4 bg-white shadow-sm flex items-center mb-2">
+                    <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 mr-3 font-bold text-xs">${String.fromCharCode(65+j)}</span> ${o}
+                </div>`
+            ).join('');
+            mcqBox.innerHTML+=`
+                <div class="p-5 border-b" id="mcq-card-${i}">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-bold text-blue-600">CÂU ${i+1} ${badge}</span>
+                        <button onclick="toggleHint('mcq-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                    </div>
+                    <p class="mb-4 text-slate-700 font-medium">${d.q}</p>
+                    <div id="mcq-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${opts}</div>
+                    <div id="mcq-fb-${i}" class="feedback-box"></div>
+                </div>`;
+        });
+
+        const tfBox=document.getElementById('tf-container');
+        tfBox.innerHTML='';
+        TF.forEach((d,i)=>{
+            const rows=d.items.map((it,j)=>`
+                <tr class="border-b">
+                    <td class="py-4 px-4 text-sm font-medium">
+                        ${it.t}
+                        <button onclick="toggleHint('tf-hint-${i}-${j}')" class="hint-btn">💡 Gợi ý</button>
+                        <div id="tf-hint-${i}-${j}" class="hint-box">💡 ${it.h}</div>
+                        <div id="tf-fb-${i}-${j}" class="feedback-box"></div>
+                    </td>
+                    <td class="p-2 text-center"><button onclick="setTf(${i},${j},true)"  id="tf-btn-${i}-${j}-t" class="check-btn w-10 h-10 rounded-xl">Đ</button></td>
+                    <td class="p-2 text-center"><button onclick="setTf(${i},${j},false)" id="tf-btn-${i}-${j}-s" class="check-btn w-10 h-10 rounded-xl">S</button></td>
+                </tr>`).join('');
+            tfBox.innerHTML+=`
+                <div class="bg-slate-50 rounded-2xl border overflow-hidden">
+                    <div class="bg-white p-4 font-bold text-blue-800 border-b">Câu ${i+1}: ${d.q}</div>
+                    <table class="w-full"><tbody>${rows}</tbody></table>
+                </div>`;
+        });
+
+        const fillBox=document.getElementById('fill-container');
+        fillBox.innerHTML='';
+        FILL.forEach((d,i)=>{
+            fillBox.innerHTML+=`
+                <div class="bg-slate-50 p-5 rounded-2xl border space-y-2">
+                    <div class="flex items-start justify-between">
+                        <span><strong>Câu ${i+1}.</strong> ${d.q}</span>
+                        <button onclick="toggleHint('fill-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                    </div>
+                    <div id="fill-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <input type="text" id="fill-${i}" class="fill-input">
+                    </div>
+                    <div id="fill-fb-${i}" class="feedback-box"></div>
+                </div>`;
+        });
+
+        if (window.MathJax) MathJax.typeset([
+            document.getElementById('mcq-container'),
+            document.getElementById('tf-container'),
+            document.getElementById('fill-container')
+        ]);
+    }
+
+    function setMcq(q,o) {
+        if (submitted) return;
+        userMcq[q]=o;
+        document.getElementById(`mcq-card-${q}`).querySelectorAll('.mcq-option').forEach(opt=>opt.classList.remove('selected'));
+        document.getElementById(`mcq-${q}-${o}`).classList.add('selected');
+    }
+    function setTf(q,i,v) {
+        if (submitted) return;
+        userTf[q][i]=v;
+        document.getElementById(`tf-btn-${q}-${i}-t`).classList.remove('selected-true');
+        document.getElementById(`tf-btn-${q}-${i}-s`).classList.remove('selected-false');
+        if (v) document.getElementById(`tf-btn-${q}-${i}-t`).classList.add('selected-true');
+        else   document.getElementById(`tf-btn-${q}-${i}-s`).classList.add('selected-false');
+    }
+
+    function celebrate(score) {
+        const pct=(score/10)*100;
+        if (pct>=90) {
+            const end=Date.now()+3000;
+            const iv=setInterval(()=>{if(Date.now()>end){clearInterval(iv);return;} confetti({particleCount:100,spread:160,origin:{y:0.6}});},250);
+        } else if (pct>=70) {
+            confetti({particleCount:150,spread:100,origin:{y:0.6}});
+            setTimeout(()=>confetti({particleCount:100,spread:80,origin:{y:0.6}}),500);
+        } else if (pct>=50) {
+            confetti({particleCount:100,spread:70,origin:{y:0.6}});
+        } else {
+            confetti({particleCount:50,spread:50,origin:{y:0.6}});
+        }
+    }
+
+    function checkResults() {
+        submitted=true;
+        let correct=0;
+        const total=MCQ.length+TF.length*4+FILL.length;
+
+        MCQ.forEach((d,i)=>{
+            const fb=document.getElementById(`mcq-fb-${i}`);
+            const opts=document.getElementById(`mcq-card-${i}`).querySelectorAll('.mcq-option');
+            opts[d.ans].classList.add('correct');
+            if (userMcq[i]===d.ans) {
+                correct++;
+                fb.innerHTML='✔️ <strong>Đúng!</strong> '+d.exp;
+                fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+            } else {
+                if (userMcq[i]!==null) opts[userMcq[i]].classList.add('wrong');
+                fb.innerHTML='❌ <strong>Sai!</strong> '+d.exp;
+                fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+            }
+            fb.style.display='block';
+        });
+
+        TF.forEach((d,i)=>{
+            d.items.forEach((it,j)=>{
+                const fb=document.getElementById(`tf-fb-${i}-${j}`);
+                if (userTf[i][j]===it.a) {
+                    correct++;
+                    fb.innerHTML='✔️ '+it.exp;
+                    fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+                } else {
+                    fb.innerHTML='❌ '+it.exp;
+                    fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+                }
+                fb.style.display='block';
+                if (it.a) document.getElementById(`tf-btn-${i}-${j}-t`).classList.add('correct-highlight');
+                else       document.getElementById(`tf-btn-${i}-${j}-s`).classList.add('correct-highlight');
+            });
+        });
+
+        FILL.forEach((d,i)=>{
+            const input=document.getElementById(`fill-${i}`);
+            const fb=document.getElementById(`fill-fb-${i}`);
+            const user=input.value.trim().toLowerCase().replace(/\s+/g,'').replace(/,/g,'.');
+            const ans=d.a.toLowerCase().replace(/\s+/g,'').replace(/,/g,'.');
+            // Chấp nhận nhiều cách viết
+            const aliases = {
+                '⊂':['⊂','thuộc','con','subset'],
+                'q':['q','ℚ','hữutỉ'],
+                'i':['i','ℐ','vôtỉ'],
+                'n':['n','ℕ','tựnhiên'],
+                'z':['z','ℤ','nguyên'],
+                'vôtỉ':['vôtỉ','voti','vô tỉ','i','ℐ'],
+                'hữutỉ':['hữutỉ','huuti','hữu tỉ','q','ℚ'],
+            };
+            let ok = user===ans;
+            if (!ok) {
+                function evalFrac(s){const m=s.match(/^(-?\d+)\/(\d+)$/);if(m)return parseInt(m[1])/parseInt(m[2]);const n=parseFloat(s);return isNaN(n)?null:n;}
+                const uVal=evalFrac(user), aVal=evalFrac(ans);
+                if (uVal!==null && aVal!==null && Math.abs(uVal-aVal)<0.001) ok=true;
+            }
+            if (!ok && aliases[ans]) ok = aliases[ans].includes(user);
+            if (ok) {
+                correct++;
+                input.classList.add('fill-correct');
+                fb.innerHTML='✔️ '+d.exp;
+                fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+            } else {
+                input.classList.add('fill-wrong');
+                fb.innerHTML='❌ Đáp án: <strong>'+d.a+'</strong>. '+d.exp;
+                fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+            }
+            fb.style.display='block';
+        });
+
+        const score=(correct/total)*10;
+        const pct=(correct/total)*100;
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('result-board').classList.remove('hidden');
+        const scoreText=document.getElementById('score-text');
+        scoreText.innerHTML=`<div class="text-center"><div class="text-5xl font-black mb-2">${score.toFixed(1)}/10</div><div class="text-lg">Đúng ${correct}/${total} câu (${pct.toFixed(0)}%)</div></div>`;
+        if (pct>=90)      {scoreText.classList.add('score-excellent'); document.getElementById('score-message').innerHTML='🎉 <span class="text-green-600">XUẤT SẮC!</span>';}
+        else if (pct>=70) {scoreText.classList.add('score-good');      document.getElementById('score-message').innerHTML='👏 <span class="text-blue-600">KHÁ TỐT!</span>';}
+        else if (pct>=50) {scoreText.classList.add('score-average');   document.getElementById('score-message').innerHTML='💪 <span class="text-orange-600">TRUNG BÌNH</span>';}
+        else              {scoreText.classList.add('score-low');       document.getElementById('score-message').innerHTML='📚 <span class="text-red-600">CẦN CỐ GẮNG</span>';}
+        celebrate(score);
+        showOptions();
+        if (window.MathJax) MathJax.typeset([document.getElementById('result-board')]);
+        document.getElementById('result-board').scrollIntoView({behavior:'smooth',block:'center'});
+        saveScore(score); // BỔ SUNG: lưu điểm vào localStorage
+    }
+
+    function showOptions() {
+        const old=document.getElementById('post-options');
+        if (old) old.remove();
+        const container=document.getElementById('result-board');
+        const div=document.createElement('div');
+        div.id='post-options';
+        div.className='mt-8 p-6 bg-white rounded-2xl shadow-xl border-2 border-blue-400 animate-bounce-in';
+        div.innerHTML=`
+            <h3 class="text-xl font-bold text-blue-800 mb-4 text-center">🌟 Tiếp tục?</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="regenerate('retry')"      class="p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all border-b-4 border-gray-300 active:border-b-0 font-bold text-gray-700">🔄 Làm lại</button>
+                <button onclick="regenerate('equivalent')" class="p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-all border-b-4 border-blue-300 active:border-b-0 font-bold text-blue-700">📚 Đề mới tương đương</button>
+                <button onclick="regenerate('harder')"     class="p-4 bg-orange-100 hover:bg-orange-200 rounded-xl transition-all border-b-4 border-orange-300 active:border-b-0 font-bold text-orange-700">🚀 Đề nâng cao</button>
+            </div>`;
+        container.appendChild(div);
+    }
+
+    async function regenerate(mode) {
+        document.getElementById('loading-overlay').style.display='flex';
+        await new Promise(r=>setTimeout(r,800));
+        submitted=false;
+        userMcq=Array(15).fill(null);
+        userTf=Array(5).fill(null).map(()=>Array(4).fill(null));
+        const opts=document.getElementById('post-options');
+        if (opts) opts.remove();
+        document.getElementById('result-board').classList.add('hidden');
+        document.getElementById('submit-btn').classList.remove('hidden');
+        if (mode!=='retry') generateQuestions();
+        renderAll();
+        document.getElementById('loading-overlay').style.display='none';
+        document.getElementById('capture-mcq').scrollIntoView({behavior:'smooth'});
+    }
+
+    // ======================== DOWNLOAD ========================
+    async function downloadKnowledgePDF() {
+        const el=document.getElementById('capture-knowledge');
+        const opt={margin:15,filename:'Kien-thuc-Tap-hop-so-thuc.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+        try{await html2pdf().set(opt).from(el).save();}catch(e){alert('Lỗi tải PDF!');}
+    }
+    async function downloadMCQImage() {
+        const lo=document.getElementById('loading-overlay'); lo.style.display='flex'; lo.querySelector('p').textContent='Đang tạo ảnh...';
+        try{const c=await html2canvas(document.getElementById('capture-mcq'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});const l=document.createElement('a');l.download='De-Trac-Nghiem.png';l.href=c.toDataURL('image/png');l.click();}catch(e){alert('Lỗi!');}
+        lo.style.display='none';
+    }
+    async function downloadTFImage() {
+        const lo=document.getElementById('loading-overlay'); lo.style.display='flex'; lo.querySelector('p').textContent='Đang tạo ảnh...';
+        try{const c=await html2canvas(document.getElementById('capture-tf'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});const l=document.createElement('a');l.download='De-Dung-Sai.png';l.href=c.toDataURL('image/png');l.click();}catch(e){alert('Lỗi!');}
+        lo.style.display='none';
+    }
+    async function downloadFillImage() {
+        const lo=document.getElementById('loading-overlay'); lo.style.display='flex'; lo.querySelector('p').textContent='Đang tạo ảnh...';
+        try{const c=await html2canvas(document.getElementById('capture-fill'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});const l=document.createElement('a');l.download='De-Tra-Loi-Ngan.png';l.href=c.toDataURL('image/png');l.click();}catch(e){alert('Lỗi!');}
+        lo.style.display='none';
+    }
+
+    // ======================== CHATBOT ========================
+    const CHATBOT_KNOWLEDGE = {
+        'số thực':    'Số thực \\(\\mathbb{R}\\):<br>• Gồm tất cả số hữu tỉ và số vô tỉ<br>• \\(\\mathbb{R} = \\mathbb{Q} \\cup \\mathbb{I}\\)<br>• Mọi số thực biểu diễn được trên trục số',
+        'quan hệ':    'Quan hệ các tập hợp số:<br>• \\(\\mathbb{N} \\subset \\mathbb{Z} \\subset \\mathbb{Q} \\subset \\mathbb{R}\\)<br>• \\(\\mathbb{I} \\subset \\mathbb{R}\\) và \\(\\mathbb{Q} \\cap \\mathbb{I} = \\varnothing\\)<br>• VD: \\(3 \\in \\mathbb{N} \\subset \\mathbb{Z} \\subset \\mathbb{Q} \\subset \\mathbb{R}\\)',
+        'tuyệt đối':  'Giá trị tuyệt đối:<br>• \\(|a| = a\\) nếu \\(a \\geq 0\\)<br>• \\(|a| = -a\\) nếu \\(a < 0\\)<br>• Luôn có \\(|a| \\geq 0\\)<br>• VD: \\(|-5|=5\\), \\(|3|=3\\), \\(|0|=0\\)',
+        'trục số':    'Trục số thực:<br>• Mỗi điểm ↔ một số thực duy nhất<br>• Số nhỏ hơn nằm bên trái<br>• Khoảng cách \\(a\\) và \\(b\\): \\(|a-b|\\)',
+        'hữu tỉ':     'Số hữu tỉ \\(\\mathbb{Q}\\):<br>• Viết được dưới dạng \\(\\frac{p}{q}\\)<br>• Thập phân hữu hạn hoặc vô hạn tuần hoàn<br>• \\(\\mathbb{Z} \\subset \\mathbb{Q}\\)',
+        'vô tỉ':      'Số vô tỉ \\(\\mathbb{I}\\):<br>• Không viết được dưới dạng \\(\\frac{p}{q}\\)<br>• Thập phân vô hạn không tuần hoàn<br>• VD: \\(\\sqrt{2}, \\sqrt{3}, \\pi\\)',
+        'so sánh':    'So sánh số thực:<br>• Mọi cặp số thực đều so sánh được<br>• \\(\\sqrt{2}\\approx1{,}414\\), \\(\\sqrt{3}\\approx1{,}732\\), \\(\\pi\\approx3{,}14159\\)<br>• Bình phương hai vế để so sánh căn',
+    };
+
+    function toggleChatbot() {
+        const win=document.getElementById('chatbot-window');
+        const toggle=document.getElementById('chatbot-toggle');
+        if (win.style.display==='flex') {
+            win.style.display='none';
+            toggle.innerHTML='💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>';
+        } else {
+            win.style.display='flex';
+            toggle.innerHTML='✖<span class="chatbot-label">Đóng</span>';
+        }
+    }
+    function addBotMessage(text) {
+        const container=document.getElementById('chatbot-messages');
+        const div=document.createElement('div');
+        div.className='chat-message bot';
+        div.innerHTML=`<div class="bot-avatar">💬</div><div class="message-content">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop=container.scrollHeight;
+        if (window.MathJax) MathJax.typeset([container]);
+    }
+    function addUserMessage(text) {
+        const container=document.getElementById('chatbot-messages');
+        const div=document.createElement('div');
+        div.className='chat-message user';
+        div.innerHTML=`<div class="message-content">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop=container.scrollHeight;
+    }
+    function getBotResponse(question) {
+        const q=question.toLowerCase().trim();
+        for (const [kw,ans] of Object.entries(CHATBOT_KNOWLEDGE)) {
+            if (q.includes(kw)) return ans;
+        }
+        if (q.includes('ví dụ')) return '📌 Ví dụ phân loại:<br>• \\(0, 5, 12 \\in \\mathbb{N}\\)<br>• \\(-3, -7 \\in \\mathbb{Z}^-\\)<br>• \\(\\frac{1}{2}, -\\frac{2}{3} \\in \\mathbb{Q}\\)<br>• \\(\\sqrt{2}, \\pi \\in \\mathbb{I}\\)';
+        return '🤔 Chưa hiểu câu hỏi.<br>Bạn có thể hỏi:<br>• <em>"Số thực là gì?"</em><br>• <em>"Quan hệ các tập hợp số?"</em><br>• <em>"Giá trị tuyệt đối là gì?"</em>';
+    }
+    function sendMessage() {
+        const input=document.getElementById('chatbot-input');
+        const q=input.value.trim();
+        if (!q) return;
+        addUserMessage(q); input.value='';
+        setTimeout(()=>addBotMessage(getBotResponse(q)),500);
+    }
+    function sendQuickQuestion(q) {
+        addUserMessage(q);
+        setTimeout(()=>addBotMessage(getBotResponse(q)),500);
+    }
+
+    window.onload = function() { init(); initClassifyGame(); };
+    </script>
+
+    <!-- ===================== BỔ SUNG: STATS & LIKE & PROGRESS ===================== -->
+    <script>
+        const STORAGE_KEY = 'bai7_tap_hop_so_thuc';
+
+        function loadStorage() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+            catch(e) { return {}; }
+        }
+        function saveStorage(data) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+        }
+
+        function initStats() {
+            const data = loadStorage();
+            data.visits = (data.visits || 0) + 1;
+            saveStorage(data);
+            document.getElementById('visit-count').textContent = data.visits;
+
+            const attempts = data.scores || [];
+            document.getElementById('attempt-count').textContent = attempts.length;
+            if (attempts.length > 0) {
+                const best = Math.max(...attempts.map(s => s.score));
+                document.getElementById('best-score').textContent = best.toFixed(1);
+            }
+
+            data.likes = data.likes || 0;
+            document.getElementById('like-count').textContent = data.likes;
+            if (data.liked) document.getElementById('like-btn').classList.add('liked');
+
+            renderProgress(attempts);
+        }
+
+        function toggleLike() {
+            const data = loadStorage();
+            const btn = document.getElementById('like-btn');
+            if (data.liked) {
+                data.liked = false;
+                data.likes = Math.max(0, (data.likes || 1) - 1);
+                btn.classList.remove('liked');
+            } else {
+                data.liked = true;
+                data.likes = (data.likes || 0) + 1;
+                btn.classList.add('liked');
+                if (typeof confetti === 'function') confetti({ particleCount: 60, spread: 60, origin: { y: 0.2 } });
+            }
+            document.getElementById('like-count').textContent = data.likes;
+            saveStorage(data);
+        }
+
+        function saveScore(score) {
+            const data = loadStorage();
+            if (!data.scores) data.scores = [];
+            data.scores.push({ score: parseFloat(score.toFixed(1)), time: new Date().toLocaleDateString('vi-VN') });
+            if (data.scores.length > 10) data.scores = data.scores.slice(-10);
+            document.getElementById('attempt-count').textContent = data.scores.length;
+            document.getElementById('best-score').textContent = Math.max(...data.scores.map(s => s.score)).toFixed(1);
+            saveStorage(data);
+            renderProgress(data.scores);
+        }
+
+        function renderProgress(attempts) {
+            const panel = document.getElementById('progress-panel');
+            const chart = document.getElementById('progress-chart');
+            const statsDiv = document.getElementById('progress-stats');
+            const trendDiv = document.getElementById('trend-display');
+            if (!attempts || attempts.length === 0) { panel.classList.add('hidden'); return; }
+            panel.classList.remove('hidden');
+
+            chart.innerHTML = attempts.map((s, i) => {
+                const pct = Math.max(4, (s.score / 10) * 100);
+                const color = s.score >= 9 ? '#10b981' : s.score >= 7 ? '#3b82f6' : s.score >= 5 ? '#f59e0b' : '#ef4444';
+                return `<div class="bar-wrap"><div class="bar-score">${s.score}</div><div class="bar" style="height:${pct}%;background:${color};"></div><div class="bar-label">L${i+1}</div></div>`;
+            }).join('');
+
+            const scores = attempts.map(s => s.score);
+            const avg = (scores.reduce((a,b) => a+b,0) / scores.length).toFixed(1);
+            const best = Math.max(...scores).toFixed(1);
+            const latest = scores[scores.length-1].toFixed(1);
+            statsDiv.innerHTML = `
+                <div class="bg-blue-50 rounded-xl p-3 border border-blue-100"><div class="font-black text-blue-700 text-lg">${avg}</div><div class="text-slate-500 text-xs">Điểm TB</div></div>
+                <div class="bg-green-50 rounded-xl p-3 border border-green-100"><div class="font-black text-green-700 text-lg">${best}</div><div class="text-slate-500 text-xs">Cao nhất</div></div>
+                <div class="bg-orange-50 rounded-xl p-3 border border-orange-100"><div class="font-black text-orange-700 text-lg">${latest}</div><div class="text-slate-500 text-xs">Lần này</div></div>`;
+
+            if (scores.length >= 2) {
+                const diff = scores[scores.length-1] - scores[scores.length-2];
+                trendDiv.innerHTML = diff > 0
+                    ? `<span class="trend-badge trend-up">📈 Tăng +${diff.toFixed(1)} điểm</span>`
+                    : diff < 0
+                    ? `<span class="trend-badge trend-down">📉 Giảm ${diff.toFixed(1)} điểm</span>`
+                    : `<span class="trend-badge trend-same">➡️ Giữ nguyên</span>`;
+            } else {
+                trendDiv.innerHTML = `<span class="trend-badge trend-same">🆕 Lần đầu làm bài</span>`;
+            }
+        }
+    </script>
+    <!-- ===================== KẾT THÚC BỔ SUNG STATS ===================== -->
+
+    <!-- COUNTAPI GLOBAL VIEW COUNTER -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var NAMESPACE = 'toan7-vi-cong-dong';
+            var PAGE_KEY  = 'bai-7.html';
+            var VISITED_KEY = 'toan7_visited_bai7';
+            var badge = document.getElementById('global-view-badge');
+            if (!localStorage.getItem(VISITED_KEY)) {
+                localStorage.setItem(VISITED_KEY, '1');
+                fetch('https://api.counterapi.dev/v1/' + NAMESPACE + '/' + PAGE_KEY + '/up')
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) { if (badge) badge.textContent = '👥 ' + (data.count || 0).toLocaleString('vi-VN') + ' người đã truy cập bài này'; })
+                    .catch(function() { if (badge) badge.textContent = '👥 0 người đã truy cập bài này'; });
+            } else {
+                fetch('https://api.counterapi.dev/v1/' + NAMESPACE + '/' + PAGE_KEY + '/')
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) { if (badge) badge.textContent = '👥 ' + (data.count || 0).toLocaleString('vi-VN') + ' người đã truy cập bài này'; })
+                    .catch(function() { if (badge) badge.textContent = '👥 0 người đã truy cập bài này'; });
+            }
+        });
+    </script>
+    <!-- END COUNTAPI GLOBAL VIEW COUNTER -->
+</body>
+</html>
