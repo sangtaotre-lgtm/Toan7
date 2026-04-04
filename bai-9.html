@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 9: Hai Đường Thẳng Song Song</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: { fontCache: 'global', scale: 1.1 },
+            options: { renderActions: { addMenu: [] } }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body { font-family: 'Comfortaa', cursive !important; scroll-behavior: smooth; line-height: 1.8; }
+        body *:not(svg):not(svg *):not(mjx-container):not(mjx-container *) {
+            font-family: 'Comfortaa', cursive !important;
+        }
+        mjx-container {
+            display: inline-block !important;
+            vertical-align: middle !important;
+            margin: 0 0.15em !important;
+            line-height: 0 !important;
+        }
+        mjx-container svg {
+            overflow: visible !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+        }
+        mjx-container svg path {
+            shape-rendering: geometricPrecision !important;
+            stroke: none !important;
+        }
+
+        nav {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .section-dashed { border: 3px dashed #cbd5e1; border-radius: 24px; transition: border-color 0.3s; }
+        .section-dashed:hover { border-color: #3b82f6; }
+
+        .check-btn { transition: all 0.2s; cursor: pointer; border: 2px solid #e2e8f0; }
+        .selected-true  { background-color: #22c55e !important; color: white !important; border-color: #16a34a !important; }
+        .selected-false { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+        .correct-highlight { border: 3px solid #22c55e !important; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
+
+        .mcq-option { border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s; border-radius: 16px; }
+        .mcq-option.selected { border-color: #3b82f6; background-color: #eff6ff; }
+        .mcq-option.correct  { border-color: #22c55e; background-color: #dcfce7; color: #166534; }
+        .mcq-option.wrong    { border-color: #ef4444; background-color: #fee2e2; color: #991b1b; }
+
+        .fill-input { border-bottom: 2px dashed #3b82f6; outline: none; text-align: center; width: 120px; font-weight: bold; color: #2563eb; background: transparent; }
+        .fill-correct { background-color: #dcfce7; border-color: #22c55e; border-style: solid; }
+        .fill-wrong   { background-color: #fee2e2; border-color: #ef4444; border-style: solid; }
+
+        .feedback-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border-left: 4px solid #ef4444; background-color: #fffafb; font-size: 0.85rem; }
+        .hint-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border: 1px dashed #eab308; background-color: #fefce8; color: #854d0e; font-size: 0.85rem; }
+
+        #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .loader { border: 6px solid #f3f3f3; border-top: 6px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+        .hint-btn { display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; border: 2px solid #f59e0b; padding: 6px 12px; border-radius: 12px; color: #92400e; font-size: 0.75rem; font-weight: bold; transition: all 0.2s; margin-left: 8px; cursor: pointer; }
+        .hint-btn:hover { background: #fde68a; transform: translateY(-1px); }
+
+        @keyframes bounce-in { 0%{transform:scale(0.9);opacity:0} 50%{transform:scale(1.05)} 100%{transform:scale(1);opacity:1} }
+        .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
+
+        .level-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+        .level-nhan-biet  { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .level-thong-hieu { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .level-van-dung   { background: #fecaca; color: #991b1b; border: 1px solid #ef4444; }
+
+        .score-excellent { background: linear-gradient(135deg,#10b981,#059669); color:white; animation: pulse-scale 1s ease-in-out infinite; }
+        .score-good      { background: linear-gradient(135deg,#3b82f6,#2563eb); color:white; }
+        .score-average   { background: linear-gradient(135deg,#f59e0b,#d97706); color:white; }
+        .score-low       { background: linear-gradient(135deg,#ef4444,#dc2626); color:white; }
+        @keyframes pulse-scale { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+        .download-btn { background: linear-gradient(135deg,#8b5cf6,#6366f1); color:white; padding:10px 20px; border-radius:16px; font-weight:bold; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(139,92,246,0.3); font-size:0.875rem; }
+        .download-btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(139,92,246,0.4); }
+        .download-btn:active { transform:translateY(0); }
+
+        /* CHATBOT */
+        #chatbot-container { position:fixed; top:50%; right:20px; transform:translateY(-50%); z-index:1000; }
+        #chatbot-toggle { width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); border:none; cursor:pointer; box-shadow:0 8px 24px rgba(0,106,255,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:32px; transition:all 0.3s; position:relative; }
+        #chatbot-toggle:hover { transform:scale(1.1); box-shadow:0 12px 32px rgba(0,106,255,0.6); }
+        .chatbot-label { position:absolute; bottom:-28px; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; padding:4px 12px; border-radius:12px; font-size:10px; font-weight:bold; white-space:nowrap; box-shadow:0 4px 12px rgba(0,106,255,0.3); }
+        #chatbot-window { display:none; position:fixed; top:50%; right:100px; transform:translateY(-50%); width:340px; height:480px; background:white; border-radius:20px; box-shadow:0 8px 32px rgba(0,0,0,0.15); flex-direction:column; overflow:hidden; animation:slideUp 0.3s ease-out; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        #chatbot-header { background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+        #chatbot-close { background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s; }
+        #chatbot-close:hover { background:rgba(255,255,255,0.2); }
+        #chatbot-messages { flex:1; overflow-y:auto; padding:16px; background:#f8fafc; }
+        .chat-message { margin-bottom:12px; animation:fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .chat-message.bot { display:flex; gap:8px; }
+        .chat-message.user { display:flex; justify-content:flex-end; }
+        .message-content { padding:10px 14px; border-radius:16px; max-width:75%; font-size:0.9rem; line-height:1.4; }
+        .chat-message.bot .message-content { background:white; color:#1e293b; border:1px solid #e2e8f0; }
+        .chat-message.user .message-content { background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; }
+        .bot-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        #chatbot-input-area { padding:12px; border-top:1px solid #e2e8f0; background:white; display:flex; gap:8px; }
+        #chatbot-input { flex:1; padding:10px 14px; border:1px solid #e2e8f0; border-radius:20px; outline:none; font-size:0.9rem; transition:border-color 0.2s; }
+        #chatbot-input:focus { border-color:#00B2FF; }
+        #chatbot-send { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); border:none; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; transition:all 0.2s; }
+        #chatbot-send:hover { transform:scale(1.05); }
+        .quick-questions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .quick-question-btn { padding:6px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; font-size:0.75rem; cursor:pointer; transition:all 0.2s; color:#1e40af; }
+        .quick-question-btn:hover { background:#dbeafe; transform:translateY(-1px); }
+
+        /* ===================== GAME: NỐI CẶP SONG SONG ===================== */
+        /* Memory-flip card matching game */
+        .mem-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        @media (max-width:520px) { .mem-grid { grid-template-columns: repeat(3,1fr); gap:8px; } }
+
+        .mem-card {
+            aspect-ratio: 1/1.15;
+            perspective: 600px;
+            cursor: pointer;
+        }
+        .mem-card-inner {
+            width:100%; height:100%;
+            position:relative;
+            transform-style: preserve-3d;
+            transition: transform 0.45s cubic-bezier(.4,0,.2,1);
+            border-radius: 14px;
+        }
+        .mem-card.flipped .mem-card-inner  { transform: rotateY(180deg); }
+        .mem-card.matched .mem-card-inner  { transform: rotateY(180deg); }
+
+        .mem-face {
+            position:absolute; inset:0;
+            border-radius:14px;
+            display:flex; align-items:center; justify-content:center;
+            padding: 6px;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            font-size: 0.82rem;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.3;
+        }
+        .mem-back {
+            background: linear-gradient(135deg,#0ea5e9,#6366f1);
+            box-shadow: 0 3px 10px rgba(99,102,241,0.3);
+            color: white;
+            font-size: 1.6rem;
+        }
+        .mem-front {
+            transform: rotateY(180deg);
+            background: white;
+            border: 2px solid #c7d2fe;
+            color: #1e1b4b;
+            box-shadow: 0 3px 10px rgba(99,102,241,0.15);
+        }
+        .mem-card.matched .mem-face.mem-front {
+            background: linear-gradient(135deg,#dcfce7,#bbf7d0);
+            border-color: #22c55e;
+            color: #166534;
+            box-shadow: 0 0 14px rgba(34,197,94,0.35);
+        }
+        .mem-card.wrong-flash .mem-card-inner {
+            animation: mem-shake 0.4s ease;
+        }
+        @keyframes mem-shake {
+            0%,100%{transform:rotateY(180deg) translateX(0)}
+            25%{transform:rotateY(180deg) translateX(-6px)}
+            75%{transform:rotateY(180deg) translateX(6px)}
+        }
+
+        #mem-progress-bar { background:#e0e7ff; border-radius:12px; height:12px; overflow:hidden; }
+        #mem-progress-fill { background:linear-gradient(90deg,#0ea5e9,#6366f1); height:100%; border-radius:12px; transition:width 0.6s ease; }
+
+        #mem-timer-bar { background:#fee2e2; border-radius:12px; height:8px; overflow:hidden; }
+        #mem-timer-fill { background:linear-gradient(90deg,#22c55e,#f59e0b,#ef4444); height:100%; border-radius:12px; transition:width 0.1s linear; }
+
+        #mem-moves-badge {
+            background: linear-gradient(135deg,#f0f9ff,#e0f2fe);
+            border: 2px solid #0ea5e9;
+            border-radius: 14px;
+            padding: 6px 16px;
+            font-weight: bold;
+            color: #0369a1;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 640px) {
+            #chatbot-window { width:calc(100vw - 40px); height:60vh; top:50%; right:20px; transform:translateY(-50%); }
+        }
+
+        /* ===== BỔ SUNG: STATS BAR ===== */
+        #stats-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .stat-item { display: flex; align-items: center; gap: 4px; background: #eff6ff; border: 1px solid #bfdbfe; padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: bold; color: #1e40af; }
+        .stat-item span.val { font-size: 0.85rem; font-weight: 900; color: #1d4ed8; }
+        /* ===== BỔ SUNG: LIKE BUTTON ===== */
+        #like-btn { background: #fff0f0; border: 1px solid #fca5a5; color: #dc2626; border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: bold; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+        #like-btn:hover { background: #fee2e2; }
+        #like-btn.liked { background: #ef4444; border-color: #ef4444; color: white; animation: likeAnim 0.4s ease; }
+        @keyframes likeAnim { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        /* ===== BỔ SUNG: PROGRESS CHART ===== */
+        #progress-panel { background: white; border-radius: 20px; padding: 20px; border: 2px dashed #3b82f6; }
+        #progress-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; padding: 8px 0; }
+        .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; gap: 4px; }
+        .bar { width: 100%; min-height: 4px; border-radius: 6px 6px 0 0; transition: height 0.5s ease; }
+        .bar-label { font-size: 0.65rem; color: #64748b; text-align: center; }
+        .bar-score { font-size: 0.7rem; font-weight: bold; color: #1e40af; }
+        .trend-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .trend-up { background: #dcfce7; color: #166534; }
+        .trend-down { background: #fee2e2; color: #991b1b; }
+        .trend-same { background: #f1f5f9; color: #475569; }
+        /* ===== KẾT THÚC BỔ SUNG CSS ===== */
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 text-slate-800">
+
+    <nav class="p-4 shadow-sm mb-6">
+        <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <a href="index.html" class="flex items-center gap-2 text-orange-600 font-bold hover:opacity-80 transition-opacity shrink-0">
+                <span class="text-xl">🏠</span>
+                <span class="hidden sm:inline">Trang chủ</span>
+            </a>
+            <!-- BỔ SUNG: STATS INLINE -->
+            <div id="stats-bar" class="flex items-center gap-2 flex-wrap">
+                <div class="stat-item">👁️ <span class="val" id="visit-count">0</span></div>
+                <div class="stat-item">📝 <span class="val" id="attempt-count">0</span> lần</div>
+                <div class="stat-item">⭐ <span class="val" id="best-score">--</span></div>
+                <button id="like-btn" onclick="toggleLike()">❤️ <span id="like-count">0</span></button>
+            </div>
+            <!-- KẾT THÚC BỔ SUNG -->
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest hidden md:block">Toán 7 - Bài 9 ✨</div>
+        </div>
+    </nav>
+
+    <div id="loading-overlay">
+        <div class="loader mb-4"></div>
+        <p class="font-bold text-blue-600 animate-pulse">Đang tạo đề mới...</p>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-3 md:px-6 space-y-12">
+
+        <!-- TIÊU ĐỀ -->
+        <div class="text-center py-6">
+            <h1 class="text-3xl md:text-4xl font-black text-teal-700 uppercase tracking-tighter flex items-center justify-center gap-3 flex-wrap">
+                <span>〰️</span> Bài 9: Hai Đường Thẳng Song Song <span>✏️</span>
+            </h1>
+            <p class="text-slate-500 font-bold mt-2">Dấu Hiệu Nhận Biết – Kết nối tri thức - Toán 7</p>
+            <!-- COUNTAPI GLOBAL VIEW COUNTER - hiển thị lượt xem toàn cầu -->
+            <p id="global-view-badge" class="text-slate-400 text-sm font-bold mt-1">👁 Đang tải...</p>
+            <!-- END COUNTAPI GLOBAL VIEW COUNTER -->
+        </div>
+
+        <!-- BỔ SUNG: TIẾN BỘ HỌC TẪP -->
+        <div id="progress-panel" class="hidden">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h2 class="text-lg font-bold text-blue-800">📈 Tiến BỘ Học Tập</h2>
+                <div id="trend-display"></div>
+            </div>
+            <div id="progress-chart"></div>
+            <div id="progress-stats" class="mt-3 grid grid-cols-3 gap-3 text-center text-sm"></div>
+        </div>
+        <!-- KẾT THÚC BỔ SUNG -->
+
+        <!-- KIẾN THỨC -->
+        <div id="capture-knowledge" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-blue-800">📖 Kiến Thức Trọng Tâm</h2>
+                <button onclick="downloadKnowledgePDF()" class="download-btn">
+                    <span>📥</span> Tải Offline
+                </button>
+            </div>
+
+            <!-- VIDEO -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🎬</span>
+                    <h3 class="font-bold text-blue-700 text-base">Video Bài Học</h3>
+                    <span class="text-xs bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">YouTube</span>
+                </div>
+                <div class="relative w-full rounded-2xl overflow-hidden border-2 border-blue-100 shadow-md bg-black" style="aspect-ratio:16/9;">
+                    <iframe src="https://www.youtube.com/embed/y-Nmik-Am0Q"
+                        title="Video Bài Học - Hai đường thẳng song song"
+                        class="w-full h-full" style="width:100%;height:100%;position:absolute;top:0;left:0;"
+                        frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen>
+                    </iframe>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 text-center">💡 Xem video trước khi làm bài tập bên dưới</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+
+                <!-- Ô 1: Định nghĩa và ký hiệu -->
+                <div class="bg-teal-50/60 p-5 rounded-2xl border border-teal-100 space-y-3">
+                    <h3 class="font-bold text-teal-700">1. Định nghĩa & Ký hiệu</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• Hai đường thẳng <strong>song song</strong> là hai đường thẳng không có điểm chung</li>
+                        <li>• Ký hiệu: \(a \parallel b\) đọc là "a song song b"</li>
+                        <li>• Hai đường thẳng phân biệt hoặc song song, hoặc cắt nhau, hoặc trùng nhau</li>
+                        <li>• Qua điểm nằm ngoài đường thẳng, có <strong>đúng một</strong> đường thẳng song song với đường thẳng đó</li>
+                    </ul>
+                    <!-- SVG 1: hai đường thẳng song song -->
+                    <div class="flex justify-center mt-3">
+                        <svg width="200" height="95" viewBox="0 0 200 95">
+                            <!-- Đường thẳng a -->
+                            <line x1="8" y1="24" x2="185" y2="24" stroke="#0d9488" stroke-width="2.5"/>
+                            <!-- Đường thẳng b -->
+                            <line x1="8" y1="66" x2="185" y2="66" stroke="#0d9488" stroke-width="2.5"/>
+                            <!-- Ký hiệu mũi tên song song trên a (hai mũi tên >) -->
+                            <polyline points="86,17 93,24 86,31" fill="none" stroke="#0d9488" stroke-width="2.2"/>
+                            <polyline points="93,17 100,24 93,31" fill="none" stroke="#0d9488" stroke-width="2.2"/>
+                            <!-- Ký hiệu mũi tên song song trên b -->
+                            <polyline points="86,59 93,66 86,73" fill="none" stroke="#0d9488" stroke-width="2.2"/>
+                            <polyline points="93,59 100,66 93,73" fill="none" stroke="#0d9488" stroke-width="2.2"/>
+                            <!-- Nhãn đường -->
+                            <text x="188" y="28" font-size="13" fill="#0d9488" font-weight="bold" font-style="italic">a</text>
+                            <text x="188" y="70" font-size="13" fill="#0d9488" font-weight="bold" font-style="italic">b</text>
+                            <!-- Đường khoảng cách vuông góc -->
+                            <line x1="148" y1="24" x2="148" y2="66" stroke="#94a3b8" stroke-width="1.3" stroke-dasharray="4,3"/>
+                            <line x1="144" y1="24" x2="152" y2="24" stroke="#94a3b8" stroke-width="1.8"/>
+                            <line x1="144" y1="66" x2="152" y2="66" stroke="#94a3b8" stroke-width="1.8"/>
+                            <text x="153" y="48" font-size="10" fill="#64748b" font-style="italic">d</text>
+                            <!-- Chú thích -->
+                            <text x="8" y="88" font-size="9.5" fill="#0d9488" font-weight="bold">a ∥ b  ⟺  không có điểm chung</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Ô 2: Góc tạo bởi cát tuyến -->
+                <div class="bg-blue-50/60 p-5 rounded-2xl border border-blue-100 space-y-3">
+                    <h3 class="font-bold text-blue-700">2. Góc tạo bởi đường cắt (cát tuyến)</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• <strong>Góc so le trong</strong>: nằm trong 2 đường thẳng, về hai phía cát tuyến</li>
+                        <li>• <strong>Góc đồng vị</strong>: cùng vị trí ở mỗi giao điểm (cùng trên/dưới, cùng trái/phải)</li>
+                        <li>• <strong>Góc trong cùng phía</strong>: nằm trong 2 đường thẳng, cùng phía cát tuyến</li>
+                    </ul>
+                    <!-- SVG 2: cát tuyến cắt hai đường thẳng, 8 góc được đánh số chuẩn -->
+                    <!--
+                        Cát tuyến c: từ (45,8)→(125,118), hướng vector(80,110)
+                        Góc tia c xuống (theo trục x dương, y tăng xuống):
+                          θ_down = atan2(110,80) ≈ 53.97° → cos≈0.5878, sin≈0.8090
+                        Giao A=(65,35) với đường a(y=35), Giao B=(101,85) với đường b(y=85)
+                        r=17 cho cung góc.
+                        Tại A:
+                          Tia a→phải: góc 0° → điểm (65+17, 35)=(82,35)
+                          Tia a→trái: góc 180° → điểm (65-17,35)=(48,35)
+                          Tia c→xuống: góc 53.97° → điểm (65+17*0.5878,35+17*0.8090)=(75.0,48.8)
+                          Tia c→lên: góc 233.97° → điểm (65-17*0.5878,35-17*0.8090)=(55.0,21.2)
+                        Sector ∠2 (phải-trên): từ tia c-lên(55,21.2) → tia a-phải(82,35), cung ngược kim (sweep=0)
+                          → "M65,35 L55.0,21.2 A17,17,0,0,0,82,35 Z"  [góc ~126°, large=0? 126>90 nhưng <180 → large=0 sai, dùng large=1? Không, sweep hướng là: từ 360°-53.97°=306.03° → 0°, đi thuận chiều kim (sweep=0 trong SVG vì y ngược), góc 306→360 = 54° → large=0]
+                        Cách dễ hơn: dùng clipPath hình sector, vẽ path "M Cx Cy L P1 A r r 0 large sweep P2 Z"
+                        Tôi sẽ tính từng sector một cẩn thận theo công thức:
+                        SVG arc: sweep=1 là chiều kim đồng hồ (y xuống), sweep=0 là ngược chiều kim.
+                        Tại A=(65,35), r=17:
+                          ∠1 (trái-trên): giữa tia c-lên và tia a-trái.
+                            c-lên = 180°+53.97°=233.97° so với trục x, nhưng SVG y ngược → góc SVG của c-lên = -53.97° = 306.03°
+                            a-trái = 180°
+                            Từ c-lên(306°) → a-trái(180°): đi ngược kim (giảm góc) = 126° (small arc)
+                            P_c_lên = (65+17*cos(306.03°), 35+17*sin(306.03°)) = (65+17*0.5878, 35+17*(-0.8090)) = (75.0, 21.2)
+                            P_a_trái = (48, 35)
+                            sector: "M65,35 L75.0,21.2 A17,17,0,0,0,48,35 Z"  [sweep=0=ngược kim, large=0 vì 126°<180°]
+                          ∠2 (phải-trên): giữa tia a-phải và tia c-lên
+                            a-phải = 0°, c-lên = 306.03°
+                            Từ a-phải(0°) → c-lên(306.03°): đi ngược kim = 360°-306.03°=53.97° 
+                            P_a_phải = (82, 35)
+                            sector: "M65,35 L82,35 A17,17,0,0,0,75.0,21.2 Z" [sweep=0, large=0 vì 53.97°<180°]
+                          ∠3 (phải-dưới): giữa tia a-phải và tia c-xuống
+                            a-phải=0°, c-xuống=53.97°
+                            Từ a-phải(0°) → c-xuống(53.97°): đi thuận kim = 53.97°
+                            P_c_xuống = (65+17*cos53.97°, 35+17*sin53.97°) = (65+17*0.5878,35+17*0.8090) = (75.0,48.8)
+                            sector: "M65,35 L82,35 A17,17,0,0,1,75.0,48.8 Z" [sweep=1=thuận kim, large=0]
+                          ∠4 (trái-dưới): giữa tia c-xuống và tia a-trái
+                            Từ c-xuống(53.97°) → a-trái(180°): đi thuận kim = 126.03°
+                            sector: "M65,35 L75.0,48.8 A17,17,0,0,1,48,35 Z" [sweep=1, large=0 vì 126°<180°]
+                        Tại B=(101,85), r=17: tương tự (cùng hướng cát tuyến)
+                          P_c_lên_B  = (101+17*0.5878, 85-17*0.8090) = (111.0, 71.2)
+                          P_c_xuống_B= (101+17*0.5878, 85+17*0.8090) = (111.0, 98.8)
+                          P_a_phải_B = (118, 85)
+                          P_a_trái_B = (84, 85)
+                          ∠5 (trái-trên tại B): giữa c-lên và b-trái → "M101,85 L111.0,71.2 A17,17,0,0,0,84,85 Z"
+                          ∠6 (phải-trên): "M101,85 L118,85 A17,17,0,0,0,111.0,71.2 Z"
+                          ∠7 (phải-dưới): "M101,85 L118,85 A17,17,0,0,1,111.0,98.8 Z"
+                          ∠8 (trái-dưới): "M101,85 L111.0,98.8 A17,17,0,0,1,84,85 Z"
+                    -->
+                    <div class="flex justify-center mt-2">
+                        <svg width="200" height="132" viewBox="0 0 200 132">
+                            <!-- Đường a -->
+                            <line x1="5" y1="35" x2="195" y2="35" stroke="#374151" stroke-width="2"/>
+                            <!-- Đường b -->
+                            <line x1="5" y1="85" x2="195" y2="85" stroke="#374151" stroke-width="2"/>
+                            <!-- Cát tuyến c -->
+                            <line x1="45" y1="5" x2="125" y2="118" stroke="#6366f1" stroke-width="2.2"/>
+
+                            <!-- Tô góc so le trong: ∠3 tại A (phải-dưới) và ∠5 tại B (trái-trên) -->
+                            <path d="M65,35 L82,35 A17,17,0,0,1,75.0,48.8 Z" fill="#f59e0b" fill-opacity="0.38"/>
+                            <path d="M101,85 L111.0,71.2 A17,17,0,0,0,84,85 Z" fill="#f59e0b" fill-opacity="0.38"/>
+
+                            <!-- Viền cung các góc còn lại -->
+                            <path d="M65,35 L75.0,21.2 A17,17,0,0,0,48,35 Z" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+                            <path d="M65,35 L82,35 A17,17,0,0,0,75.0,21.2 Z" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+                            <path d="M65,35 L75.0,48.8 A17,17,0,0,1,48,35 Z" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+
+                            <path d="M101,85 L118,85 A17,17,0,0,0,111.0,71.2 Z" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+                            <path d="M101,85 L118,85 A17,17,0,0,1,111.0,98.8 Z" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+                            <path d="M101,85 L111.0,98.8 A17,17,0,0,1,84,85 Z" fill="none" stroke="#9ca3af" stroke-width="1.2"/>
+
+                            <!-- Giao điểm -->
+                            <circle cx="65" cy="35" r="3" fill="#374151"/>
+                            <circle cx="101" cy="85" r="3" fill="#374151"/>
+
+                            <!-- Nhãn điểm giao -->
+                            <text x="56" y="34" font-size="10" fill="#374151" font-weight="bold" font-style="italic">A</text>
+                            <text x="92" y="84" font-size="10" fill="#374151" font-weight="bold" font-style="italic">B</text>
+
+                            <!-- Nhãn góc tại A (chuẩn SGK: Â₁ trái-trên, Â₂ phải-trên, Â₃ phải-dưới, Â₄ trái-dưới) -->
+                            <text x="44" y="30" font-size="8.5" fill="#374151" font-weight="bold">Â₁</text>
+                            <text x="68" y="29" font-size="8.5" fill="#374151" font-weight="bold">Â₂</text>
+                            <text x="69" y="51" font-size="8.5" fill="#b45309" font-weight="bold">Â₃</text>
+                            <text x="44" y="51" font-size="8.5" fill="#374151" font-weight="bold">Â₄</text>
+
+                            <!-- Nhãn góc tại B (chuẩn SGK: B̂₁ trái-trên, B̂₂ phải-trên, B̂₃ phải-dưới, B̂₄ trái-dưới) -->
+                            <text x="80" y="81" font-size="8.5" fill="#b45309" font-weight="bold">B̂₁</text>
+                            <text x="105" y="81" font-size="8.5" fill="#374151" font-weight="bold">B̂₂</text>
+                            <text x="105" y="101" font-size="8.5" fill="#374151" font-weight="bold">B̂₃</text>
+                            <text x="80" y="101" font-size="8.5" fill="#374151" font-weight="bold">B̂₄</text>
+
+                            <!-- Nhãn đường -->
+                            <text x="186" y="31" font-size="12" fill="#374151" font-weight="bold" font-style="italic">a</text>
+                            <text x="186" y="81" font-size="12" fill="#374151" font-weight="bold" font-style="italic">b</text>
+                            <text x="128" y="116" font-size="12" fill="#6366f1" font-weight="bold" font-style="italic">c</text>
+
+                            <!-- Ghi chú -->
+                            <text x="5" y="126" font-size="8.5" fill="#b45309" font-weight="bold">● So le trong: Â₃ và B̂₁ (tô vàng)</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Ô 3: Dấu hiệu nhận biết song song -->
+                <div class="bg-emerald-50/60 p-5 rounded-2xl border border-emerald-100 space-y-3">
+                    <h3 class="font-bold text-emerald-700">3. Dấu hiệu nhận biết \(a \parallel b\)</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>✅ <strong>Dấu hiệu 1</strong>: Có một cặp <strong>góc so le trong bằng nhau</strong></li>
+                        <li>✅ <strong>Dấu hiệu 2</strong>: Có một cặp <strong>góc đồng vị bằng nhau</strong></li>
+                        <li>✅ <strong>Dấu hiệu 3</strong>: Có một cặp <strong>góc trong cùng phía bù nhau</strong> (tổng \(= 180°\))</li>
+                    </ul>
+                    <!-- SVG 3: dấu hiệu 1 - so le trong bằng nhau → a ∥ b -->
+                    <!--
+                        Cát tuyến: (48,6)→(112,112), vector(64,106), θ_down=atan2(106,64)≈58.8°
+                        cos58.8°≈0.5195, sin58.8°≈0.8545
+                        Giao A tại y=30: x=48+64*(30-6)/106=48+64*24/106≈62.5 → A=(63,30)
+                        Giao B tại y=80: x=48+64*(80-6)/106=48+64*74/106≈92.7 → B=(93,80)
+                        r=16
+                        Tại A=(63,30):
+                          c-xuống=(63+16*0.5195,30+16*0.8545)=(71.3,43.7)
+                          c-lên  =(63-16*0.5195,30-16*0.8545)=(54.7,16.3)
+                          a-phải =(79,30)
+                          a-trái =(47,30)
+                          ∠3 (phải-dưới, so le trong): M63,30 L79,30 A16,16,0,0,1,71.3,43.7 Z [sweep=1=thuận kim, 58.8°<180°→large=0]
+                        Tại B=(93,80):
+                          c-lên  =(93-16*0.5195,80-16*0.8545)=(84.7,66.3)
+                          b-trái =(77,80)
+                          ∠5 (trái-trên, so le trong): M93,80 L84.7,66.3 A16,16,0,0,0,77,80 Z [sweep=0=ngược kim, 58.8°+? cần tính: từ c-lên(121.2°) đến b-trái(180°) = 58.8° → large=0]
+                    -->
+                    <div class="flex justify-center mt-2">
+                        <svg width="195" height="120" viewBox="0 0 195 120">
+                            <!-- Đường a -->
+                            <line x1="5" y1="30" x2="188" y2="30" stroke="#059669" stroke-width="2.2"/>
+                            <!-- Đường b -->
+                            <line x1="5" y1="80" x2="188" y2="80" stroke="#059669" stroke-width="2.2"/>
+                            <!-- Cát tuyến c -->
+                            <line x1="48" y1="6" x2="112" y2="112" stroke="#6366f1" stroke-width="2.2"/>
+
+                            <!-- Sector ∠3 tại A (phải-dưới): khép kín giữa tia a→phải và tia c→xuống -->
+                            <path d="M63,30 L79,30 A16,16,0,0,1,71.3,43.7 Z" fill="#10b981" fill-opacity="0.42" stroke="#059669" stroke-width="1.4"/>
+                            <!-- Sector ∠5 tại B (trái-trên): khép kín giữa tia c→lên và tia b→trái -->
+                            <path d="M93,80 L84.7,66.3 A16,16,0,0,0,77,80 Z" fill="#10b981" fill-opacity="0.42" stroke="#059669" stroke-width="1.4"/>
+
+                            <!-- Giao điểm -->
+                            <circle cx="63" cy="30" r="3" fill="#374151"/>
+                            <circle cx="93" cy="80" r="3" fill="#374151"/>
+
+                            <!-- Ký hiệu bằng nhau: 2 gạch song song trên mỗi sector -->
+                            <line x1="70" y1="35" x2="76" y2="41" stroke="#059669" stroke-width="2.2"/>
+                            <line x1="73" y1="32" x2="79" y2="38" stroke="#059669" stroke-width="2.2"/>
+                            <line x1="83" y1="71" x2="89" y2="77" stroke="#059669" stroke-width="2.2"/>
+                            <line x1="80" y1="74" x2="86" y2="68" stroke="#059669" stroke-width="2.2"/>
+
+                            <!-- Mũi tên song song trên a -->
+                            <polyline points="120,23 127,30 120,37" fill="none" stroke="#059669" stroke-width="1.8"/>
+                            <polyline points="128,23 135,30 128,37" fill="none" stroke="#059669" stroke-width="1.8"/>
+                            <!-- Mũi tên song song trên b -->
+                            <polyline points="120,73 127,80 120,87" fill="none" stroke="#059669" stroke-width="1.8"/>
+                            <polyline points="128,73 135,80 128,87" fill="none" stroke="#059669" stroke-width="1.8"/>
+
+                            <!-- Nhãn điểm giao -->
+                            <text x="54" y="29" font-size="10" fill="#374151" font-weight="bold" font-style="italic">A</text>
+                            <text x="84" y="79" font-size="10" fill="#374151" font-weight="bold" font-style="italic">B</text>
+
+                            <!-- Nhãn góc (chuẩn SGK) -->
+                            <text x="64" y="48" font-size="9.5" fill="#065f46" font-weight="bold">Â₃</text>
+                            <text x="73" y="76" font-size="9.5" fill="#065f46" font-weight="bold">B̂₁</text>
+
+                            <!-- Nhãn đường -->
+                            <text x="4" y="27" font-size="12" fill="#059669" font-weight="bold" font-style="italic">a</text>
+                            <text x="4" y="77" font-size="12" fill="#059669" font-weight="bold" font-style="italic">b</text>
+                            <text x="114" y="109" font-size="12" fill="#6366f1" font-weight="bold" font-style="italic">c</text>
+
+                            <!-- Chú thích -->
+                            <text x="5" y="114" font-size="8.5" fill="#059669" font-weight="bold">Â₃ = B̂₁  →  a ∥ b  (Dấu hiệu 1)</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Ô 4: Tính chất khi song song -->
+                <div class="bg-violet-50/60 p-5 rounded-2xl border border-violet-100 space-y-3">
+                    <h3 class="font-bold text-violet-700">4. Tính chất của hai đường thẳng song song</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• Nếu \(a \parallel b\) thì: <strong>Góc so le trong bằng nhau</strong></li>
+                        <li>• Nếu \(a \parallel b\) thì: <strong>Góc đồng vị bằng nhau</strong></li>
+                        <li>• Nếu \(a \parallel b\) thì: <strong>Góc trong cùng phía bù nhau</strong> (\(= 180°\))</li>
+                        <li>• Hai đường thẳng cùng song song với đường thẳng thứ ba thì <strong>song song với nhau</strong></li>
+                    </ul>
+                    <!-- SVG 4: góc đồng vị bằng nhau khi a ∥ b -->
+                    <!--
+                        Cùng cát tuyến: (48,6)→(112,112), A=(63,30), B=(93,80), r=16
+                        cos58.8°≈0.5195, sin58.8°≈0.8545
+                        ∠2 (phải-trên tại A): giữa tia a→phải và tia c→lên
+                          c-lên=(63-16*0.5195,30-16*0.8545)=(54.7,16.3)
+                          a-phải=(79,30)
+                          Từ a-phải(0°) → c-lên(306°-360°=-54°... SVG: góc c-lên = 180°+58.8°=238.8° xuống-trái, tia ngược = lên-phải = 238.8°-180°=58.8°, trong SVG-y-down: tia c-lên = -58.8°=301.2°
+                          Sector ∠2: từ c-lên đến a-phải đi thuận kim = 360°-301.2°=58.8°
+                          "M63,30 L54.7,16.3 A16,16,0,0,1,79,30 Z" [sweep=1, large=0 vì 58.8°<180°]
+                        ∠6 (phải-trên tại B): giữa tia b→phải và tia c→lên
+                          c-lên_B=(93-16*0.5195,80-16*0.8545)=(84.7,66.3)
+                          b-phải_B=(109,80)
+                          "M93,80 L84.7,66.3 A16,16,0,0,1,109,80 Z" [sweep=1, large=0]
+                    -->
+                    <div class="flex justify-center mt-2">
+                        <svg width="195" height="120" viewBox="0 0 195 120">
+                            <!-- Đường a -->
+                            <line x1="5" y1="30" x2="188" y2="30" stroke="#7c3aed" stroke-width="2.2"/>
+                            <!-- Đường b -->
+                            <line x1="5" y1="80" x2="188" y2="80" stroke="#7c3aed" stroke-width="2.2"/>
+                            <!-- Cát tuyến c -->
+                            <line x1="48" y1="6" x2="112" y2="112" stroke="#f97316" stroke-width="2.2"/>
+
+                            <!-- Sector ∠2 tại A (phải-trên, đồng vị): giữa c-lên và a-phải -->
+                            <path d="M63,30 L54.7,16.3 A16,16,0,0,1,79,30 Z" fill="#a78bfa" fill-opacity="0.42" stroke="#7c3aed" stroke-width="1.4"/>
+                            <!-- Sector ∠6 tại B (phải-trên, đồng vị): giữa c-lên và b-phải -->
+                            <path d="M93,80 L84.7,66.3 A16,16,0,0,1,109,80 Z" fill="#a78bfa" fill-opacity="0.42" stroke="#7c3aed" stroke-width="1.4"/>
+
+                            <!-- Giao điểm -->
+                            <circle cx="63" cy="30" r="3" fill="#374151"/>
+                            <circle cx="93" cy="80" r="3" fill="#374151"/>
+
+                            <!-- Nhãn điểm giao -->
+                            <text x="54" y="29" font-size="10" fill="#374151" font-weight="bold" font-style="italic">A</text>
+                            <text x="84" y="79" font-size="10" fill="#374151" font-weight="bold" font-style="italic">B</text>
+
+                            <!-- Ký hiệu bằng nhau: 2 gạch ngang song song trong mỗi sector -->
+                            <line x1="60" y1="21" x2="69" y2="21" stroke="#7c3aed" stroke-width="2.2"/>
+                            <line x1="60" y1="24" x2="69" y2="24" stroke="#7c3aed" stroke-width="2.2"/>
+                            <line x1="90" y1="71" x2="99" y2="71" stroke="#7c3aed" stroke-width="2.2"/>
+                            <line x1="90" y1="74" x2="99" y2="74" stroke="#7c3aed" stroke-width="2.2"/>
+
+                            <!-- Mũi tên song song trên a -->
+                            <polyline points="138,23 145,30 138,37" fill="none" stroke="#7c3aed" stroke-width="1.8"/>
+                            <polyline points="146,23 153,30 146,37" fill="none" stroke="#7c3aed" stroke-width="1.8"/>
+                            <!-- Mũi tên song song trên b -->
+                            <polyline points="138,73 145,80 138,87" fill="none" stroke="#7c3aed" stroke-width="1.8"/>
+                            <polyline points="146,73 153,80 146,87" fill="none" stroke="#7c3aed" stroke-width="1.8"/>
+
+                            <!-- Nhãn góc (chuẩn SGK) -->
+                            <text x="59" y="15" font-size="9.5" fill="#5b21b6" font-weight="bold">Â₂</text>
+                            <text x="89" y="65" font-size="9.5" fill="#5b21b6" font-weight="bold">B̂₂</text>
+
+                            <!-- Nhãn đường -->
+                            <text x="4" y="27" font-size="12" fill="#7c3aed" font-weight="bold" font-style="italic">a</text>
+                            <text x="4" y="77" font-size="12" fill="#7c3aed" font-weight="bold" font-style="italic">b</text>
+                            <text x="114" y="109" font-size="12" fill="#f97316" font-weight="bold" font-style="italic">c</text>
+
+                            <!-- Chú thích -->
+                            <text x="5" y="114" font-size="8.5" fill="#7c3aed" font-weight="bold">Â₂ = B̂₂  →  a ∥ b  (Dấu hiệu 2)</text>
+                        </svg>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bảng tóm tắt 3 dấu hiệu -->
+            <div class="mt-6 p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-teal-50 border border-teal-100">
+                <h3 class="font-bold text-teal-700 mb-4 text-center text-base">📊 Bảng tóm tắt: Dấu hiệu nhận biết &amp; Tính chất song song</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-teal-600 text-white">
+                                <th class="p-3 rounded-tl-xl text-left">Điều kiện (Dấu hiệu)</th>
+                                <th class="p-3 text-center">Loại góc</th>
+                                <th class="p-3 rounded-tr-xl text-center">Kết luận</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-emerald-50 border-b border-teal-100">
+                                <td class="p-3">Góc so le trong bằng nhau</td>
+                                <td class="p-3 text-center text-emerald-700 font-bold">\(\hat{A_3} = \hat{B_1}\)</td>
+                                <td class="p-3 text-center font-bold text-teal-700">\(a \parallel b\)</td>
+                            </tr>
+                            <tr class="bg-violet-50 border-b border-teal-100">
+                                <td class="p-3">Góc đồng vị bằng nhau</td>
+                                <td class="p-3 text-center text-violet-700 font-bold">\(\hat{A_2} = \hat{B_2}\)</td>
+                                <td class="p-3 text-center font-bold text-teal-700">\(a \parallel b\)</td>
+                            </tr>
+                            <tr class="bg-orange-50">
+                                <td class="p-3">Góc trong cùng phía bù nhau</td>
+                                <td class="p-3 text-center text-orange-700 font-bold">\(\hat{A_3} + \hat{B_2} = 180°\)</td>
+                                <td class="p-3 text-center font-bold text-teal-700">\(a \parallel b\)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== TRÒ CHƠI: LẬT THẺ NỐI CẶP ===================== -->
+        <div class="bg-white p-8 section-dashed shadow-md" id="memory-game-section">
+            <h2 class="text-2xl font-black text-teal-700 flex items-center gap-3 mb-2">
+                <span class="text-3xl">🃏</span> LẬT THẺ NỐI CẶP
+            </h2>
+            <p class="text-slate-600 mb-1 font-medium">
+                Lật thẻ để tìm các <strong>cặp kiến thức song song</strong> khớp nhau: Góc tạo bởi cát tuyến ↔ Tính chất/Dấu hiệu!
+            </p>
+            <p class="text-xs text-teal-500 font-bold mb-5">🖱️ Nhấn vào thẻ để lật. Tìm đúng cặp — thẻ sẽ sáng xanh và khóa lại!</p>
+
+            <!-- Thông tin game -->
+            <div class="flex flex-wrap items-center gap-4 mb-5">
+                <div id="mem-moves-badge">🔄 Lượt: <span id="mem-moves">0</span></div>
+                <div class="flex-1 min-w-[120px]">
+                    <div class="flex justify-between text-xs font-bold text-teal-600 mb-1">
+                        <span>Cặp tìm được</span>
+                        <span id="mem-pairs-label">0/8</span>
+                    </div>
+                    <div id="mem-progress-bar"><div id="mem-progress-fill" style="width:0%"></div></div>
+                </div>
+                <button onclick="resetMemGame()" class="bg-teal-100 hover:bg-teal-200 text-teal-700 font-bold py-2 px-5 rounded-xl transition-all border border-teal-200 text-sm">🔄 Chơi lại</button>
+            </div>
+
+            <!-- Lưới thẻ -->
+            <div class="mem-grid" id="mem-grid"></div>
+
+            <!-- Phần thưởng -->
+            <div id="mem-reward" class="hidden text-center space-y-3 py-8 animate-bounce-in mt-6">
+                <div class="text-6xl">🏆</div>
+                <h3 class="text-2xl font-black text-teal-600">KẾT NỐI HOÀN HẢO! 🎉</h3>
+                <p id="mem-result-msg" class="text-blue-600 font-bold animate-pulse">Bộ nhớ siêu đỉnh — tiếp tục thôi! 👇</p>
+            </div>
+        </div>
+
+        <!-- MCQ -->
+        <div id="capture-mcq" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">📝 PHẦN 1: Trắc nghiệm (15 câu)</h2>
+                <button onclick="downloadMCQImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="mcq-container" class="space-y-8"></div>
+        </div>
+
+        <!-- T/F -->
+        <div id="capture-tf" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">✔️ PHẦN 2: Đúng/Sai (5 câu)</h2>
+                <button onclick="downloadTFImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="tf-container" class="space-y-10"></div>
+        </div>
+
+        <!-- FILL -->
+        <div id="capture-fill" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">🖋️ PHẦN 3: Điền đáp án (5 câu)</h2>
+                <button onclick="downloadFillImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="fill-container" class="space-y-6"></div>
+        </div>
+
+        <!-- NỘP BÀI -->
+        <div class="text-center py-12">
+            <button id="submit-btn" onclick="checkResults()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-16 rounded-full shadow-2xl transition-all active:scale-95 text-xl tracking-widest flex items-center gap-4 mx-auto">
+                <span>📤</span> NỘP BÀI
+            </button>
+            <div id="result-board" class="mt-8 hidden">
+                <div class="bg-white section-dashed p-8 inline-block shadow-xl w-full max-w-2xl">
+                    <div id="score-text" class="text-4xl font-black mb-2 p-6 rounded-2xl"></div>
+                    <div id="score-message" class="text-lg font-bold mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT -->
+    <div id="chatbot-container">
+        <button id="chatbot-toggle" onclick="toggleChatbot()">
+            💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>
+        </button>
+        <div id="chatbot-window">
+            <div id="chatbot-header">
+                <div>
+                    <div style="font-weight:bold;font-size:1rem;">Trợ lý Toán học</div>
+                    <div style="font-size:0.75rem;opacity:0.9;">Hỗ trợ 24/7</div>
+                </div>
+                <button id="chatbot-close" onclick="toggleChatbot()">×</button>
+            </div>
+            <div id="chatbot-messages">
+                <div class="chat-message bot">
+                    <div class="bot-avatar">💬</div>
+                    <div>
+                        <div class="message-content">
+                            Xin chào! Tôi có thể giúp bạn về <strong>hai đường thẳng song song</strong>. Hãy hỏi tôi bất cứ điều gì!
+                        </div>
+                        <div class="quick-questions">
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Hai đường thẳng song song là gì?')">Song song là gì?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Góc so le trong là gì?')">Góc so le trong?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Dấu hiệu nhận biết song song?')">Dấu hiệu nhận biết?</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chatbot-input-area">
+                <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button id="chatbot-send" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ======================== GAME: LẬT THẺ NỐI CẶP ========================
+    // 8 cặp (16 thẻ), mỗi cặp gồm: thẻ khái niệm + thẻ mô tả/ví dụ
+    const MEM_PAIRS = [
+        {
+            id: 'p1',
+            a: { text: 'Góc\nso le trong', math: false },
+            b: { text: 'Nằm trong 2 đường thẳng, khác phía cát tuyến', math: false }
+        },
+        {
+            id: 'p2',
+            a: { text: 'Góc\nđồng vị', math: false },
+            b: { text: 'Cùng vị trí ở hai giao điểm (cùng trên/dưới, cùng phải/trái)', math: false }
+        },
+        {
+            id: 'p3',
+            a: { text: 'Góc trong\ncùng phía', math: false },
+            b: { text: 'Nằm trong 2 đường thẳng, cùng phía cát tuyến', math: false }
+        },
+        {
+            id: 'p4',
+            a: { text: 'So le trong\nbằng nhau', math: false },
+            b: { text: '→ hai đường thẳng song song (Dấu hiệu 1)', math: false }
+        },
+        {
+            id: 'p5',
+            a: { text: 'Đồng vị\nbằng nhau', math: false },
+            b: { text: '→ hai đường thẳng song song (Dấu hiệu 2)', math: false }
+        },
+        {
+            id: 'p6',
+            a: { text: 'Trong cùng phía\nbù nhau (180°)', math: false },
+            b: { text: '→ hai đường thẳng song song (Dấu hiệu 3)', math: false }
+        },
+        {
+            id: 'p7',
+            a: { text: 'a ∥ b', math: false },
+            b: { text: 'a và b không có điểm chung', math: false }
+        },
+        {
+            id: 'p8',
+            a: { text: 'a ∥ b và b ∥ c', math: false },
+            b: { text: '→ a ∥ c (tính bắc cầu)', math: false }
+        },
+    ];
+
+    const MEM_TOTAL_PAIRS = MEM_PAIRS.length;
+    let memCards = [];
+    let memFlipped = [];
+    let memMatched = 0;
+    let memMoves = 0;
+    let memLock = false;
+
+    function buildMemCards() {
+        const cards = [];
+        MEM_PAIRS.forEach(pair => {
+            cards.push({ pairId: pair.id, side: 'a', text: pair.a.text });
+            cards.push({ pairId: pair.id, side: 'b', text: pair.b.text });
+        });
+        // Fisher-Yates shuffle
+        for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+        return cards;
+    }
+
+    function renderMemGrid() {
+        const grid = document.getElementById('mem-grid');
+        grid.innerHTML = '';
+        memCards.forEach((card, idx) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'mem-card';
+            wrapper.id = 'memcard-' + idx;
+            wrapper.innerHTML = `
+                <div class="mem-card-inner">
+                    <div class="mem-face mem-back">🃏</div>
+                    <div class="mem-face mem-front">${card.text.replace(/\n/g,'<br>')}</div>
+                </div>`;
+            wrapper.addEventListener('click', () => flipCard(idx));
+            grid.appendChild(wrapper);
+        });
+    }
+
+    function flipCard(idx) {
+        if (memLock) return;
+        const el = document.getElementById('memcard-' + idx);
+        if (!el || el.classList.contains('flipped') || el.classList.contains('matched')) return;
+        el.classList.add('flipped');
+        memFlipped.push(idx);
+
+        if (memFlipped.length === 2) {
+            memMoves++;
+            document.getElementById('mem-moves').textContent = memMoves;
+            memLock = true;
+            const [i1, i2] = memFlipped;
+            const c1 = memCards[i1], c2 = memCards[i2];
+            if (c1.pairId === c2.pairId && c1.side !== c2.side) {
+                // Match!
+                setTimeout(() => {
+                    document.getElementById('memcard-' + i1).classList.add('matched');
+                    document.getElementById('memcard-' + i2).classList.add('matched');
+                    document.getElementById('memcard-' + i1).classList.remove('flipped');
+                    document.getElementById('memcard-' + i2).classList.remove('flipped');
+                    memMatched++;
+                    updateMemProgress();
+                    confetti({ particleCount: 35, spread: 55, origin: { y: 0.55 }, colors: ['#0d9488','#6366f1','#f59e0b'] });
+                    memFlipped = [];
+                    memLock = false;
+                    if (memMatched === MEM_TOTAL_PAIRS) showMemReward();
+                }, 350);
+            } else {
+                // No match
+                const el1 = document.getElementById('memcard-' + i1);
+                const el2 = document.getElementById('memcard-' + i2);
+                el1.classList.add('wrong-flash');
+                el2.classList.add('wrong-flash');
+                setTimeout(() => {
+                    el1.classList.remove('flipped','wrong-flash');
+                    el2.classList.remove('flipped','wrong-flash');
+                    memFlipped = [];
+                    memLock = false;
+                }, 900);
+            }
+        }
+    }
+
+    function updateMemProgress() {
+        const pct = (memMatched / MEM_TOTAL_PAIRS) * 100;
+        document.getElementById('mem-progress-fill').style.width = pct + '%';
+        document.getElementById('mem-pairs-label').textContent = memMatched + '/' + MEM_TOTAL_PAIRS;
+    }
+
+    function showMemReward() {
+        const reward = document.getElementById('mem-reward');
+        reward.classList.remove('hidden');
+        let msg = '';
+        if (memMoves <= MEM_TOTAL_PAIRS + 2) msg = '🌟 Xuất sắc! Chỉ ' + memMoves + ' lượt — trí nhớ siêu đỉnh!';
+        else if (memMoves <= MEM_TOTAL_PAIRS * 2) msg = '👏 Rất tốt! ' + memMoves + ' lượt — tiếp tục cố gắng nhé!';
+        else msg = '💪 Hoàn thành! ' + memMoves + ' lượt — luyện tập thêm để nhớ nhanh hơn!';
+        document.getElementById('mem-result-msg').textContent = msg;
+        confetti({ particleCount: 220, spread: 200, colors: ['#0d9488','#6366f1','#22c55e','#f59e0b'] });
+        setTimeout(() => confetti({ particleCount: 160, spread: 170, origin: { y: 0.3 } }), 600);
+    }
+
+    function resetMemGame() {
+        memCards = buildMemCards();
+        memFlipped = [];
+        memMatched = 0;
+        memMoves = 0;
+        memLock = false;
+        document.getElementById('mem-moves').textContent = '0';
+        document.getElementById('mem-reward').classList.add('hidden');
+        updateMemProgress();
+        renderMemGrid();
+    }
+
+    function initMemGame() {
+        resetMemGame();
+    }
+
+    // ======================== QUESTION BANKS ========================
+    const QUESTION_BANK = {
+        nb: [
+            {
+                q: "Hai đường thẳng song song là hai đường thẳng:",
+                opts: ["Không có điểm chung","Có đúng một điểm chung","Có hai điểm chung","Trùng nhau"],
+                ans: 0,
+                exp: "Hai đường thẳng song song là hai đường thẳng không có bất kỳ điểm chung nào.",
+                hint: "Song song = không gặp nhau = không có điểm chung"
+            },
+            {
+                q: "Ký hiệu \\(a \\parallel b\\) được đọc là:",
+                opts: ["a song song b","a vuông góc b","a trùng b","a cắt b"],
+                ans: 0,
+                exp: "\\(a \\parallel b\\) đọc là \"a song song b\".",
+                hint: "Ký hiệu ∥ là song song"
+            },
+            {
+                q: "Góc so le trong là hai góc:",
+                opts: ["Nằm trong hai đường thẳng, ở hai phía của cát tuyến","Nằm ngoài hai đường thẳng","Cùng phía cát tuyến, ở trong hai đường thẳng","Bằng nhau và cùng vị trí"],
+                ans: 0,
+                exp: "Góc so le trong: nằm giữa hai đường thẳng, về hai phía khác nhau của đường cắt (cát tuyến).",
+                hint: "So le = hai bên cát tuyến; trong = giữa hai đường thẳng"
+            },
+            {
+                q: "Góc đồng vị là hai góc:",
+                opts: ["Cùng vị trí ở hai giao điểm (cùng trên-phải hoặc cùng trên-trái…)","Nằm trong, khác phía cát tuyến","Bù nhau","Đối đỉnh nhau"],
+                ans: 0,
+                exp: "Góc đồng vị: ở cùng vị trí tương đối tại hai giao điểm (ví dụ: cùng góc phải-trên).",
+                hint: "Đồng vị = cùng vị trí, cùng chiều nhìn"
+            },
+            {
+                q: "Qua một điểm nằm ngoài đường thẳng \\(a\\), có bao nhiêu đường thẳng song song với \\(a\\)?",
+                opts: ["Đúng một đường thẳng","Hai đường thẳng","Vô số đường thẳng","Không có đường thẳng nào"],
+                ans: 0,
+                exp: "Tiên đề Euclid: qua một điểm ngoài đường thẳng, có đúng một đường thẳng song song với nó.",
+                hint: "Tiên đề Euclid về đường song song"
+            },
+            {
+                q: "Nếu hai đường thẳng \\(a\\) và \\(b\\) cùng song song với đường thẳng \\(c\\) thì:",
+                opts: ["\\(a \\parallel b\\)","\\(a\\) cắt \\(b\\)","\\(a\\) vuông góc \\(b\\)","Không kết luận được"],
+                ans: 0,
+                exp: "Tính chất bắc cầu: \\(a \\parallel c\\) và \\(b \\parallel c\\) thì \\(a \\parallel b\\).",
+                hint: "Tính bắc cầu của song song"
+            },
+            {
+                q: "Hai đường thẳng phân biệt trong mặt phẳng có thể:",
+                opts: ["Song song hoặc cắt nhau","Chỉ song song","Chỉ cắt nhau","Song song, cắt nhau hoặc trùng nhau"],
+                ans: 0,
+                exp: "Hai đường thẳng phân biệt (không trùng) trong mặt phẳng hoặc song song, hoặc cắt nhau.",
+                hint: "Phân biệt = không trùng → chỉ còn 2 khả năng"
+            }
+        ],
+        th: [
+            {
+                q: "Đường thẳng \\(c\\) cắt \\(a\\) tại \\(A\\) và cắt \\(b\\) tại \\(B\\). Góc \\(\\widehat{A_1} = \\widehat{B_3} = 65°\\). Hai góc này là góc:",
+                opts: ["Đồng vị","So le trong","Trong cùng phía","Đối đỉnh"],
+                ans: 0,
+                exp: "Góc đồng vị là các góc ở cùng vị trí tương đối tại hai giao điểm với cát tuyến.",
+                hint: "Cùng vị trí → đồng vị"
+            },
+            {
+                q: "Biết \\(a \\parallel b\\), cát tuyến \\(c\\) tạo góc \\(70°\\) với \\(a\\). Góc so le trong ở đường \\(b\\) bằng:",
+                opts: ["\\(70°\\)","\\(110°\\)","\\(180°\\)","\\(35°\\)"],
+                ans: 0,
+                exp: "Khi \\(a \\parallel b\\), góc so le trong bằng nhau. Vậy góc so le trong tại \\(b\\) cũng bằng \\(70°\\).",
+                hint: "a ∥ b → so le trong bằng nhau"
+            },
+            {
+                q: "Biết \\(a \\parallel b\\), cát tuyến tạo góc đồng vị \\(120°\\) với \\(a\\). Góc đồng vị ở \\(b\\) bằng:",
+                opts: ["\\(120°\\)","\\(60°\\)","\\(180°\\)","\\(90°\\)"],
+                ans: 0,
+                exp: "Khi \\(a \\parallel b\\), góc đồng vị bằng nhau, vậy góc đồng vị tại \\(b\\) cũng bằng \\(120°\\).",
+                hint: "a ∥ b → đồng vị bằng nhau"
+            },
+            {
+                q: "Biết \\(a \\parallel b\\), một góc trong cùng phía ở \\(a\\) bằng \\(55°\\). Góc trong cùng phía ở \\(b\\) bằng:",
+                opts: ["\\(125°\\)","\\(55°\\)","\\(90°\\)","\\(180°\\)"],
+                ans: 0,
+                exp: "Khi \\(a \\parallel b\\), hai góc trong cùng phía bù nhau: \\(180° - 55° = 125°\\).",
+                hint: "a ∥ b → trong cùng phía bù nhau (tổng 180°)"
+            },
+            {
+                q: "Hai góc so le trong bằng \\(80°\\). Từ đó suy ra:",
+                opts: ["Hai đường thẳng song song","Hai đường thẳng cắt nhau","Hai đường thẳng vuông góc","Không kết luận được"],
+                ans: 0,
+                exp: "Theo dấu hiệu 1: góc so le trong bằng nhau \\(\\Rightarrow a \\parallel b\\).",
+                hint: "Dấu hiệu 1: so le trong bằng nhau → song song"
+            },
+            {
+                q: "Hai góc trong cùng phía bằng \\(90°\\) mỗi góc (tổng \\(180°\\)). Kết luận:",
+                opts: ["Hai đường thẳng song song","Hai đường thẳng cắt nhau","Không kết luận","Hai đường thẳng trùng nhau"],
+                ans: 0,
+                exp: "Hai góc trong cùng phía bù nhau (tổng \\(180°\\)) \\(\\Rightarrow a \\parallel b\\) (dấu hiệu 3).",
+                hint: "Trong cùng phía tổng 180° → song song"
+            }
+        ],
+        vd: [
+            {
+                q: "Cát tuyến \\(c\\) cắt \\(a\\) và \\(b\\). Góc tạo với \\(a\\) là \\(3x°\\), góc so le trong tương ứng tạo với \\(b\\) là \\((x+50)°\\). Nếu \\(a \\parallel b\\) thì \\(x\\) bằng:",
+                opts: ["\\(25\\)","\\(50\\)","\\(30\\)","\\(45\\)"],
+                ans: 0,
+                exp: "\\(a \\parallel b\\) thì so le trong bằng nhau: \\(3x = x+50 \\Rightarrow 2x=50 \\Rightarrow x=25\\).",
+                hint: "Song song → so le trong bằng nhau → lập phương trình"
+            },
+            {
+                q: "Biết \\(a \\parallel b \\parallel c\\), cát tuyến tạo góc \\(50°\\) với \\(a\\). Góc đồng vị tại \\(c\\) bằng:",
+                opts: ["\\(50°\\)","\\(130°\\)","\\(100°\\)","\\(25°\\)"],
+                ans: 0,
+                exp: "Vì \\(a \\parallel c\\) (tính bắc cầu), góc đồng vị tại \\(c\\) bằng góc tại \\(a\\) = \\(50°\\).",
+                hint: "a ∥ b ∥ c → a ∥ c → đồng vị bằng nhau"
+            },
+            {
+                q: "Cát tuyến tạo với \\(a\\) góc \\(\\alpha\\). Nếu \\(a \\parallel b\\), tổng hai góc trong cùng phía bằng:",
+                opts: ["\\(180°\\)","\\(2\\alpha\\)","\\(90°\\)","\\(360°\\)"],
+                ans: 0,
+                exp: "Khi \\(a \\parallel b\\), hai góc trong cùng phía luôn bù nhau, tổng \\(= 180°\\).",
+                hint: "Tính chất: song song → trong cùng phía bù nhau"
+            }
+        ]
+    };
+
+    const TF_BANK = [
+        {
+            q: "Định nghĩa và ký hiệu song song",
+            items: [
+                {t:"a) Hai đường thẳng song song không có điểm chung nào", a:true,  exp:"Đúng! Đó chính là định nghĩa hai đường thẳng song song.", h:"Song song ↔ không có điểm chung"},
+                {t:"b) Ký hiệu \\(a \\parallel b\\) nghĩa là \\(a\\) vuông góc \\(b\\)", a:false, exp:"Sai! \\(a \\parallel b\\) nghĩa là \\(a\\) song song \\(b\\). Vuông góc ký hiệu là \\(a \\perp b\\).", h:"∥ là song song; ⊥ là vuông góc"},
+                {t:"c) Hai đường thẳng phân biệt hoặc song song hoặc cắt nhau", a:true,  exp:"Đúng! Trong mặt phẳng, hai đường thẳng phân biệt chỉ có hai trường hợp: song song hoặc cắt nhau.", h:"Phân biệt = không trùng → song song hoặc cắt nhau"},
+                {t:"d) Qua một điểm ngoài đường thẳng có vô số đường thẳng song song với nó", a:false, exp:"Sai! Có đúng một đường thẳng song song (tiên đề Euclid).", h:"Tiên đề Euclid: đúng một đường song song"}
+            ]
+        },
+        {
+            q: "Nhận biết các loại góc",
+            items: [
+                {t:"a) Góc so le trong nằm giữa hai đường thẳng, ở hai phía khác nhau của cát tuyến", a:true,  exp:"Đúng! Đó là định nghĩa góc so le trong.", h:"So le = hai bên; trong = giữa hai đường thẳng"},
+                {t:"b) Góc đồng vị là hai góc cùng vị trí ở hai giao điểm", a:true,  exp:"Đúng! Ví dụ: cả hai đều ở góc phải-trên của giao điểm.", h:"Đồng vị = cùng vị trí tương đối"},
+                {t:"c) Góc trong cùng phía ở hai phía khác nhau của cát tuyến", a:false, exp:"Sai! Góc trong cùng phía ở CÙNG phía của cát tuyến (nhưng nằm trong hai đường thẳng).", h:"Cùng phía = cùng một bên cát tuyến"},
+                {t:"d) Hai góc so le trong luôn bằng nhau", a:false, exp:"Sai! Chỉ bằng nhau khi hai đường thẳng song song. Nếu hai đường thẳng cắt nhau thì góc so le trong không bằng nhau.", h:"So le trong bằng nhau chỉ khi song song"}
+            ]
+        },
+        {
+            q: "Dấu hiệu nhận biết song song",
+            items: [
+                {t:"a) Nếu có một cặp góc so le trong bằng nhau thì hai đường thẳng song song", a:true,  exp:"Đúng! Đây là dấu hiệu 1.", h:"Dấu hiệu 1: so le trong bằng nhau"},
+                {t:"b) Nếu có một cặp góc đồng vị bằng nhau thì hai đường thẳng song song", a:true,  exp:"Đúng! Đây là dấu hiệu 2.", h:"Dấu hiệu 2: đồng vị bằng nhau"},
+                {t:"c) Nếu hai góc trong cùng phía bù nhau thì hai đường thẳng song song", a:true,  exp:"Đúng! Đây là dấu hiệu 3: trong cùng phía tổng \\(180°\\).", h:"Dấu hiệu 3: trong cùng phía tổng 180°"},
+                {t:"d) Nếu hai góc trong cùng phía bằng nhau thì hai đường thẳng song song", a:false, exp:"Sai! Điều kiện là trong cùng phía phải BÙ NHAU (tổng \\(180°\\)), không phải bằng nhau.", h:"Trong cùng phía: bù nhau (tổng 180°), không phải bằng nhau"}
+            ]
+        },
+        {
+            q: "Tính chất hai đường thẳng song song",
+            items: [
+                {t:"a) Nếu \\(a \\parallel b\\) thì góc so le trong bằng nhau", a:true,  exp:"Đúng! Đây là tính chất của hai đường thẳng song song.", h:"a ∥ b → so le trong bằng nhau"},
+                {t:"b) Nếu \\(a \\parallel b\\) thì góc đồng vị bằng nhau", a:true,  exp:"Đúng! Tính chất song song.", h:"a ∥ b → đồng vị bằng nhau"},
+                {t:"c) Nếu \\(a \\parallel b\\) thì hai góc trong cùng phía bằng nhau", a:false, exp:"Sai! Khi \\(a \\parallel b\\), hai góc trong cùng phía bù nhau (tổng \\(180°\\)), không phải bằng nhau.", h:"a ∥ b → trong cùng phía BÙ nhau"},
+                {t:"d) Nếu \\(a \\parallel b\\) và \\(b \\parallel c\\) thì \\(a \\parallel c\\)", a:true,  exp:"Đúng! Tính bắc cầu của song song.", h:"Bắc cầu: a ∥ b, b ∥ c → a ∥ c"}
+            ]
+        },
+        {
+            q: "Vận dụng tính chất song song",
+            items: [
+                {t:"a) \\(a \\parallel b\\), cát tuyến tạo góc \\(70°\\) với \\(a\\). Góc so le trong tại \\(b\\) là \\(70°\\)", a:true,  exp:"Đúng! Song song → so le trong bằng nhau: \\(70°\\).", h:"So le trong bằng nhau khi song song"},
+                {t:"b) \\(a \\parallel b\\), cát tuyến tạo góc \\(110°\\) với \\(a\\). Góc trong cùng phía tại \\(b\\) là \\(70°\\)", a:true,  exp:"Đúng! \\(180° - 110° = 70°\\). Trong cùng phía bù nhau.", h:"180° − 110° = 70°"},
+                {t:"c) \\(a \\parallel b\\), góc đồng vị tại \\(a\\) là \\(85°\\). Góc đồng vị tại \\(b\\) là \\(95°\\)", a:false, exp:"Sai! Khi \\(a \\parallel b\\), góc đồng vị BẰNG NHAU: góc tại \\(b\\) cũng là \\(85°\\).", h:"Song song → đồng vị bằng nhau"},
+                {t:"d) Hai đường thẳng cùng song song với \\(d\\) thì song song với nhau", a:true,  exp:"Đúng! Tính bắc cầu của quan hệ song song.", h:"a ∥ d và b ∥ d → a ∥ b"}
+            ]
+        }
+    ];
+
+    const FILL_BANK = [
+        {q:"Hai đường thẳng \\(a\\) và \\(b\\) song song, ký hiệu là \\(a \\ ? \\ b\\) (dùng ký hiệu toán)", a:"∥", exp:"Ký hiệu song song là \\(\\parallel\\), viết \\(a \\parallel b\\).", hint:"Ký hiệu: ∥"},
+        {q:"\\(a \\parallel b\\), cát tuyến tạo góc so le trong \\(65°\\) tại \\(a\\). Góc so le trong tại \\(b\\) bằng?", a:"65", exp:"Song song → so le trong bằng nhau: \\(65°\\).", hint:"a ∥ b → so le trong bằng nhau"},
+        {q:"\\(a \\parallel b\\), một góc trong cùng phía tại \\(a\\) là \\(130°\\). Góc trong cùng phía tại \\(b\\) bằng?", a:"50", exp:"\\(180° - 130° = 50°\\). Trong cùng phía bù nhau.", hint:"180° − 130°"},
+        {q:"\\(a \\parallel b\\), cát tuyến tạo góc đồng vị \\(112°\\) tại \\(a\\). Góc đồng vị tại \\(b\\) bằng?", a:"112", exp:"Song song → đồng vị bằng nhau: \\(112°\\).", hint:"Đồng vị bằng nhau khi song song"},
+        {q:"Qua điểm \\(M\\) nằm ngoài đường thẳng \\(d\\), có bao nhiêu đường thẳng song song với \\(d\\)?", a:"1", exp:"Tiên đề Euclid: đúng một đường thẳng.", hint:"Tiên đề Euclid"},
+        {q:"Hai góc so le trong bằng \\(75°\\). Hai đường thẳng đó có song song không? (có/không)", a:"có", exp:"So le trong bằng nhau → dấu hiệu 1 → hai đường thẳng song song.", hint:"Dấu hiệu 1: so le trong bằng nhau"},
+        {q:"\\(a \\parallel b\\), \\(b \\parallel c\\). Kết luận: \\(a \\ ? \\ c\\)", a:"∥", exp:"Tính bắc cầu: \\(a \\parallel b\\) và \\(b \\parallel c\\) thì \\(a \\parallel c\\).", hint:"Tính bắc cầu của song song"},
+        {q:"Cát tuyến tạo góc \\(40°\\) với \\(a\\). Góc trong cùng phía tại \\(b\\) là \\(140°\\). Hai đường thẳng có song song không? (có/không)", a:"có", exp:"\\(40° + 140° = 180°\\): trong cùng phía bù nhau → song song (dấu hiệu 3).", hint:"40° + 140° = 180° → trong cùng phía bù nhau"},
+        {q:"\\(a \\parallel b\\), góc đồng vị tại \\(a\\) là \\(97°\\). Góc đồng vị tại \\(b\\) bằng?", a:"97", exp:"Đồng vị bằng nhau khi song song: \\(97°\\).", hint:"Đồng vị bằng nhau"},
+        {q:"Hai góc đồng vị bằng \\(x°\\). Điều kiện để hai đường thẳng song song là góc đồng vị phải như thế nào? (bằng nhau/bù nhau)", a:"bằng nhau", exp:"Dấu hiệu 2: góc đồng vị bằng nhau → song song.", hint:"Dấu hiệu 2"},
+        {q:"\\(a \\parallel b\\), cát tuyến tạo góc \\(55°\\) với \\(b\\). Góc đồng vị tại \\(a\\) bằng?", a:"55", exp:"Đồng vị bằng nhau khi song song: \\(55°\\).", hint:"a ∥ b → đồng vị bằng nhau"},
+        {q:"Tổng hai góc trong cùng phía khi \\(a \\parallel b\\) bằng bao nhiêu độ?", a:"180", exp:"Tính chất: \\(a \\parallel b\\) → hai góc trong cùng phía bù nhau, tổng \\(= 180°\\).", hint:"Song song → trong cùng phía bù nhau (180°)"}
+    ];
+
+    // ======================== MAIN QUIZ ========================
+    let MCQ=[], TF=[], FILL=[];
+    let userMcq = Array(15).fill(null);
+    let userTf  = Array(5).fill(null).map(()=>Array(4).fill(null));
+    let submitted = false;
+
+    function shuffle(arr) {
+        for (let i=arr.length-1;i>0;i--) {
+            const j=Math.floor(Math.random()*(i+1));
+            [arr[i],arr[j]]=[arr[j],arr[i]];
+        }
+    }
+
+    function generateQuestions() {
+        MCQ=[];
+        const nb=[...QUESTION_BANK.nb]; shuffle(nb);
+        for (let i=0;i<7;i++) MCQ.push({...nb[i%nb.length], l:'nb'});
+        const th=[...QUESTION_BANK.th]; shuffle(th);
+        for (let i=0;i<5;i++) MCQ.push({...th[i%th.length], l:'th'});
+        const vd=[...QUESTION_BANK.vd]; shuffle(vd);
+        for (let i=0;i<3;i++) MCQ.push({...vd[i%vd.length], l:'vd'});
+        const tfPool=[...TF_BANK]; shuffle(tfPool); TF=tfPool.slice(0,5);
+        const fillPool=[...FILL_BANK]; shuffle(fillPool); FILL=fillPool.slice(0,5);
+    }
+
+    function init() { generateQuestions(); renderAll(); initStats(); }
+
+    function toggleHint(id) {
+        const el=document.getElementById(id);
+        el.style.display=el.style.display==='block'?'none':'block';
+    }
+
+    function renderAll() {
+        const mcqBox=document.getElementById('mcq-container');
+        mcqBox.innerHTML='';
+        MCQ.forEach((d,i)=>{
+            if (!d||!d.q) return;
+            let badge='';
+            if (d.l==='nb') badge='<span class="level-badge level-nhan-biet">NHẬN BIẾT</span>';
+            else if (d.l==='th') badge='<span class="level-badge level-thong-hieu">THÔNG HIỂU</span>';
+            else badge='<span class="level-badge level-van-dung">VẬN DỤNG</span>';
+            const opts=(d.opts||[]).map((o,j)=>
+                `<div onclick="setMcq(${i},${j})" id="mcq-${i}-${j}" class="mcq-option p-4 bg-white shadow-sm flex items-center mb-2">
+                    <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 mr-3 font-bold text-xs">${String.fromCharCode(65+j)}</span> ${o}
+                </div>`
+            ).join('');
+            mcqBox.innerHTML+=`
+                <div class="p-5 border-b" id="mcq-card-${i}">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-bold text-blue-600">CÂU ${i+1} ${badge}</span>
+                        <button onclick="toggleHint('mcq-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                    </div>
+                    <p class="mb-4 text-slate-700 font-medium">${d.q}</p>
+                    <div id="mcq-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${opts}</div>
+                    <div id="mcq-fb-${i}" class="feedback-box"></div>
+                </div>`;
+        });
+
+        const tfBox=document.getElementById('tf-container');
+        tfBox.innerHTML='';
+        TF.forEach((d,i)=>{
+            const rows=d.items.map((it,j)=>`
+                <tr class="border-b">
+                    <td class="py-4 px-4 text-sm font-medium">
+                        ${it.t}
+                        <button onclick="toggleHint('tf-hint-${i}-${j}')" class="hint-btn">💡 Gợi ý</button>
+                        <div id="tf-hint-${i}-${j}" class="hint-box">💡 ${it.h}</div>
+                        <div id="tf-fb-${i}-${j}" class="feedback-box"></div>
+                    </td>
+                    <td class="p-2 text-center"><button onclick="setTf(${i},${j},true)"  id="tf-btn-${i}-${j}-t" class="check-btn w-10 h-10 rounded-xl">Đ</button></td>
+                    <td class="p-2 text-center"><button onclick="setTf(${i},${j},false)" id="tf-btn-${i}-${j}-s" class="check-btn w-10 h-10 rounded-xl">S</button></td>
+                </tr>`).join('');
+            tfBox.innerHTML+=`
+                <div class="bg-slate-50 rounded-2xl border overflow-hidden">
+                    <div class="bg-white p-4 font-bold text-blue-800 border-b">Câu ${i+1}: ${d.q}</div>
+                    <table class="w-full"><tbody>${rows}</tbody></table>
+                </div>`;
+        });
+
+        const fillBox=document.getElementById('fill-container');
+        fillBox.innerHTML='';
+        FILL.forEach((d,i)=>{
+            fillBox.innerHTML+=`
+                <div class="bg-slate-50 p-5 rounded-2xl border space-y-2">
+                    <div class="flex items-start justify-between">
+                        <span><strong>Câu ${i+1}.</strong> ${d.q}</span>
+                        <button onclick="toggleHint('fill-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                    </div>
+                    <div id="fill-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <input type="text" id="fill-${i}" class="fill-input">
+                    </div>
+                    <div id="fill-fb-${i}" class="feedback-box"></div>
+                </div>`;
+        });
+
+        if (window.MathJax) MathJax.typesetPromise([
+            document.getElementById('mcq-container'),
+            document.getElementById('tf-container'),
+            document.getElementById('fill-container')
+        ]).catch(()=>{});
+    }
+
+    function setMcq(q,o) {
+        if (submitted) return;
+        userMcq[q]=o;
+        document.getElementById(`mcq-card-${q}`).querySelectorAll('.mcq-option').forEach(opt=>opt.classList.remove('selected'));
+        document.getElementById(`mcq-${q}-${o}`).classList.add('selected');
+    }
+    function setTf(q,i,v) {
+        if (submitted) return;
+        userTf[q][i]=v;
+        document.getElementById(`tf-btn-${q}-${i}-t`).classList.remove('selected-true');
+        document.getElementById(`tf-btn-${q}-${i}-s`).classList.remove('selected-false');
+        if (v) document.getElementById(`tf-btn-${q}-${i}-t`).classList.add('selected-true');
+        else   document.getElementById(`tf-btn-${q}-${i}-s`).classList.add('selected-false');
+    }
+
+    function celebrate(score) {
+        const pct=(score/10)*100;
+        if (pct>=90) {
+            const end=Date.now()+3000;
+            const iv=setInterval(()=>{if(Date.now()>end){clearInterval(iv);return;} confetti({particleCount:100,spread:160,origin:{y:0.6}});},250);
+        } else if (pct>=70) {
+            confetti({particleCount:150,spread:100,origin:{y:0.6}});
+            setTimeout(()=>confetti({particleCount:100,spread:80,origin:{y:0.6}}),500);
+        } else if (pct>=50) {
+            confetti({particleCount:100,spread:70,origin:{y:0.6}});
+        } else {
+            confetti({particleCount:50,spread:50,origin:{y:0.6}});
+        }
+    }
+
+    function checkResults() {
+        submitted=true;
+        let correct=0;
+        const total=MCQ.length+TF.length*4+FILL.length;
+
+        MCQ.forEach((d,i)=>{
+            const fb=document.getElementById(`mcq-fb-${i}`);
+            const opts=document.getElementById(`mcq-card-${i}`).querySelectorAll('.mcq-option');
+            opts[d.ans].classList.add('correct');
+            if (userMcq[i]===d.ans) {
+                correct++;
+                fb.innerHTML='&#10004;&#65039; <strong>Đúng!</strong> '+d.exp;
+                fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+            } else {
+                if (userMcq[i]!==null) opts[userMcq[i]].classList.add('wrong');
+                fb.innerHTML='&#10060; <strong>Sai!</strong> '+d.exp;
+                fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+            }
+            fb.style.display='block';
+        });
+
+        TF.forEach((d,i)=>{
+            d.items.forEach((it,j)=>{
+                const fb=document.getElementById(`tf-fb-${i}-${j}`);
+                if (userTf[i][j]===it.a) {
+                    correct++;
+                    fb.innerHTML='&#10004;&#65039; '+it.exp;
+                    fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+                } else {
+                    fb.innerHTML='&#10060; '+it.exp;
+                    fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+                }
+                fb.style.display='block';
+                if (it.a) document.getElementById(`tf-btn-${i}-${j}-t`).classList.add('correct-highlight');
+                else       document.getElementById(`tf-btn-${i}-${j}-s`).classList.add('correct-highlight');
+            });
+        });
+
+        FILL.forEach((d,i)=>{
+            const input=document.getElementById(`fill-${i}`);
+            const fb=document.getElementById(`fill-fb-${i}`);
+            const normalize = s => s.trim().toLowerCase()
+                .replace(/\s+/g,'').replace(/,/g,'.').replace(/°/g,'')
+                .replace(/song\s*song/g,'∥').replace(/bang\s*nhau/g,'bằngnhau');
+            const user = normalize(input.value);
+            const ans  = normalize(d.a);
+            let ok = user === ans;
+            // numeric tolerance
+            if (!ok) {
+                const uNum = parseFloat(user), aNum = parseFloat(ans);
+                if (!isNaN(uNum) && !isNaN(aNum) && Math.abs(uNum - aNum) < 0.01) ok = true;
+            }
+            // aliases
+            const aliases = {
+                '∥': ['∥','//','song song','songson','parallel'],
+                'có': ['có','co','yes','đúng','dung'],
+                'không': ['không','khong','no','sai'],
+                'bằng nhau': ['bằngnhau','bang nhau','bangnhau','equal'],
+                'bù nhau': ['bùnhau','bu nhau','bunhau'],
+            };
+            if (!ok) {
+                for (const [key, vals] of Object.entries(aliases)) {
+                    const normKey = normalize(key);
+                    if (normKey === ans && vals.some(v => normalize(v) === user)) { ok = true; break; }
+                }
+            }
+            if (ok) {
+                correct++;
+                input.classList.add('fill-correct');
+                fb.innerHTML='&#10004;&#65039; '+d.exp;
+                fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+            } else {
+                input.classList.add('fill-wrong');
+                fb.innerHTML='&#10060; Đáp án: <strong>'+d.a+'</strong>. '+d.exp;
+                fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+            }
+            fb.style.display='block';
+        });
+
+        const score=(correct/total)*10;
+        const pct=(correct/total)*100;
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('result-board').classList.remove('hidden');
+        const scoreText=document.getElementById('score-text');
+        scoreText.innerHTML=`<div class="text-center"><div class="text-5xl font-black mb-2">${score.toFixed(1)}/10</div><div class="text-lg">Đúng ${correct}/${total} câu (${pct.toFixed(0)}%)</div></div>`;
+        if (pct>=90)      {scoreText.classList.add('score-excellent'); document.getElementById('score-message').innerHTML='&#127881; <span class="text-green-600">XUẤT SẮC!</span>';}
+        else if (pct>=70) {scoreText.classList.add('score-good');      document.getElementById('score-message').innerHTML='&#128079; <span class="text-blue-600">KHÁ TỐT!</span>';}
+        else if (pct>=50) {scoreText.classList.add('score-average');   document.getElementById('score-message').innerHTML='&#128170; <span class="text-orange-600">TRUNG BÌNH</span>';}
+        else              {scoreText.classList.add('score-low');       document.getElementById('score-message').innerHTML='&#128218; <span class="text-red-600">CẦN CỐ GẮNG</span>';}
+        celebrate(score);
+        showOptions();
+        if (window.MathJax) {
+            MathJax.typesetPromise([
+                document.getElementById('mcq-container'),
+                document.getElementById('tf-container'),
+                document.getElementById('fill-container'),
+                document.getElementById('result-board')
+            ]).catch(err => console.warn('MathJax typeset error:', err));
+        }
+        document.getElementById('result-board').scrollIntoView({behavior:'smooth',block:'center'});
+        saveScore(score); // BỔ SUNG
+    }
+
+    function showOptions() {
+        const old=document.getElementById('post-options');
+        if (old) old.remove();
+        const container=document.getElementById('result-board');
+        const div=document.createElement('div');
+        div.id='post-options';
+        div.className='mt-8 p-6 bg-white rounded-2xl shadow-xl border-2 border-blue-400 animate-bounce-in';
+        div.innerHTML=`
+            <h3 class="text-xl font-bold text-blue-800 mb-4 text-center">&#127775; Tiếp tục?</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="regenerate('retry')"      class="p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all border-b-4 border-gray-300 active:border-b-0 font-bold text-gray-700">&#128260; Làm lại</button>
+                <button onclick="regenerate('equivalent')" class="p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-all border-b-4 border-blue-300 active:border-b-0 font-bold text-blue-700">&#128218; Đề mới tương đương</button>
+                <button onclick="regenerate('harder')"     class="p-4 bg-orange-100 hover:bg-orange-200 rounded-xl transition-all border-b-4 border-orange-300 active:border-b-0 font-bold text-orange-700">&#128640; Đề nâng cao</button>
+            </div>`;
+        container.appendChild(div);
+    }
+
+    async function regenerate(mode) {
+        document.getElementById('loading-overlay').style.display='flex';
+        await new Promise(r=>setTimeout(r,800));
+        submitted=false;
+        userMcq=Array(15).fill(null);
+        userTf=Array(5).fill(null).map(()=>Array(4).fill(null));
+        const opts=document.getElementById('post-options');
+        if (opts) opts.remove();
+        document.getElementById('result-board').classList.add('hidden');
+        document.getElementById('submit-btn').classList.remove('hidden');
+        if (mode!=='retry') generateQuestions();
+        renderAll();
+        document.getElementById('loading-overlay').style.display='none';
+        document.getElementById('capture-mcq').scrollIntoView({behavior:'smooth'});
+    }
+
+    // ======================== DOWNLOAD ========================
+    async function downloadKnowledgePDF() {
+        const el=document.getElementById('capture-knowledge');
+        const opt={margin:15,filename:'Kien-thuc-Hai-duong-thang-song-song.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+        try{await html2pdf().set(opt).from(el).save();}catch(e){alert('Lỗi tải PDF!');}
+    }
+    async function downloadMCQImage() {
+        const lo=document.getElementById('loading-overlay'); lo.style.display='flex'; lo.querySelector('p').textContent='Đang tạo ảnh...';
+        try{const c=await html2canvas(document.getElementById('capture-mcq'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});const l=document.createElement('a');l.download='De-Trac-Nghiem.png';l.href=c.toDataURL('image/png');l.click();}catch(e){alert('Lỗi!');}
+        lo.style.display='none';
+    }
+    async function downloadTFImage() {
+        const lo=document.getElementById('loading-overlay'); lo.style.display='flex'; lo.querySelector('p').textContent='Đang tạo ảnh...';
+        try{const c=await html2canvas(document.getElementById('capture-tf'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});const l=document.createElement('a');l.download='De-Dung-Sai.png';l.href=c.toDataURL('image/png');l.click();}catch(e){alert('Lỗi!');}
+        lo.style.display='none';
+    }
+    async function downloadFillImage() {
+        const lo=document.getElementById('loading-overlay'); lo.style.display='flex'; lo.querySelector('p').textContent='Đang tạo ảnh...';
+        try{const c=await html2canvas(document.getElementById('capture-fill'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});const l=document.createElement('a');l.download='De-Tra-Loi-Ngan.png';l.href=c.toDataURL('image/png');l.click();}catch(e){alert('Lỗi!');}
+        lo.style.display='none';
+    }
+
+    // ======================== CHATBOT ========================
+    const CHATBOT_KNOWLEDGE = {
+        'song song':      'Hai đường thẳng song song:<br>• Không có điểm chung nào<br>• Ký hiệu: \\(a \\parallel b\\)<br>• Tiên đề: qua điểm ngoài \\(d\\) có đúng 1 đường song song với \\(d\\)',
+        'so le trong':    'Góc so le trong:<br>• Nằm GIỮA hai đường thẳng<br>• Ở HAI PHÍA khác nhau của cát tuyến<br>• Khi song song: so le trong BẰNG nhau<br>• Ví dụ: \\(\\hat{A_3} = \\hat{B_1}\\)',
+        'đồng vị':        'Góc đồng vị:<br>• Cùng VỊ TRÍ ở hai giao điểm<br>• Ví dụ: cùng góc phải-trên<br>• Khi song song: đồng vị BẰNG nhau<br>• Ví dụ: \\(\\hat{A_2} = \\hat{B_2}\\)',
+        'cùng phía':      'Góc trong cùng phía:<br>• Nằm GIỮA hai đường thẳng<br>• Cùng một PHÍA của cát tuyến<br>• Khi song song: cùng phía BÙ nhau (\\(= 180°\\))<br>• Ví dụ: \\(\\hat{A_3} + \\hat{B_2} = 180°\\)',
+        'dấu hiệu':       'Ba dấu hiệu nhận biết song song:<br>1. Góc so le trong BẰNG nhau<br>2. Góc đồng vị BẰNG nhau<br>3. Góc trong cùng phía BÙ nhau (\\(= 180°\\))',
+        'tính chất':      'Tính chất khi \\(a \\parallel b\\):<br>• So le trong bằng nhau<br>• Đồng vị bằng nhau<br>• Trong cùng phía bù nhau (\\(= 180°\\))<br>• Bắc cầu: \\(a \\parallel b, b \\parallel c \\Rightarrow a \\parallel c\\)',
+        'bắc cầu':        'Tính bắc cầu của song song:<br>• Nếu \\(a \\parallel b\\) và \\(b \\parallel c\\)<br>• Thì \\(a \\parallel c\\)<br>• Ứng dụng: ba đường song song đôi một',
+        'ví dụ':          '📌 Ví dụ:<br>• \\(a \\parallel b\\), góc so le trong tại \\(a\\) là \\(65°\\) → góc tại \\(b\\) cũng \\(65°\\)<br>• Cùng phía: \\(70° + 110° = 180°\\) → song song<br>• \\(a \\parallel b, b \\parallel c\\) → \\(a \\parallel c\\)',
+    };
+
+    function toggleChatbot() {
+        const win=document.getElementById('chatbot-window');
+        const toggle=document.getElementById('chatbot-toggle');
+        if (win.style.display==='flex') {
+            win.style.display='none';
+            toggle.innerHTML='&#128172;<span class="chatbot-label">Chatbot Hỗ Trợ</span>';
+        } else {
+            win.style.display='flex';
+            toggle.innerHTML='&#10006;<span class="chatbot-label">Đóng</span>';
+        }
+    }
+    function addBotMessage(text) {
+        const container=document.getElementById('chatbot-messages');
+        const div=document.createElement('div');
+        div.className='chat-message bot';
+        div.innerHTML=`<div class="bot-avatar">&#128172;</div><div class="message-content">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop=container.scrollHeight;
+        if (window.MathJax) MathJax.typesetPromise([container]).catch(()=>{});
+    }
+    function addUserMessage(text) {
+        const container=document.getElementById('chatbot-messages');
+        const div=document.createElement('div');
+        div.className='chat-message user';
+        div.innerHTML=`<div class="message-content">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop=container.scrollHeight;
+    }
+    function getBotResponse(question) {
+        const q=question.toLowerCase().trim();
+        for (const [kw,ans] of Object.entries(CHATBOT_KNOWLEDGE)) {
+            if (q.includes(kw)) return ans;
+        }
+        if (q.includes('cát tuyến') || q.includes('cat tuyen')) return '📐 Cát tuyến là đường thẳng cắt cả hai đường thẳng \\(a\\) và \\(b\\). Nó tạo ra các cặp góc: so le trong, đồng vị, trong cùng phía.';
+        return '&#129300; Chưa hiểu câu hỏi.<br>Bạn có thể hỏi:<br>• <em>"Hai đường thẳng song song là gì?"</em><br>• <em>"Góc so le trong là gì?"</em><br>• <em>"Dấu hiệu nhận biết song song?"</em>';
+    }
+    function sendMessage() {
+        const input=document.getElementById('chatbot-input');
+        const q=input.value.trim();
+        if (!q) return;
+        addUserMessage(q); input.value='';
+        setTimeout(()=>addBotMessage(getBotResponse(q)),500);
+    }
+    function sendQuickQuestion(q) {
+        addUserMessage(q);
+        setTimeout(()=>addBotMessage(getBotResponse(q)),500);
+    }
+
+    window.onload = function() { init(); initMemGame(); };
+    </script>
+
+    <!-- ===================== BỔ SUNG: STATS & LIKE & PROGRESS ===================== -->
+    <script>
+        const STORAGE_KEY = 'bai9_hai_duong_thang_song_song';
+
+        function loadStorage() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+            catch(e) { return {}; }
+        }
+        function saveStorage(data) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+        }
+
+        function initStats() {
+            const data = loadStorage();
+            data.visits = (data.visits || 0) + 1;
+            saveStorage(data);
+            document.getElementById('visit-count').textContent = data.visits;
+            const attempts = data.scores || [];
+            document.getElementById('attempt-count').textContent = attempts.length;
+            if (attempts.length > 0) {
+                const best = Math.max(...attempts.map(s => s.score));
+                document.getElementById('best-score').textContent = best.toFixed(1);
+            }
+            data.likes = data.likes || 0;
+            document.getElementById('like-count').textContent = data.likes;
+            if (data.liked) document.getElementById('like-btn').classList.add('liked');
+            renderProgress(attempts);
+        }
+
+        function toggleLike() {
+            const data = loadStorage();
+            const btn = document.getElementById('like-btn');
+            if (data.liked) {
+                data.liked = false;
+                data.likes = Math.max(0, (data.likes || 1) - 1);
+                btn.classList.remove('liked');
+            } else {
+                data.liked = true;
+                data.likes = (data.likes || 0) + 1;
+                btn.classList.add('liked');
+                if (typeof confetti === 'function') confetti({ particleCount: 60, spread: 60, origin: { y: 0.2 } });
+            }
+            document.getElementById('like-count').textContent = data.likes;
+            saveStorage(data);
+        }
+
+        function saveScore(score) {
+            const data = loadStorage();
+            if (!data.scores) data.scores = [];
+            data.scores.push({ score: parseFloat(score.toFixed(1)), time: new Date().toLocaleDateString('vi-VN') });
+            if (data.scores.length > 10) data.scores = data.scores.slice(-10);
+            document.getElementById('attempt-count').textContent = data.scores.length;
+            document.getElementById('best-score').textContent = Math.max(...data.scores.map(s => s.score)).toFixed(1);
+            saveStorage(data);
+            renderProgress(data.scores);
+        }
+
+        function renderProgress(attempts) {
+            const panel = document.getElementById('progress-panel');
+            const chart = document.getElementById('progress-chart');
+            const statsDiv = document.getElementById('progress-stats');
+            const trendDiv = document.getElementById('trend-display');
+            if (!attempts || attempts.length === 0) { panel.classList.add('hidden'); return; }
+            panel.classList.remove('hidden');
+            chart.innerHTML = attempts.map((s, i) => {
+                const pct = Math.max(4, (s.score / 10) * 100);
+                const color = s.score >= 9 ? '#10b981' : s.score >= 7 ? '#3b82f6' : s.score >= 5 ? '#f59e0b' : '#ef4444';
+                return `<div class="bar-wrap"><div class="bar-score">${s.score}</div><div class="bar" style="height:${pct}%;background:${color};"></div><div class="bar-label">L${i+1}</div></div>`;
+            }).join('');
+            const scores = attempts.map(s => s.score);
+            const avg = (scores.reduce((a,b) => a+b,0) / scores.length).toFixed(1);
+            const best = Math.max(...scores).toFixed(1);
+            const latest = scores[scores.length-1].toFixed(1);
+            statsDiv.innerHTML = `
+                <div class="bg-blue-50 rounded-xl p-3 border border-blue-100"><div class="font-black text-blue-700 text-lg">${avg}</div><div class="text-slate-500 text-xs">Điểm TB</div></div>
+                <div class="bg-green-50 rounded-xl p-3 border border-green-100"><div class="font-black text-green-700 text-lg">${best}</div><div class="text-slate-500 text-xs">Cao nhất</div></div>
+                <div class="bg-orange-50 rounded-xl p-3 border border-orange-100"><div class="font-black text-orange-700 text-lg">${latest}</div><div class="text-slate-500 text-xs">Lần này</div></div>`;
+            if (scores.length >= 2) {
+                const diff = scores[scores.length-1] - scores[scores.length-2];
+                trendDiv.innerHTML = diff > 0
+                    ? `<span class="trend-badge trend-up">📈 Tăng +${diff.toFixed(1)} điểm</span>`
+                    : diff < 0
+                    ? `<span class="trend-badge trend-down">📉 Giảm ${diff.toFixed(1)} điểm</span>`
+                    : `<span class="trend-badge trend-same">➡️ Giữ nguyên</span>`;
+            } else {
+                trendDiv.innerHTML = `<span class="trend-badge trend-same">🆕 Lần đầu làm bài</span>`;
+            }
+        }
+    </script>
+    <!-- ===================== KẾT THÚC BỔ SUNG STATS ===================== -->
+
+    <!-- COUNTAPI GLOBAL VIEW COUNTER -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var NAMESPACE = 'toan7-vi-cong-dong';
+            var PAGE_KEY  = 'bai-9.html';
+            var VISITED_KEY = 'toan7_visited_bai9';
+            var badge = document.getElementById('global-view-badge');
+            if (!localStorage.getItem(VISITED_KEY)) {
+                localStorage.setItem(VISITED_KEY, '1');
+                fetch('https://api.counterapi.dev/v1/' + NAMESPACE + '/' + PAGE_KEY + '/up')
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) { if (badge) badge.textContent = '👥 ' + (data.count || 0).toLocaleString('vi-VN') + ' người đã truy cập bài này'; })
+                    .catch(function() { if (badge) badge.textContent = '👥 0 người đã truy cập bài này'; });
+            } else {
+                fetch('https://api.counterapi.dev/v1/' + NAMESPACE + '/' + PAGE_KEY + '/')
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) { if (badge) badge.textContent = '👥 ' + (data.count || 0).toLocaleString('vi-VN') + ' người đã truy cập bài này'; })
+                    .catch(function() { if (badge) badge.textContent = '👥 0 người đã truy cập bài này'; });
+            }
+        });
+    </script>
+    <!-- END COUNTAPI GLOBAL VIEW COUNTER -->
+</body>
+</html>
