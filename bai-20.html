@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 20: Tỉ lệ thức</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: { inlineMath:[['$','$'],['\\(','\\)']], displayMath:[['$$','$$'],['\\[','\\]']], processEscapes:true },
+            chtml: { scale:1, matchFontHeight:false, mtextInheritFont:true }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family:'Comfortaa',cursive !important; scroll-behavior:smooth; line-height:1.8; }
+        * { font-family:'Comfortaa',cursive !important; }
+        mjx-container { display:inline-block !important; vertical-align:baseline !important; margin:0 0.1em !important; }
+        nav { background:rgba(255,255,255,0.9); backdrop-filter:blur(10px); border-bottom:1px solid #e2e8f0; position:sticky; top:0; z-index:50; }
+        .section-dashed { border:3px dashed #cbd5e1; border-radius:24px; transition:border-color 0.3s; }
+        .section-dashed:hover { border-color:#3b82f6; }
+        .check-btn { transition:all 0.2s; cursor:pointer; border:2px solid #e2e8f0; }
+        .selected-true { background-color:#22c55e !important; color:white !important; border-color:#16a34a !important; }
+        .selected-false { background-color:#ef4444 !important; color:white !important; border-color:#dc2626 !important; }
+        .correct-highlight { border:3px solid #22c55e !important; box-shadow:0 0 8px rgba(34,197,94,0.4); }
+        .mcq-option { border:2px solid #e2e8f0; cursor:pointer; transition:all 0.2s; border-radius:16px; }
+        .mcq-option.selected { border-color:#3b82f6; background-color:#eff6ff; }
+        .mcq-option.correct { border-color:#22c55e; background-color:#dcfce7; color:#166534; }
+        .mcq-option.wrong { border-color:#ef4444; background-color:#fee2e2; color:#991b1b; }
+        .fill-input { border-bottom:2px dashed #3b82f6; outline:none; text-align:center; width:140px; font-weight:bold; color:#2563eb; background:transparent; }
+        .fill-correct { background-color:#dcfce7; border-color:#22c55e; border-style:solid; border-radius:8px; padding:2px 8px; }
+        .fill-wrong { background-color:#fee2e2; border-color:#ef4444; border-style:solid; border-radius:8px; padding:2px 8px; }
+        .feedback-box { display:none; margin-top:0.5rem; padding:0.75rem; border-radius:0.75rem; border-left:4px solid #ef4444; background-color:#fffafb; font-size:0.85rem; }
+        .hint-box { display:none; margin-top:0.5rem; padding:0.75rem; border-radius:0.75rem; border:1px dashed #eab308; background-color:#fefce8; color:#854d0e; font-size:0.85rem; }
+        #loading-overlay { display:none; position:fixed; inset:0; background:rgba(255,255,255,0.9); z-index:100; flex-direction:column; align-items:center; justify-content:center; }
+        .loader { border:6px solid #f3f3f3; border-top:6px solid #3b82f6; border-radius:50%; width:50px; height:50px; animation:spin 1s linear infinite; }
+        @keyframes spin { 0%{transform:rotate(0deg);}100%{transform:rotate(360deg);} }
+        .hint-btn { display:inline-flex; align-items:center; gap:4px; background:#fef3c7; border:2px solid #f59e0b; padding:6px 12px; border-radius:12px; color:#92400e; font-size:0.75rem; font-weight:bold; transition:all 0.2s; margin-left:8px; cursor:pointer; }
+        .hint-btn:hover { background:#fde68a; transform:translateY(-1px); }
+        @keyframes bounce-in { 0%{transform:scale(0.9);opacity:0;}50%{transform:scale(1.05);}100%{transform:scale(1);opacity:1;} }
+        .animate-bounce-in { animation:bounce-in 0.5s ease-out; }
+        .level-badge { display:inline-block; padding:4px 12px; border-radius:12px; font-size:0.7rem; font-weight:bold; margin-left:8px; }
+        .level-nhan-biet { background:#dbeafe; color:#1e40af; border:1px solid #3b82f6; }
+        .level-thong-hieu { background:#fef3c7; color:#92400e; border:1px solid #f59e0b; }
+        .level-van-dung { background:#fecaca; color:#991b1b; border:1px solid #ef4444; }
+        .score-excellent { background:linear-gradient(135deg,#10b981,#059669); color:white; animation:pulse-scale 1s ease-in-out infinite; }
+        .score-good { background:linear-gradient(135deg,#3b82f6,#2563eb); color:white; }
+        .score-average { background:linear-gradient(135deg,#f59e0b,#d97706); color:white; }
+        .score-low { background:linear-gradient(135deg,#ef4444,#dc2626); color:white; }
+        @keyframes pulse-scale { 0%,100%{transform:scale(1);}50%{transform:scale(1.05);} }
+        .download-btn { background:linear-gradient(135deg,#8b5cf6,#6366f1); color:white; padding:10px 20px; border-radius:16px; font-weight:bold; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(139,92,246,0.3); font-size:0.875rem; }
+        .download-btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(139,92,246,0.4); }
+
+        /* ==================== TIME TRAVELER GAME — BRIGHT & FUN ==================== */
+        #time-game { position:relative; }
+
+        .tt-scene {
+            background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%);
+            border-radius: 28px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #bae6fd;
+        }
+        .tt-scene::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 10% 90%, rgba(251,191,36,0.18) 0%, transparent 50%),
+                        radial-gradient(ellipse at 90% 10%, rgba(167,139,250,0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        /* Floating confetti dots decoration */
+        .deco-dot { position:absolute; border-radius:50%; opacity:0.35; animation:float-dot var(--dur,6s) ease-in-out infinite; }
+        @keyframes float-dot { 0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-18px) rotate(180deg);} }
+
+        #tt-canvas {
+            width:100%;
+            max-width:620px;
+            height:280px;
+            cursor:crosshair;
+            display:block;
+            margin:0 auto;
+            border-radius:20px;
+            background: white;
+            border: 3px solid #bfdbfe;
+            box-shadow: 0 8px 32px rgba(99,179,237,0.18);
+            transition: box-shadow 0.2s;
+        }
+        #tt-canvas:hover { box-shadow: 0 12px 40px rgba(99,102,241,0.22); }
+
+        .mission-card {
+            background: white;
+            border: 2.5px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 14px 12px;
+            cursor: pointer;
+            transition: all 0.22s;
+            color: #1e293b;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .mission-card:hover { background:#eff6ff; transform:translateY(-4px); border-color:#93c5fd; box-shadow:0 8px 20px rgba(99,102,241,0.15); }
+        .mission-card.active { background: linear-gradient(135deg,#eff6ff,#faf5ff); border-color:#818cf8; box-shadow:0 6px 20px rgba(99,102,241,0.2); }
+        .mission-card.done { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border-color:#86efac; cursor:default; pointer-events:none; }
+
+        .time-badge {
+            display:inline-flex; align-items:center; gap:6px;
+            background:white; border:2px solid #bfdbfe;
+            padding:6px 14px; border-radius:12px; color:#1e40af; font-size:0.8rem; font-weight:bold;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.1);
+        }
+
+        .accuracy-meter {
+            height:10px; background:#e2e8f0; border-radius:8px; overflow:hidden; flex:1;
+            border: 1.5px solid #cbd5e1;
+        }
+        .accuracy-fill {
+            height:100%; border-radius:8px; transition:width 0.6s ease;
+            background: linear-gradient(90deg,#f87171,#fbbf24,#34d399);
+        }
+
+        .score-pill {
+            background: linear-gradient(135deg,#fef3c7,#fde68a);
+            border: 2px solid #fbbf24;
+            border-radius:20px; padding:8px 20px; color:#92400e; font-weight:bold;
+            display:inline-flex; align-items:center; gap:8px;
+            box-shadow: 0 3px 10px rgba(251,191,36,0.2);
+        }
+
+        .tt-instruction {
+            background: linear-gradient(135deg,#eff6ff,#faf5ff);
+            border: 2px dashed #93c5fd;
+            border-radius:16px; padding:12px 18px; color:#1e40af;
+            font-size:0.85rem; font-weight:bold;
+        }
+
+        @keyframes point-land {
+            0%{transform:scale(0) translateY(-20px); opacity:0;}
+            60%{transform:scale(1.4) translateY(0); opacity:1;}
+            100%{transform:scale(1); opacity:1;}
+        }
+        .point-land { animation:point-land 0.4s ease-out; }
+
+        @keyframes bounce-float {
+            0%,100%{transform:translateY(0);}
+            50%{transform:translateY(-8px);}
+        }
+        .bounce-float { animation: bounce-float 2s ease-in-out infinite; }
+
+        /* CHATBOT */
+        #chatbot-container { position:fixed; top:50%; right:20px; transform:translateY(-50%); z-index:1000; }
+        #chatbot-toggle { width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg,#00B2FF,#006AFF); border:none; cursor:pointer; box-shadow:0 8px 24px rgba(0,106,255,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:32px; transition:all 0.3s; position:relative; }
+        #chatbot-toggle:hover { transform:scale(1.1); box-shadow:0 12px 32px rgba(0,106,255,0.6); }
+        .chatbot-label { position:absolute; bottom:-28px; background:linear-gradient(135deg,#00B2FF,#006AFF); color:white; padding:4px 12px; border-radius:12px; font-size:10px; font-weight:bold; white-space:nowrap; box-shadow:0 4px 12px rgba(0,106,255,0.3); }
+        #chatbot-window { display:none; position:fixed; top:50%; right:100px; transform:translateY(-50%); width:340px; height:480px; background:white; border-radius:20px; box-shadow:0 8px 32px rgba(0,0,0,0.15); flex-direction:column; overflow:hidden; animation:slideUp 0.3s ease-out; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);} }
+        #chatbot-header { background:linear-gradient(135deg,#00B2FF,#006AFF); color:white; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+        #chatbot-close { background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s; }
+        #chatbot-close:hover { background:rgba(255,255,255,0.2); }
+        #chatbot-messages { flex:1; overflow-y:auto; padding:16px; background:#f8fafc; }
+        .chat-message { margin-bottom:12px; animation:fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);} }
+        .chat-message.bot { display:flex; gap:8px; }
+        .chat-message.user { display:flex; justify-content:flex-end; }
+        .message-content { padding:10px 14px; border-radius:16px; max-width:75%; font-size:0.9rem; line-height:1.4; }
+        .chat-message.bot .message-content { background:white; color:#1e293b; border:1px solid #e2e8f0; }
+        .chat-message.user .message-content { background:linear-gradient(135deg,#00B2FF,#006AFF); color:white; }
+        .bot-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#00B2FF,#006AFF); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        #chatbot-input-area { padding:12px; border-top:1px solid #e2e8f0; background:white; display:flex; gap:8px; }
+        #chatbot-input { flex:1; padding:10px 14px; border:1px solid #e2e8f0; border-radius:20px; outline:none; font-size:0.9rem; transition:border-color 0.2s; }
+        #chatbot-input:focus { border-color:#00B2FF; }
+        #chatbot-send { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#00B2FF,#006AFF); border:none; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; transition:all 0.2s; }
+        #chatbot-send:hover { transform:scale(1.05); }
+        .quick-questions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .quick-question-btn { padding:6px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; font-size:0.75rem; cursor:pointer; transition:all 0.2s; color:#1e40af; }
+        .quick-question-btn:hover { background:#dbeafe; transform:translateY(-1px); }
+        @media (max-width:640px) { #chatbot-window { width:calc(100vw - 40px); height:60vh; top:50%; right:20px; transform:translateY(-50%); } }
+
+        /* ===== STATS BAR ===== */
+        #stats-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+        .stat-item { display:flex; align-items:center; gap:4px; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 10px; border-radius:20px; font-size:0.78rem; font-weight:bold; color:#1e40af; }
+        .stat-item span.val { font-size:0.85rem; font-weight:900; color:#1d4ed8; }
+        #like-btn { background:#fff0f0; border:1px solid #fca5a5; color:#dc2626; border-radius:20px; padding:4px 12px; font-size:0.78rem; font-weight:bold; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:4px; }
+        #like-btn:hover { background:#fee2e2; }
+        #like-btn.liked { background:#ef4444; border-color:#ef4444; color:white; animation:likeAnim 0.4s ease; }
+        @keyframes likeAnim { 0%{transform:scale(1)} 50%{transform:scale(1.3)} 100%{transform:scale(1)} }
+        #progress-panel { background:white; border-radius:20px; padding:20px; border:2px dashed #3b82f6; margin-bottom:0; }
+        #progress-chart { display:flex; align-items:flex-end; gap:8px; height:100px; padding:8px 0; }
+        .bar-wrap { display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; gap:4px; }
+        .bar { width:100%; min-height:4px; border-radius:6px 6px 0 0; transition:height 0.5s ease; }
+        .bar-label { font-size:0.65rem; color:#64748b; text-align:center; }
+        .bar-score { font-size:0.7rem; font-weight:bold; color:#1e40af; }
+        .trend-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:bold; }
+        .trend-up { background:#dcfce7; color:#166534; }
+        .trend-down { background:#fee2e2; color:#991b1b; }
+        .trend-same { background:#f1f5f9; color:#475569; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 text-slate-800">
+
+<nav class="p-4 shadow-sm mb-6">
+    <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+        <a href="index.html" class="flex items-center gap-2 text-orange-600 font-bold hover:opacity-80 transition-opacity shrink-0">
+            <span class="text-xl">🏠</span>
+            <span class="hidden sm:inline">Trang chủ</span>
+        </a>
+        <!-- STATS BAR INLINE -->
+        <div id="stats-bar" class="flex items-center gap-2 flex-wrap">
+            <div class="stat-item">👁️ <span class="val" id="visit-count">0</span></div>
+            <div class="stat-item">🏆 <span class="val" id="attempt-count">0</span> lần</div>
+            <div class="stat-item">⭐ <span class="val" id="best-score">--</span></div>
+            <button id="like-btn" onclick="toggleLike()">❤️ <span id="like-count">0</span></button>
+        </div>
+        <div class="text-xs font-bold text-slate-500 uppercase tracking-widest hidden md:block">Toán 7 - Bài 20 ✨</div>
+    </div>
+</nav>
+
+<div id="loading-overlay">
+    <div class="loader mb-4"></div>
+    <p class="font-bold text-blue-600 animate-pulse">Đang tạo đề mới...</p>
+</div>
+
+<div class="max-w-4xl mx-auto px-3 md:px-6 space-y-12">
+
+    <!-- HEADER -->
+    <div class="text-center py-6">
+        <h1 class="text-3xl md:text-4xl font-black text-blue-600 uppercase tracking-tighter flex items-center justify-center gap-3 flex-wrap">
+            <span>⚖️</span> Bài 20: Tỉ lệ thức <span>🔢</span>
+        </h1>
+        <p class="text-slate-500 font-bold mt-2">Kết nối tri thức - Toán 7</p>
+        <!-- COUNTAPI GLOBAL VIEW COUNTER -->
+        <p id="global-view-badge" class="text-slate-400 text-sm font-bold mt-1">👥 Đang tải...</p>
+    </div>
+
+    <!-- TIẾN BỘ HỌC TẬP -->
+    <div id="progress-panel" class="hidden">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <h2 class="text-lg font-bold text-blue-800">📈 Tiến Bộ Học Tập</h2>
+            <div id="trend-display"></div>
+        </div>
+        <div id="progress-chart"></div>
+        <div id="progress-stats" class="mt-3 grid grid-cols-3 gap-3 text-center text-sm"></div>
+    </div>
+
+    <!-- KIẾN THỨC -->
+    <div id="capture-knowledge" class="bg-white p-6 section-dashed shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-blue-800">📖 Kiến Thức Trọng Tâm</h2>
+            <button onclick="downloadKnowledgePDF()" class="download-btn"><span>📥</span> Tải Offline</button>
+        </div>
+        <!-- VIDEO BÀI HỌC -->
+        <div class="mb-6">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-2xl">🎬</span>
+                <h3 class="font-bold text-blue-700 text-base">Video Bài Học</h3>
+                <span class="text-xs bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">YouTube</span>
+            </div>
+            <div class="relative w-full rounded-2xl overflow-hidden border-2 border-blue-100 shadow-md bg-black" style="aspect-ratio: 16/9;">
+                <iframe
+                    id="lesson-video"
+                    src="https://www.youtube.com/embed/yRtTnIP_o6E"
+                    title="Video Bài Học - Tỉ lệ thức"
+                    class="w-full h-full"
+                    style="width:100%; height:100%; position:absolute; top:0; left:0;"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen>
+                </iframe>
+            </div>
+            <p class="text-xs text-slate-400 mt-2 text-center">💡 Xem video trước khi làm bài tập bên dưới</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 space-y-3">
+                <h3 class="font-bold text-blue-700">1. Định nghĩa tỉ lệ thức</h3>
+                <ul class="space-y-2 text-slate-600">
+                    <li>• Tỉ lệ thức là <strong>đẳng thức của hai tỉ số</strong>: $\dfrac{a}{b} = \dfrac{c}{d}$</li>
+                    <li>• Ký hiệu: $a : b = c : d$ hay $\dfrac{a}{b} = \dfrac{c}{d}$</li>
+                    <li>• $a, d$: ngoại tỉ &nbsp;|&nbsp; $b, c$: trung tỉ</li>
+                    <li>• Điều kiện: $b \neq 0$, $d \neq 0$</li>
+                </ul>
+            </div>
+            <div class="bg-green-50/50 p-5 rounded-2xl border border-green-100 space-y-3">
+                <h3 class="font-bold text-green-700">2. Tính chất cơ bản — Nhân chéo</h3>
+                <ul class="space-y-2 text-slate-600">
+                    <li>• Nếu $\dfrac{a}{b} = \dfrac{c}{d}$ thì $a \cdot d = b \cdot c$</li>
+                    <li>• <strong>Ngoại tỉ nhân ngoại tỉ = trung tỉ nhân trung tỉ</strong></li>
+                    <li>• Ngược lại: nếu $ad = bc$ thì $\dfrac{a}{b} = \dfrac{c}{d}$</li>
+                    <li>• Ứng dụng: kiểm tra & lập tỉ lệ thức</li>
+                </ul>
+            </div>
+            <div class="bg-purple-50/50 p-5 rounded-2xl border border-purple-100 space-y-3">
+                <h3 class="font-bold text-purple-700">3. Tìm số hạng chưa biết</h3>
+                <ul class="space-y-2 text-slate-600">
+                    <li>• Biết $a, b, c$ → tìm $d$: $d = \dfrac{b \cdot c}{a}$</li>
+                    <li>• Biết $a, c, d$ → tìm $b$: $b = \dfrac{a \cdot d}{c}$</li>
+                    <li>• <strong>Nhân chéo rồi chia</strong> để tìm ẩn</li>
+                    <li>• Ví dụ: $\dfrac{3}{x} = \dfrac{6}{10}$ → $x = \dfrac{3 \times 10}{6} = 5$</li>
+                </ul>
+            </div>
+            <div class="bg-orange-50/50 p-5 rounded-2xl border border-orange-100 space-y-3">
+                <h3 class="font-bold text-orange-700">4. Ứng dụng thực tế</h3>
+                <ul class="space-y-2 text-slate-600">
+                    <li>• <strong>Bản đồ & tỉ lệ xích:</strong> $\dfrac{\text{khoảng cách bản đồ}}{\text{khoảng cách thực}} = $ hằng số</li>
+                    <li>• <strong>Pha dung dịch:</strong> giữ nguyên tỉ lệ khi thay đổi lượng</li>
+                    <li>• <strong>Bài toán chia tỉ lệ:</strong> phân phối theo tỉ lệ cho trước</li>
+                    <li>• <strong>Công thức đổi đơn vị</strong> (vận tốc, khối lượng…)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TRÒ CHƠI: TIME TRAVELER ===== -->
+    <div class="section-dashed shadow-md" id="time-game">
+        <div class="tt-scene">
+
+            <!-- Floating decoration dots -->
+            <div class="deco-dot" style="width:28px;height:28px;background:#fbbf24;top:8%;left:4%;--dur:5s;"></div>
+            <div class="deco-dot" style="width:18px;height:18px;background:#f472b6;top:15%;right:6%;--dur:7s;"></div>
+            <div class="deco-dot" style="width:22px;height:22px;background:#34d399;bottom:12%;left:8%;--dur:6s;"></div>
+            <div class="deco-dot" style="width:14px;height:14px;background:#60a5fa;bottom:18%;right:5%;--dur:4s;"></div>
+            <div class="deco-dot" style="width:10px;height:10px;background:#a78bfa;top:40%;left:2%;--dur:8s;"></div>
+
+            <!-- Title -->
+            <div class="relative z-10 mb-6">
+                <h2 class="text-2xl font-black text-blue-700 flex items-center gap-3 mb-2">
+                    <span class="text-3xl bounce-float inline-block">🔮</span> TIÊN TRI TỈ LỆ THỨC
+                </h2>
+                <p class="text-slate-600 text-sm font-medium">Biểu đồ tỉ lệ đang ẩn <strong class="text-purple-600">1 giá trị bí ẩn ❓</strong> — phân tích quy luật và <strong class="text-blue-600">bấm thẳng lên biểu đồ</strong> vào vị trí bạn đoán! Bấm càng chính xác, điểm càng cao! 🎯</p>
+            </div>
+
+            <!-- Stats row -->
+            <div class="relative z-10 flex flex-wrap items-center gap-3 mb-5">
+                <div class="score-pill">⚡ <span id="tt-score">0</span> điểm</div>
+                <div class="time-badge">🎯 Nhiệm vụ <span id="tt-mission-num">0</span>/5</div>
+                <div class="flex items-center gap-2 flex-1 min-w-32">
+                    <span class="text-slate-600 text-xs font-bold whitespace-nowrap">Độ chính xác</span>
+                    <div class="accuracy-meter"><div id="tt-accuracy-fill" class="accuracy-fill" style="width:0%"></div></div>
+                    <span id="tt-accuracy-pct" class="text-blue-700 text-xs font-bold">—</span>
+                </div>
+            </div>
+
+            <!-- Mission selector -->
+            <div id="tt-missions" class="relative z-10 grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+                <!-- rendered by JS -->
+            </div>
+
+            <!-- Canvas area -->
+            <div id="tt-workspace" class="relative z-10 hidden">
+                <div class="tt-instruction mb-4" id="tt-instruction">
+                    👆 Biểu đồ đang ẩn 1 điểm dữ liệu (dấu ❓). Bấm vào vị trí đúng trên biểu đồ để dự đoán!
+                </div>
+                <canvas id="tt-canvas"></canvas>
+                <div id="tt-canvas-fb" class="hidden mt-4 p-4 rounded-2xl text-center font-bold text-lg"></div>
+            </div>
+
+            <!-- Reward -->
+            <div id="tt-reward" class="relative z-10 hidden text-center py-10 animate-bounce-in">
+                <div class="text-7xl mb-4">🏆</div>
+                <h3 class="text-3xl font-black text-blue-700 mb-2">TIÊN TRI XUẤT SẮC!</h3>
+                <p class="text-purple-600 font-bold text-lg animate-pulse">Bài học đã được mở khoá! Sẵn sàng làm bài 👇</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MCQ -->
+    <div id="capture-mcq" class="bg-white p-6 section-dashed shadow-sm">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-bold text-blue-800 uppercase">📝 PHẦN 1: Trắc nghiệm (15 câu)</h2>
+            <button onclick="downloadMCQImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+        </div>
+        <div id="mcq-container" class="space-y-8"></div>
+    </div>
+
+    <!-- T/F -->
+    <div id="capture-tf" class="bg-white p-6 section-dashed shadow-sm">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-bold text-blue-800 uppercase">✔️ PHẦN 2: Đúng/Sai (5 câu)</h2>
+            <button onclick="downloadTFImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+        </div>
+        <div id="tf-container" class="space-y-10"></div>
+    </div>
+
+    <!-- FILL -->
+    <div id="capture-fill" class="bg-white p-6 section-dashed shadow-sm">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-xl font-bold text-blue-800 uppercase">🖋️ PHẦN 3: Điền đáp án (5 câu)</h2>
+            <button onclick="downloadFillImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+        </div>
+        <div id="fill-container" class="space-y-6"></div>
+    </div>
+
+    <!-- NỘP BÀI -->
+    <div class="text-center py-12">
+        <button id="submit-btn" onclick="checkResults()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-16 rounded-full shadow-2xl transition-all active:scale-95 text-xl tracking-widest flex items-center gap-4 mx-auto">
+            <span>📤</span> NỘP BÀI
+        </button>
+        <div id="result-board" class="mt-8 hidden">
+            <div class="bg-white section-dashed p-8 inline-block shadow-xl w-full max-w-2xl">
+                <div id="score-text" class="text-4xl font-black mb-2 p-6 rounded-2xl"></div>
+                <div id="score-message" class="text-lg font-bold mt-4"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHATBOT -->
+<div id="chatbot-container">
+    <button id="chatbot-toggle" onclick="toggleChatbot()">
+        💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>
+    </button>
+    <div id="chatbot-window">
+        <div id="chatbot-header">
+            <div><div style="font-weight:bold;font-size:1rem;">Trợ lý Tỉ lệ thức</div><div style="font-size:0.75rem;opacity:0.9;">Hỗ trợ 24/7</div></div>
+            <button id="chatbot-close" onclick="toggleChatbot()">×</button>
+        </div>
+        <div id="chatbot-messages">
+            <div class="chat-message bot">
+                <div class="bot-avatar">💬</div>
+                <div>
+                    <div class="message-content">Xin chào! Tôi là trợ lý Tỉ lệ thức. Tôi có thể giúp:<br>• Định nghĩa và tính chất tỉ lệ thức<br>• Tìm số hạng chưa biết<br>• Ứng dụng thực tế</div>
+                    <div class="quick-questions">
+                        <button class="quick-question-btn" onclick="sendQuickQuestion('Tỉ lệ thức là gì?')">TLT là gì?</button>
+                        <button class="quick-question-btn" onclick="sendQuickQuestion('Nhân chéo là thế nào?')">Nhân chéo?</button>
+                        <button class="quick-question-btn" onclick="sendQuickQuestion('Ứng dụng tỉ lệ thức trong thực tế')">Ứng dụng?</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="chatbot-input-area">
+            <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button id="chatbot-send" onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ======================== TIME TRAVELER GAME ========================
+
+const TT_MISSIONS = [
+    {
+        id:0, emoji:'💰', title:'Giá tiền tỉ lệ',
+        xLabel:'Số kg', yLabel:'Nghìn đ',
+        xValues:['1','2','3','4','5','6'],
+        yValues:[10, 20, 30, null, 50, 60],
+        hiddenIdx:3, yMin:0, yMax:70,
+        hint:'Giá tăng đều 10 nghìn/kg: 1→10, 2→20, 3→30 → kg 4=?',
+        description:'Giá tiền (nghìn đồng) theo số kg mua. Kg 4 đang bị ẩn!',
+        color:'#f59e0b'
+    },
+    {
+        id:1, emoji:'🗺️', title:'Bản đồ tỉ lệ xích',
+        xLabel:'Bản đồ(cm)', yLabel:'Thực(km)',
+        xValues:['1','2','3','4','5','6'],
+        yValues:[5, 10, null, 20, 25, 30],
+        hiddenIdx:2, yMin:0, yMax:35,
+        hint:'Tỉ lệ xích 1:500000 → 1cm = 5km, 2cm = 10km → 3cm = ?',
+        description:'Khoảng cách thực (km) theo cm trên bản đồ. Giá trị 3cm bị ẩn!',
+        color:'#6366f1'
+    },
+    {
+        id:2, emoji:'⚗️', title:'Pha dung dịch',
+        xLabel:'Nước(lít)', yLabel:'Muối(g)',
+        xValues:['1','2','3','4','5','6'],
+        yValues:[20, 40, 60, null, 100, 120],
+        hiddenIdx:3, yMin:0, yMax:140,
+        hint:'Tỉ lệ muối:nước = 20g/lít → 3 lít = 60g → 4 lít = ?',
+        description:'Lượng muối (g) cần pha với nước (lít). Giá trị 4 lít bị ẩn!',
+        color:'#0ea5e9'
+    },
+    {
+        id:3, emoji:'🚗', title:'Quãng đường - thời gian',
+        xLabel:'Giờ', yLabel:'Km',
+        xValues:['1','2','3','4','5','6','7'],
+        yValues:[60, 120, 180, null, 300, 360, 420],
+        hiddenIdx:3, yMin:0, yMax:450,
+        hint:'Vận tốc đều 60km/h: 1h=60km, 2h=120km → 4h = ?',
+        description:'Quãng đường (km) theo thời gian (giờ). Giờ thứ 4 bị ẩn!',
+        color:'#10b981'
+    },
+    {
+        id:4, emoji:'🎨', title:'Pha màu tỉ lệ',
+        xLabel:'Đỏ(ml)', yLabel:'Vàng(ml)',
+        xValues:['2','4','6','8','10'],
+        yValues:[3, 6, 9, null, 15],
+        hiddenIdx:3, yMin:0, yMax:18,
+        hint:'Tỉ lệ đỏ:vàng = 2:3 → 8ml đỏ cần bao nhiêu ml vàng?',
+        description:'Lượng màu vàng (ml) pha với màu đỏ (ml). Giá trị 8ml đỏ bị ẩn!',
+        color:'#f97316'
+    }
+];
+
+const TOLERANCE_PCT = 18;
+let ttCompleted = new Set();
+let ttTotalScore = 0;
+let ttActiveMission = null;
+let ttUserClicked = false;
+
+function initTimeTraveler() {
+    renderMissions();
+}
+
+function renderMissions() {
+    const box = document.getElementById('tt-missions');
+    box.innerHTML = '';
+    const missionColors = ['#fff7ed','#faf5ff','#eff6ff','#f0fdf4','#fefce8'];
+    const missionBorders = ['#fed7aa','#ddd6fe','#bfdbfe','#bbf7d0','#fde68a'];
+    TT_MISSIONS.forEach((m,idx) => {
+        const done = ttCompleted.has(m.id);
+        box.innerHTML += `
+            <div onclick="${done?'':'startMission('+m.id+')'}" 
+                 class="mission-card ${done?'done':''}" id="mc-${m.id}"
+                 style="${!done?`background:${missionColors[idx]};border-color:${missionBorders[idx]};`:''}">
+                <div class="text-3xl mb-2">${done?'✅':m.emoji}</div>
+                <div class="text-sm font-bold text-slate-700">${m.title}</div>
+                <div class="text-xs mt-1 ${done?'text-green-600 font-bold':'text-slate-400'}">${done?'✓ Xong!':'Bấm để chơi'}</div>
+            </div>`;
+    });
+}
+
+function startMission(id) {
+    ttActiveMission = TT_MISSIONS.find(m => m.id === id);
+    if (!ttActiveMission) return;
+    ttUserClicked = false;
+
+    document.querySelectorAll('.mission-card').forEach(c => c.classList.remove('active'));
+    document.getElementById(`mc-${id}`).classList.add('active');
+    document.getElementById('tt-workspace').classList.remove('hidden');
+    document.getElementById('tt-canvas-fb').classList.add('hidden');
+    document.getElementById('tt-mission-num').textContent = ttCompleted.size;
+    document.getElementById('tt-instruction').innerHTML = 
+        `<span class="text-2xl">${ttActiveMission.emoji}</span> <strong>${ttActiveMission.description}</strong> Bấm thẳng lên biểu đồ để đoán điểm bị ẩn!`;
+
+    drawChart(ttActiveMission, null);
+    document.getElementById('tt-workspace').scrollIntoView({ behavior:'smooth', block:'center' });
+    document.getElementById('tt-canvas').onclick = handleCanvasClick;
+}
+
+function getChartDimensions(canvas) {
+    const pad = { top:36, right:24, bottom:44, left:54 };
+    const w = canvas.offsetWidth || 600;
+    canvas.width = w;
+    canvas.height = 280;
+    return { pad, w, h:280 };
+}
+
+function drawChart(mission, clickedValue) {
+    const canvas = document.getElementById('tt-canvas');
+    const { pad, w, h } = getChartDimensions(canvas);
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+
+    const vals = mission.yValues;
+    const xs = mission.xValues;
+    const yMin = mission.yMin, yMax = mission.yMax;
+    const N = xs.length;
+    const chartW = w - pad.left - pad.right;
+    const chartH = h - pad.top - pad.bottom;
+    const toX = i => pad.left + (i / (N-1)) * chartW;
+    const toY = v => pad.top + chartH - ((v - yMin) / (yMax - yMin)) * chartH;
+    const lineColor = mission.color || '#6366f1';
+
+    // Grid lines (light)
+    for (let g = 0; g <= 5; g++) {
+        const gy = pad.top + (g/5)*chartH;
+        const gv = yMax - (g/5)*(yMax-yMin);
+        ctx.strokeStyle = '#f1f5f9';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4,3]);
+        ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(pad.left+chartW, gy); ctx.stroke();
+        ctx.setLineDash([]);
+        // Y label
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = `bold 11px Comfortaa, sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.round(gv), pad.left - 8, gy + 4);
+    }
+
+    // Vertical grid
+    xs.forEach((label, i) => {
+        ctx.strokeStyle = '#f8fafc';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(toX(i), pad.top); ctx.lineTo(toX(i), pad.top+chartH); ctx.stroke();
+    });
+
+    // Axes
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top+chartH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top+chartH); ctx.lineTo(pad.left+chartW, pad.top+chartH); ctx.stroke();
+
+    // Axis unit labels
+    ctx.fillStyle = '#64748b';
+    ctx.font = `bold 11px Comfortaa, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(mission.yLabel, 3, pad.top - 12);
+    ctx.textAlign = 'right';
+    ctx.fillText(mission.xLabel, w - 3, h - 3);
+
+    // X labels
+    ctx.textAlign = 'center';
+    xs.forEach((label, i) => {
+        ctx.fillStyle = '#475569';
+        ctx.font = `bold 11px Comfortaa, sans-serif`;
+        ctx.fillText(label, toX(i), h - 10);
+        // tick
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(toX(i), pad.top+chartH); ctx.lineTo(toX(i), pad.top+chartH+5); ctx.stroke();
+    });
+
+    // Known points for drawing
+    const knownPts = vals.map((v, i) => ({ i, v, known: v !== null && i !== mission.hiddenIdx })).filter(p => p.known);
+
+    // Area fill under line (gradient)
+    if (knownPts.length > 1) {
+        const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top+chartH);
+        grad.addColorStop(0, lineColor.replace(')', ',0.18)').replace('rgb', 'rgba').replace('#', 'rgba(').replace('rgba(','rgba(0,0,0,0)'));
+        // simpler approach:
+        ctx.beginPath();
+        ctx.moveTo(toX(knownPts[0].i), pad.top+chartH);
+        knownPts.forEach(p => ctx.lineTo(toX(p.i), toY(p.v)));
+        ctx.lineTo(toX(knownPts[knownPts.length-1].i), pad.top+chartH);
+        ctx.closePath();
+        ctx.fillStyle = lineColor + '18';
+        ctx.fill();
+    }
+
+    // Draw main line (only between known points)
+    if (knownPts.length > 1) {
+        ctx.beginPath();
+        ctx.strokeStyle = lineColor;
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.setLineDash([]);
+        ctx.moveTo(toX(knownPts[0].i), toY(knownPts[0].v));
+        for (let k = 1; k < knownPts.length; k++) {
+            ctx.lineTo(toX(knownPts[k].i), toY(knownPts[k].v));
+        }
+        ctx.stroke();
+    }
+
+    // Dashed hint lines to hidden point
+    const hi = mission.hiddenIdx;
+    const prevPt = knownPts.filter(p => p.i < hi).pop();
+    const nextPt = knownPts.find(p => p.i > hi);
+    if (prevPt && nextPt && clickedValue === null) {
+        const midY = (prevPt.v + nextPt.v) / 2;
+        ctx.beginPath();
+        ctx.setLineDash([6,4]);
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
+        ctx.moveTo(toX(prevPt.i), toY(prevPt.v));
+        ctx.lineTo(toX(hi), toY(midY));
+        ctx.lineTo(toX(nextPt.i), toY(nextPt.v));
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // Draw known dots
+    knownPts.forEach(p => {
+        // Shadow
+        ctx.beginPath();
+        ctx.arc(toX(p.i), toY(p.v), 9, 0, 2*Math.PI);
+        ctx.fillStyle = lineColor + '22';
+        ctx.fill();
+        // Dot
+        ctx.beginPath();
+        ctx.arc(toX(p.i), toY(p.v), 6, 0, 2*Math.PI);
+        ctx.fillStyle = lineColor;
+        ctx.fill();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        // Value label
+        ctx.fillStyle = '#1e293b';
+        ctx.font = `bold 12px Comfortaa, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(p.v, toX(p.i), toY(p.v) - 13);
+    });
+
+    // Hidden point
+    const trueVal = mission.yValues[mission.hiddenIdx];
+    if (clickedValue !== null && clickedValue !== undefined) {
+        // True answer (green)
+        ctx.beginPath();
+        ctx.arc(toX(hi), toY(trueVal), 11, 0, 2*Math.PI);
+        ctx.fillStyle = '#dcfce7';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(toX(hi), toY(trueVal), 7, 0, 2*Math.PI);
+        ctx.fillStyle = '#22c55e';
+        ctx.fill();
+        ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.fillStyle = '#15803d';
+        ctx.font = `bold 13px Comfortaa, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(trueVal, toX(hi), toY(trueVal) - 16);
+
+        // User click (orange pin)
+        ctx.beginPath();
+        ctx.arc(toX(hi), toY(clickedValue), 8, 0, 2*Math.PI);
+        ctx.fillStyle = '#fef3c7';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(toX(hi), toY(clickedValue), 5, 0, 2*Math.PI);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fill();
+        ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#92400e';
+        ctx.font = `bold 11px Comfortaa, sans-serif`;
+        ctx.fillText('Bạn', toX(hi), toY(clickedValue) - 12);
+    } else {
+        // Question mark bubble
+        const qx = toX(hi), qy = (pad.top + pad.top+chartH)/2;
+        // Pulsing outer ring
+        ctx.beginPath();
+        ctx.arc(qx, qy, 22, 0, 2*Math.PI);
+        ctx.fillStyle = '#fef9c3';
+        ctx.fill();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5,3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Inner
+        ctx.beginPath();
+        ctx.arc(qx, qy, 15, 0, 2*Math.PI);
+        ctx.fillStyle = '#fde68a';
+        ctx.fill();
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2; ctx.stroke();
+        // ? text
+        ctx.fillStyle = '#92400e';
+        ctx.font = `bold 16px Comfortaa, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', qx, qy);
+        ctx.textBaseline = 'alphabetic';
+        // Label
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = `bold 10px Comfortaa, sans-serif`;
+        ctx.fillText('BẤM VÀO ĐÂY', qx, qy + 30);
+    }
+}
+
+function handleCanvasClick(e) {
+    if (ttUserClicked || !ttActiveMission) return;
+    const canvas = document.getElementById('tt-canvas');
+    const rect = canvas.getBoundingClientRect();
+    const m = ttActiveMission;
+    const { pad, w, h } = getChartDimensions(canvas);
+    const chartH = h - pad.top - pad.bottom;
+
+    const clickY = e.clientY - rect.top;
+    const relY = (clickY - pad.top) / chartH;
+    const clickedValue = m.yMax - relY * (m.yMax - m.yMin);
+    const clampedValue = Math.max(m.yMin, Math.min(m.yMax, clickedValue));
+
+    ttUserClicked = true;
+    ttClickY = clampedValue;
+
+    // Evaluate accuracy
+    const trueVal = m.yValues[m.hiddenIdx];
+    const range = m.yMax - m.yMin;
+    const diff = Math.abs(clampedValue - trueVal);
+    const accuracy = Math.max(0, 100 - (diff / range) * 100 * (100/TOLERANCE_PCT));
+    const pct = Math.min(100, Math.round(accuracy));
+
+    const pts = Math.round(pct * 2); // max 200 pts per mission
+    ttTotalScore += pts;
+    document.getElementById('tt-score').textContent = ttTotalScore;
+    document.getElementById('tt-accuracy-fill').style.width = pct + '%';
+    document.getElementById('tt-accuracy-pct').textContent = pct + '%';
+
+    // Redraw with answer
+    drawChart(m, clampedValue);
+
+    // Feedback
+    const fb = document.getElementById('tt-canvas-fb');
+    fb.classList.remove('hidden');
+    if (pct >= 85) {
+        fb.className = 'mt-4 p-4 rounded-2xl text-center font-bold text-lg bg-green-50 border-2 border-green-400 text-green-800';
+        fb.innerHTML = `🎯 Xuất sắc! Độ chính xác ${pct}% (+${pts} điểm) 🎉<br><span class="text-sm font-normal text-green-600">Đáp án đúng: <strong>${trueVal} ${m.yLabel}</strong> | Bạn bấm: ${clampedValue.toFixed(1)} ${m.yLabel}</span>`;
+        confetti({ particleCount: 60, spread: 80, origin: { y: 0.6 } });
+    } else if (pct >= 60) {
+        fb.className = 'mt-4 p-4 rounded-2xl text-center font-bold text-lg bg-blue-50 border-2 border-blue-400 text-blue-800';
+        fb.innerHTML = `👍 Khá tốt! Độ chính xác ${pct}% (+${pts} điểm)<br><span class="text-sm font-normal text-blue-600">Đáp án đúng: <strong>${trueVal} ${m.yLabel}</strong> | Bạn bấm: ${clampedValue.toFixed(1)}</span>`;
+    } else {
+        fb.className = 'mt-4 p-4 rounded-2xl text-center font-bold text-lg bg-orange-50 border-2 border-orange-300 text-orange-800';
+        fb.innerHTML = `💡 Sai rồi! Độ chính xác ${pct}% (+${pts} điểm)<br><span class="text-sm font-normal text-orange-600">Đáp án đúng: <strong>${trueVal} ${m.yLabel}</strong> — Gợi ý: ${m.hint}</span>`;
+    }
+
+    // Mark complete and show next button
+    ttCompleted.add(m.id);
+    renderMissions();
+    document.getElementById('tt-mission-num').textContent = ttCompleted.size;
+
+    if (ttCompleted.size >= 5) {
+        setTimeout(() => {
+            document.getElementById('tt-reward').classList.remove('hidden');
+            document.getElementById('tt-reward').scrollIntoView({ behavior:'smooth', block:'center' });
+            const end = Date.now() + 3000;
+            const iv = setInterval(() => { if(Date.now()>end){clearInterval(iv);return;} confetti({particleCount:100,spread:160,origin:{y:0.4}}); }, 300);
+        }, 1000);
+    } else {
+        setTimeout(() => {
+            fb.innerHTML += `<br><button onclick="pickNextMission()" class="mt-3 inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold px-8 py-2.5 rounded-xl text-sm transition-all shadow-md">Nhiệm vụ tiếp theo ➡️</button>`;
+        }, 800);
+    }
+}
+
+function pickNextMission() {
+    const next = TT_MISSIONS.find(m => !ttCompleted.has(m.id));
+    if (next) startMission(next.id);
+}
+
+// ======================== QUESTION BANKS ========================
+const QUESTION_BANK = {
+    nb: [
+        {
+            q: "Tỉ lệ thức là:",
+            opts: ["Tổng của hai tỉ số","Đẳng thức của hai tỉ số","Hiệu của hai tỉ số","Tích của hai tỉ số"],
+            ans:1, exp:"Tỉ lệ thức là đẳng thức của hai tỉ số: a/b = c/d.", hint:"Đẳng thức của hai..."
+        },
+        {
+            q: "Trong tỉ lệ thức $\\frac{a}{b} = \\frac{c}{d}$, các số $a$ và $d$ được gọi là:",
+            opts: ["Trung tỉ","Ngoại tỉ","Tỉ số","Tỉ lệ"],
+            ans:1, exp:"a và d là ngoại tỉ (hai số ngoài). b và c là trung tỉ (hai số giữa).", hint:"Ngoài hay giữa?"
+        },
+        {
+            q: "Trong tỉ lệ thức $\\frac{3}{4} = \\frac{6}{8}$, tích ngoại tỉ bằng:",
+            opts: ["24","18","12","32"],
+            ans:0, exp:"Tích ngoại tỉ = 3 × 8 = 24. Tích trung tỉ = 4 × 6 = 24. Bằng nhau ✓", hint:"Nhân hai số ngoài: 3 × 8"
+        },
+        {
+            q: "Tính chất cơ bản của tỉ lệ thức $\\frac{a}{b} = \\frac{c}{d}$ là:",
+            opts: ["a + d = b + c","a - d = b - c","a × d = b × c","a ÷ d = b ÷ c"],
+            ans:2, exp:"Tính chất nhân chéo: a × d = b × c (ngoại tỉ × ngoại tỉ = trung tỉ × trung tỉ).", hint:"Nhân chéo"
+        },
+        {
+            q: "Cặp tỉ số nào lập thành tỉ lệ thức?",
+            opts: ["$\\frac{2}{3}$ và $\\frac{4}{5}$","$\\frac{1}{2}$ và $\\frac{3}{6}$","$\\frac{5}{7}$ và $\\frac{8}{9}$","$\\frac{3}{4}$ và $\\frac{5}{7}$"],
+            ans:1, exp:"1/2 = 3/6 vì 1×6 = 2×3 = 6. Kiểm tra: nhân chéo bằng nhau.", hint:"Kiểm tra nhân chéo"
+        },
+        {
+            q: "Cho tỉ lệ thức $\\frac{2}{x} = \\frac{4}{10}$. Giá trị của $x$ là:",
+            opts: ["4","5","6","8"],
+            ans:1, exp:"2 × 10 = 4 × x → 20 = 4x → x = 5.", hint:"Nhân chéo: 2 × 10 = 4 × x"
+        },
+        {
+            q: "Cho $3:5 = 9:x$. Giá trị $x$ là:",
+            opts: ["12","15","18","25"],
+            ans:1, exp:"3 × x = 5 × 9 → 3x = 45 → x = 15.", hint:"Ngoại × ngoại = trung × trung"
+        }
+    ],
+    th: [
+        {
+            q: "Từ $2 \\times 15 = 5 \\times 6$, lập được bao nhiêu tỉ lệ thức?",
+            opts: ["1","2","3","4"],
+            ans:3, exp:"Từ ad = bc, lập được 4 TLT: a/b=c/d, a/c=b/d, d/b=c/a, d/c=b/a.", hint:"Hoán vị ngoại tỉ và trung tỉ"
+        },
+        {
+            q: "Bản đồ tỉ lệ xích 1:500000. Khoảng cách trên bản đồ là 3cm, khoảng cách thực tế là:",
+            opts: ["15km","150km","1.5km","15000km"],
+            ans:0, exp:"3 cm × 500000 = 1500000 cm = 15 km.", hint:"Nhân 3 với mẫu số rồi đổi đơn vị"
+        },
+        {
+            q: "Cho tỉ lệ thức $\\frac{x}{3} = \\frac{8}{12}$. Giá trị $x$ là:",
+            opts: ["1","2","3","4"],
+            ans:1, exp:"x × 12 = 3 × 8 → 12x = 24 → x = 2.", hint:"Nhân chéo rồi chia"
+        },
+        {
+            q: "Từ đẳng thức $4 \\times 9 = 6 \\times 6$, tỉ lệ thức nào ĐÚNG?",
+            opts: ["4/6 = 9/6","4/9 = 6/6","4/6 = 6/9","9/4 = 6/6"],
+            ans:2, exp:"4/6 = 6/9 vì 4×9 = 6×6 = 36 ✓", hint:"a/b = c/d khi ad = bc"
+        },
+        {
+            q: "Một ô tô đi 120km hết 2 giờ. Để đi 300km cần bao nhiêu giờ (vận tốc không đổi)?",
+            opts: ["4 giờ","5 giờ","6 giờ","7 giờ"],
+            ans:1, exp:"120/2 = 300/x → 120x = 600 → x = 5 giờ.", hint:"Lập tỉ lệ thức: 120/2 = 300/x"
+        }
+    ],
+    vd: [
+        {
+            q: "Chia 180 thành hai phần tỉ lệ với 2 và 3. Phần lớn hơn là:",
+            opts: ["60","72","108","120"],
+            ans:2, exp:"Phần 1 = 180×2/(2+3) = 72. Phần 2 = 180×3/5 = 108. Phần lớn = 108.", hint:"Tổng tỉ = 2+3=5, phần lớn = 180×3/5"
+        },
+        {
+            q: "Tìm $x$ và $y$ biết $\\frac{x}{3} = \\frac{y}{5}$ và $x + y = 24$. Giá trị $x$ là:",
+            opts: ["6","8","9","12"],
+            ans:2, exp:"x/3 = y/5 → 5x = 3y → y = 5x/3. Thay vào: x + 5x/3 = 24 → 8x/3 = 24 → x = 9.", hint:"Đặt x/3 = k → x=3k, y=5k"
+        },
+        {
+            q: "Một hợp kim gồm đồng và kẽm theo tỉ lệ 3:2. Nếu có 12kg đồng, cần bao nhiêu kg kẽm?",
+            opts: ["6","8","10","18"],
+            ans:1, exp:"đồng/kẽm = 3/2 → 12/kẽm = 3/2 → kẽm = 12×2/3 = 8kg.", hint:"Lập tỉ lệ thức: 12/kẽm = 3/2"
+        }
+    ]
+};
+
+const TF_BANK = [
+    {
+        q:"Định nghĩa và tính chất tỉ lệ thức",
+        items:[
+            {t:"a) Tỉ lệ thức là đẳng thức của hai tỉ số", a:true, exp:"Đúng theo định nghĩa: a/b = c/d là tỉ lệ thức.", h:"Đẳng thức hai tỉ số"},
+            {t:"b) Trong tỉ lệ thức a:b = c:d, các số a và b là ngoại tỉ", a:false, exp:"Sai. a và d mới là ngoại tỉ; b và c là trung tỉ.", h:"Ngoại = hai số ngoài cùng"},
+            {t:"c) Nếu a/b = c/d thì a × d = b × c", a:true, exp:"Đúng, đây là tính chất nhân chéo của tỉ lệ thức.", h:"Tính chất nhân chéo"},
+            {t:"d) Tỉ lệ thức 2/3 = 4/6 là đúng", a:true, exp:"Kiểm tra: 2×6 = 3×4 = 12 ✓ Vậy 2/3 = 4/6.", h:"Nhân chéo: 2×6=12, 3×4=12"}
+        ]
+    },
+    {
+        q:"Kiểm tra và lập tỉ lệ thức",
+        items:[
+            {t:"a) Từ 3 × 8 = 4 × 6, có thể lập tỉ lệ thức 3/4 = 6/8", a:true, exp:"3×8=24, 4×6=24, nên 3/4=6/8 là tỉ lệ thức đúng.", h:"ad=bc → a/b=c/d"},
+            {t:"b) Nếu a × d = b × c thì a/b = c/d và a/c = b/d đều đúng", a:true, exp:"Từ ad=bc có thể lập được 4 tỉ lệ thức khác nhau.", h:"Nhiều cách hoán vị"},
+            {t:"c) 5/6 = 15/18 là một tỉ lệ thức đúng", a:true, exp:"5×18 = 90 = 6×15 = 90 ✓", h:"Kiểm tra nhân chéo"},
+            {t:"d) 3/4 = 5/6 là một tỉ lệ thức đúng", a:false, exp:"3×6 = 18 ≠ 4×5 = 20. Không phải tỉ lệ thức.", h:"Nhân chéo: 3×6≠4×5"}
+        ]
+    },
+    {
+        q:"Tìm số hạng chưa biết",
+        items:[
+            {t:"a) Trong tỉ lệ thức x/4 = 6/8, thì x = 3", a:true, exp:"x×8 = 4×6 → 8x = 24 → x = 3 ✓", h:"Nhân chéo rồi chia"},
+            {t:"b) Trong tỉ lệ thức 2/x = 10/15, thì x = 5", a:false, exp:"2×15 = x×10 → 30 = 10x → x = 3 (không phải 5).", h:"2×15=30, chia cho 10"},
+            {t:"c) Tìm x trong 3:x = 9:12, ta được x = 4", a:true, exp:"3×12 = x×9 → 36 = 9x → x = 4 ✓", h:"Ngoại × ngoại = trung × trung"},
+            {t:"d) Nếu a/3 = 4/b và a×b = 12, thì a = 2, b = 6", a:false, exp:"a/3 = 4/b → ab = 12, kết hợp: a = 2, b = 6 → a/3 = 2/3, 4/b = 4/6 = 2/3 ✓ Thực ra đúng!", h:"a×b=12, a=2, b=6 → 2×6=12 ✓"}
+        ]
+    },
+    {
+        q:"Ứng dụng tỉ lệ thức",
+        items:[
+            {t:"a) Bản đồ tỉ lệ 1:200000, đoạn 5cm trên bản đồ ứng với 10km thực tế", a:true, exp:"5cm × 200000 = 1000000cm = 10km ✓", h:"Nhân cm với mẫu số, đổi ra km"},
+            {t:"b) Nếu 3 công nhân làm xong việc trong 12 ngày, thì 6 công nhân làm xong trong 6 ngày (cùng năng suất)", a:true, exp:"Năng suất tổng không đổi: 3×12 = 6×x → x = 6 ngày ✓", h:"Công nhân × ngày = hằng số"},
+            {t:"c) Chia 60 thành hai phần tỉ lệ 2:3, phần lớn là 36", a:true, exp:"Phần lớn = 60 × 3/(2+3) = 60×3/5 = 36 ✓", h:"Tổng tỉ = 5, phần lớn = 60×3/5"},
+            {t:"d) Tỉ lệ thức không có ứng dụng trong đời sống thực tế", a:false, exp:"Tỉ lệ thức ứng dụng rộng rãi: bản đồ, công thức pha chế, chia tỉ lệ...", h:"Nghĩ đến bản đồ, công thức"}
+        ]
+    },
+    {
+        q:"Tính chất và mở rộng",
+        items:[
+            {t:"a) Từ a/b = c/d, suy ra (a+b)/b = (c+d)/d", a:true, exp:"Đây là tính chất tỉ lệ thức: thêm mẫu vào tử cả hai vế.", h:"Tính chất thành phần tỉ lệ thức"},
+            {t:"b) Nếu a/b = c/d thì a/c = b/d", a:true, exp:"Hoán đổi trung tỉ: từ ad=bc → a/c=b/d ✓", h:"Hoán vị trung tỉ"},
+            {t:"c) Tỉ lệ thức chỉ áp dụng được với số nguyên dương", a:false, exp:"Tỉ lệ thức áp dụng cho mọi số thực khác 0.", h:"Có thể dùng phân số, số thập phân"},
+            {t:"d) Nếu a/b = c/d = k thì a = kb và c = kd", a:true, exp:"Đúng, k là tỉ số chung, nên a = kb và c = kd.", h:"k là hệ số tỉ lệ chung"}
+        ]
+    },
+    {
+        q:"Tính toán nâng cao với tỉ lệ thức",
+        items:[
+            {t:"a) Biết x/4 = y/7, và x + y = 33, thì x = 12", a:true, exp:"x/4 = y/7 = k → x=4k, y=7k. 4k+7k=33 → 11k=33 → k=3 → x=12 ✓", h:"Đặt tỉ số chung = k"},
+            {t:"b) Từ tỉ lệ thức 3/5 = 6/10, ngoại tỉ là 3 và 6", a:false, exp:"Sai. Ngoại tỉ là hai số ngoài cùng: 3 và 10 (không phải 3 và 6).", h:"Ngoại tỉ = số đứng ngoài cùng"},
+            {t:"c) Nếu a:b = c:d thì (a+c):(b+d) = a:b", a:true, exp:"Tính chất hợp tỉ: nếu a/b = c/d = k thì (a+c)/(b+d) = k = a/b ✓", h:"Tính chất hợp tỉ"},
+            {t:"d) Tỉ lệ thức 0.5/1.5 = 2/6 là đúng", a:true, exp:"0.5 × 6 = 3 = 1.5 × 2 = 3 ✓", h:"Nhân chéo: 0.5×6=3, 1.5×2=3"}
+        ]
+    },
+    {
+        q:"Bài toán thực tế",
+        items:[
+            {t:"a) Xe đi 240km hết 4 giờ. Để đi 360km với vận tốc đó cần 6 giờ", a:true, exp:"240/4 = 360/x → 240x = 1440 → x = 6 giờ ✓", h:"Lập tỉ lệ thức quãng đường/thời gian"},
+            {t:"b) Pha nước cam: 2 quả cam được 300ml. 5 quả được 800ml", a:false, exp:"2/300 = 5/x → 2x = 1500 → x = 750ml (không phải 800ml).", h:"Lập tỉ lệ thức: cam/nước = hằng số"},
+            {t:"c) Nếu lương tuần lễ 5 ngày là 2 triệu, lương 3 ngày là 1.2 triệu", a:true, exp:"5/2 = 3/x → 5x = 6 → x = 1.2 triệu ✓", h:"Ngày/lương = tỉ lệ hằng số"},
+            {t:"d) Mô hình tỉ lệ 1:20. Vật cao 40cm trên mô hình, thực tế cao 8m", a:true, exp:"1/20 = 40cm/thực → thực = 800cm = 8m ✓", h:"Tỉ lệ mô hình × 20 = thực tế"}
+        ]
+    },
+    {
+        q:"Phân tích và nhận định",
+        items:[
+            {t:"a) Tích của hai ngoại tỉ luôn bằng tích của hai trung tỉ trong một tỉ lệ thức", a:true, exp:"Đây chính là tính chất cơ bản: ngoại tỉ × ngoại tỉ = trung tỉ × trung tỉ.", h:"Tính chất quan trọng nhất"},
+            {t:"b) Nếu tăng cả tử số và mẫu số của một tỉ số lên cùng một số k, tỉ số đó không đổi", a:true, exp:"(ka)/(kb) = a/b. Nhân cả tử mẫu với cùng số khác 0 thì tỉ số không đổi.", h:"Rút gọn phân số"},
+            {t:"c) Từ một đẳng thức tích, chỉ lập được đúng 1 tỉ lệ thức", a:false, exp:"Từ ab = cd, lập được 4 tỉ lệ thức: a/c=d/b, a/d=c/b, b/c=d/a, b/d=c/a.", h:"Hoán vị nhiều cách"},
+            {t:"d) Tỉ lệ thức 1/2 = 50/100 là đúng", a:true, exp:"1×100 = 100 = 2×50 = 100 ✓", h:"Nhân chéo đều bằng 100"}
+        ]
+    }
+];
+
+const FILL_BANK = [
+    {q:"Tỉ lệ thức là đẳng thức của hai:", a:"tỉ số", exp:"Định nghĩa: tỉ lệ thức là đẳng thức của hai tỉ số a/b = c/d.", hint:"Hai ... bằng nhau"},
+    {q:"Trong tỉ lệ thức a:b = c:d, tích ngoại tỉ bằng tích:", a:"trung tỉ", exp:"Tính chất: a×d = b×c (ngoại tỉ × ngoại tỉ = trung tỉ × trung tỉ).", hint:"Ngoại tỉ × ngoại tỉ = ... × ..."},
+    {q:"Cho 2/3 = x/9. Giá trị của x là:", a:"6", exp:"2×9 = 3×x → 18 = 3x → x = 6.", hint:"Nhân chéo: 2×9 = 3×x"},
+    {q:"Cho tỉ lệ thức 4:6 = 2:x. Giá trị x là:", a:"3", exp:"4×x = 6×2 → 4x = 12 → x = 3.", hint:"4×x = 6×2"},
+    {q:"Bản đồ tỉ lệ 1:100000. Đoạn 4cm trên bản đồ ứng với bao nhiêu km thực tế?", a:"4", exp:"4cm × 100000 = 400000cm = 4km.", hint:"Nhân cm với mẫu số, đổi sang km"},
+    {q:"Trong tỉ lệ thức a/b = c/d, số a và d là các:", a:"ngoại tỉ", exp:"a và d đứng ở ngoài cùng nên gọi là ngoại tỉ.", hint:"Nằm phía ngoài"},
+    {q:"Từ 3 × 8 = 4 × 6, lập được bao nhiêu tỉ lệ thức?", a:"4", exp:"Từ ad=bc, lập được đúng 4 tỉ lệ thức bằng cách hoán vị.", hint:"Hoán vị ngoại tỉ và trung tỉ"},
+    {q:"Chia 45 thành hai phần tỉ lệ 2:3. Phần lớn là:", a:"27", exp:"Phần lớn = 45×3/(2+3) = 45×3/5 = 27.", hint:"Tổng tỉ = 5, phần lớn = 45×3/5"},
+    {q:"Cho x/5 = y/8 và x + y = 26. Giá trị x là:", a:"10", exp:"x=5k, y=8k → 5k+8k=26 → 13k=26 → k=2 → x=10.", hint:"Đặt tỉ số chung bằng k"},
+    {q:"Kiểm tra xem 6/9 và 10/15 có lập thành tỉ lệ thức không? (có/không)", a:"có", exp:"6×15=90 = 9×10=90 → Nhân chéo bằng nhau → Là tỉ lệ thức.", hint:"Kiểm tra nhân chéo"},
+    {q:"Xe máy đi 180km hết 3 giờ. Đi 240km mất bao nhiêu giờ?", a:"4", exp:"180/3 = 240/x → 180x = 720 → x = 4 giờ.", hint:"Lập tỉ lệ thức: 180/3 = 240/x"},
+    {q:"Trong tỉ lệ thức a/b = c/d = k, thì a bằng:", a:"kb", exp:"a/b = k → a = k×b = kb.", hint:"a/b = k suy ra a = ?"}
+];
+
+let MCQ=[], TF=[], FILL=[];
+let userMcq=Array(15).fill(null);
+let userTf=Array(5).fill(null).map(()=>Array(4).fill(null));
+let submitted=false;
+
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]; } }
+
+function generateQuestions(){
+    MCQ=[];
+    const nb=[...QUESTION_BANK.nb]; shuffle(nb);
+    for(let i=0;i<7;i++){ const q=nb[i%nb.length]; MCQ.push(q.gen?{...q.gen(),l:"nb"}:{...q,l:"nb"}); }
+    const th=[...QUESTION_BANK.th]; shuffle(th);
+    for(let i=0;i<5;i++){ const q=th[i%th.length]; MCQ.push(q.gen?{...q.gen(),l:"th"}:{...q,l:"th"}); }
+    const vd=[...QUESTION_BANK.vd]; shuffle(vd);
+    for(let i=0;i<3;i++){ const q=vd[i%vd.length]; MCQ.push(q.gen?{...q.gen(),l:"vd"}:{...q,l:"vd"}); }
+    const tfPool=[...TF_BANK]; shuffle(tfPool); TF=tfPool.slice(0,5);
+    const fillPool=[...FILL_BANK]; shuffle(fillPool); FILL=fillPool.slice(0,5);
+}
+
+function init(){ generateQuestions(); renderAll(); initTimeTraveler(); }
+
+function toggleHint(id){ const el=document.getElementById(id); el.style.display=el.style.display==='block'?'none':'block'; }
+
+function renderAll(){
+    const mcqBox=document.getElementById('mcq-container');
+    mcqBox.innerHTML='';
+    MCQ.forEach((d,i)=>{
+        if(!d||!d.q)return;
+        let badge='';
+        if(d.l==='nb') badge='<span class="level-badge level-nhan-biet">NHẬN BIẾT</span>';
+        else if(d.l==='th') badge='<span class="level-badge level-thong-hieu">THÔNG HIỂU</span>';
+        else if(d.l==='vd') badge='<span class="level-badge level-van-dung">VẬN DỤNG</span>';
+        const opts=(d.opts||d.options||[]).map((o,j)=>
+            `<div onclick="setMcq(${i},${j})" id="mcq-${i}-${j}" class="mcq-option p-4 bg-white shadow-sm flex items-center mb-2">
+                <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 mr-3 font-bold text-xs">${String.fromCharCode(65+j)}</span>${o}
+            </div>`).join('');
+        mcqBox.innerHTML+=`
+            <div class="p-5 border-b" id="mcq-card-${i}">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="font-bold text-blue-600">CÂU ${i+1} ${badge}</span>
+                    <button onclick="toggleHint('mcq-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                </div>
+                <p class="mb-4 text-slate-700 font-medium">${d.q}</p>
+                <div id="mcq-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${opts}</div>
+                <div id="mcq-fb-${i}" class="feedback-box"></div>
+            </div>`;
+    });
+
+    const tfBox=document.getElementById('tf-container');
+    tfBox.innerHTML='';
+    TF.forEach((d,i)=>{
+        const rows=d.items.map((it,j)=>`
+            <tr class="border-b">
+                <td class="py-4 px-4 text-sm font-medium">${it.t}
+                    <button onclick="toggleHint('tf-hint-${i}-${j}')" class="hint-btn">💡 Gợi ý</button>
+                    <div id="tf-hint-${i}-${j}" class="hint-box">💡 ${it.h}</div>
+                    <div id="tf-fb-${i}-${j}" class="feedback-box"></div>
+                </td>
+                <td class="p-2 text-center"><button onclick="setTf(${i},${j},true)" id="tf-btn-${i}-${j}-t" class="check-btn w-10 h-10 rounded-xl">Đ</button></td>
+                <td class="p-2 text-center"><button onclick="setTf(${i},${j},false)" id="tf-btn-${i}-${j}-s" class="check-btn w-10 h-10 rounded-xl">S</button></td>
+            </tr>`).join('');
+        tfBox.innerHTML+=`
+            <div class="bg-slate-50 rounded-2xl border overflow-hidden">
+                <div class="bg-white p-4 font-bold text-blue-800 border-b">Câu ${i+1}: ${d.q}</div>
+                <table class="w-full"><tbody>${rows}</tbody></table>
+            </div>`;
+    });
+
+    const fillBox=document.getElementById('fill-container');
+    fillBox.innerHTML='';
+    FILL.forEach((d,i)=>{
+        fillBox.innerHTML+=`
+            <div class="bg-slate-50 p-5 rounded-2xl border space-y-2">
+                <div class="flex items-start justify-between">
+                    <span><strong>Câu ${i+1}.</strong> ${d.q}</span>
+                    <button onclick="toggleHint('fill-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                </div>
+                <div id="fill-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                <div class="flex items-center gap-4 mt-2"><input type="text" id="fill-${i}" class="fill-input"></div>
+                <div id="fill-fb-${i}" class="feedback-box"></div>
+            </div>`;
+    });
+    if(window.MathJax) MathJax.typeset();
+}
+
+function setMcq(q,o){ if(submitted)return; userMcq[q]=o; document.getElementById(`mcq-card-${q}`).querySelectorAll('.mcq-option').forEach(opt=>opt.classList.remove('selected')); document.getElementById(`mcq-${q}-${o}`).classList.add('selected'); }
+function setTf(q,i,v){ if(submitted)return; userTf[q][i]=v; document.getElementById(`tf-btn-${q}-${i}-t`).classList.remove('selected-true'); document.getElementById(`tf-btn-${q}-${i}-s`).classList.remove('selected-false'); if(v) document.getElementById(`tf-btn-${q}-${i}-t`).classList.add('selected-true'); else document.getElementById(`tf-btn-${q}-${i}-s`).classList.add('selected-false'); }
+
+function celebrate(score){ const pct=(score/10)*100; if(pct>=90){ const end=Date.now()+3000; const iv=setInterval(()=>{if(Date.now()>end){clearInterval(iv);return;} confetti({particleCount:100,spread:160,origin:{y:0.6}});},250); } else if(pct>=70){ confetti({particleCount:150,spread:100,origin:{y:0.6}}); setTimeout(()=>confetti({particleCount:100,spread:80,origin:{y:0.6}}),500); } else if(pct>=50){ confetti({particleCount:100,spread:70,origin:{y:0.6}}); } else { confetti({particleCount:50,spread:50,origin:{y:0.6}}); } }
+
+function checkResults(){
+    submitted=true;
+    let correct=0;
+    const total=MCQ.length+TF.length*4+FILL.length;
+    MCQ.forEach((d,i)=>{ const fb=document.getElementById(`mcq-fb-${i}`); const opts=document.getElementById(`mcq-card-${i}`).querySelectorAll('.mcq-option'); const ci=d.ans!==undefined?d.ans:d.correct; opts[ci].classList.add('correct'); if(userMcq[i]===ci){correct++; fb.innerHTML="✔️ <strong>Đúng!</strong> "+d.exp; fb.className="feedback-box block text-green-700 bg-green-50 border-green-300"; fb.style.display='block';} else{ if(userMcq[i]!==null) opts[userMcq[i]].classList.add('wrong'); fb.innerHTML="❌ <strong>Sai!</strong> "+d.exp; fb.className="feedback-box block text-red-700 bg-red-50 border-red-300"; fb.style.display='block';} });
+    TF.forEach((d,i)=>{ d.items.forEach((it,j)=>{ const fb=document.getElementById(`tf-fb-${i}-${j}`); if(userTf[i][j]===it.a){correct++; fb.innerHTML="✔️ "+it.exp; fb.className="feedback-box block text-green-700 bg-green-50 border-green-300";} else{ fb.innerHTML="❌ "+it.exp; fb.className="feedback-box block text-red-700 bg-red-50 border-red-300";} fb.style.display='block'; if(it.a) document.getElementById(`tf-btn-${i}-${j}-t`).classList.add('correct-highlight'); else document.getElementById(`tf-btn-${i}-${j}-s`).classList.add('correct-highlight'); }); });
+    FILL.forEach((d,i)=>{ const input=document.getElementById(`fill-${i}`); const fb=document.getElementById(`fill-fb-${i}`); const user=input.value.trim().toLowerCase().replace(/\s+/g,' '); const ans=d.a.toLowerCase(); if(user===ans||user.replace(/\s/g,'')===ans.replace(/\s/g,'')){ correct++; input.classList.add('fill-correct'); fb.innerHTML="✔️ "+d.exp; fb.className="feedback-box block text-green-700 bg-green-50 border-green-300"; } else{ input.classList.add('fill-wrong'); fb.innerHTML="❌ Đáp án: <strong>"+d.a+"</strong>. "+d.exp; fb.className="feedback-box block text-red-700 bg-red-50 border-red-300"; } fb.style.display='block'; });
+    const score=(correct/total)*10; const pct=(correct/total)*100;
+    document.getElementById('submit-btn').classList.add('hidden');
+    document.getElementById('result-board').classList.remove('hidden');
+    const scoreText=document.getElementById('score-text');
+    scoreText.innerHTML=`<div class="text-center"><div class="text-5xl font-black mb-2">${score.toFixed(1)}/10</div><div class="text-lg">Đúng ${correct}/${total} câu (${pct.toFixed(0)}%)</div></div>`;
+    if(pct>=90){scoreText.classList.add('score-excellent');document.getElementById('score-message').innerHTML='🎉 <span class="text-green-600">XUẤT SẮC!</span>';}
+    else if(pct>=70){scoreText.classList.add('score-good');document.getElementById('score-message').innerHTML='👏 <span class="text-blue-600">KHÁ TỐT!</span>';}
+    else if(pct>=50){scoreText.classList.add('score-average');document.getElementById('score-message').innerHTML='💪 <span class="text-orange-600">TRUNG BÌNH</span>';}
+    else{scoreText.classList.add('score-low');document.getElementById('score-message').innerHTML='📚 <span class="text-red-600">CẦN CỐ GẮNG</span>';}
+    celebrate(score); saveScore(score); showOptions();
+    if(window.MathJax) MathJax.typeset();
+    document.getElementById('result-board').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function showOptions(){
+    const old=document.getElementById('post-options'); if(old) old.remove();
+    const container=document.getElementById('result-board');
+    const div=document.createElement('div'); div.id='post-options'; div.className='mt-8 p-6 bg-white rounded-2xl shadow-xl border-2 border-blue-400 animate-bounce-in';
+    div.innerHTML=`<h3 class="text-xl font-bold text-blue-800 mb-4 text-center">🌟 Tiếp tục?</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><button onclick="regenerate('retry')" class="p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all border-b-4 border-gray-300 active:border-b-0 font-bold text-gray-700">🔄 Làm lại</button><button onclick="regenerate('equivalent')" class="p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-all border-b-4 border-blue-300 active:border-b-0 font-bold text-blue-700">📚 Đề mới tương đương</button><button onclick="regenerate('harder')" class="p-4 bg-orange-100 hover:bg-orange-200 rounded-xl transition-all border-b-4 border-orange-300 active:border-b-0 font-bold text-orange-700">🚀 Đề nâng cao</button></div>`;
+    container.appendChild(div);
+}
+
+async function regenerate(mode){
+    document.getElementById('loading-overlay').style.display='flex';
+    await new Promise(r=>setTimeout(r,800));
+    generateQuestions(); submitted=false;
+    userMcq=Array(15).fill(null); userTf=Array(5).fill(null).map(()=>Array(4).fill(null));
+    const opts=document.getElementById('post-options'); if(opts) opts.remove();
+    document.getElementById('result-board').classList.add('hidden');
+    document.getElementById('submit-btn').classList.remove('hidden');
+    renderAll();
+    document.getElementById('loading-overlay').style.display='none';
+    document.getElementById('capture-mcq').scrollIntoView({behavior:'smooth'});
+}
+
+async function downloadKnowledgePDF(){ const opt={margin:15,filename:'Kien-thuc-Ti-le-thuc.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}; try{await html2pdf().set(opt).from(document.getElementById('capture-knowledge')).save();}catch(e){alert('Lỗi tải PDF!');} }
+async function downloadMCQImage(){ document.getElementById('loading-overlay').style.display='flex'; document.getElementById('loading-overlay').querySelector('p').textContent='Đang tạo ảnh...'; try{const c=await html2canvas(document.getElementById('capture-mcq'),{scale:2,useCORS:true,backgroundColor:'#ffffff'}); const l=document.createElement('a');l.download='De-TN-Bai20.png';l.href=c.toDataURL('image/png');l.click();}catch(e){alert('Lỗi!');} document.getElementById('loading-overlay').style.display='none'; }
+async function downloadTFImage(){ document.getElementById('loading-overlay').style.display='flex'; document.getElementById('loading-overlay').querySelector('p').textContent='Đang tạo ảnh...'; try{const c=await html2canvas(document.getElementById('capture-tf'),{scale:2,useCORS:true,backgroundColor:'#ffffff'}); const l=document.createElement('a');l.download='De-DS-Bai20.png';l.href=c.toDataURL('image/png');l.click();}catch(e){alert('Lỗi!');} document.getElementById('loading-overlay').style.display='none'; }
+async function downloadFillImage(){ document.getElementById('loading-overlay').style.display='flex'; document.getElementById('loading-overlay').querySelector('p').textContent='Đang tạo ảnh...'; try{const c=await html2canvas(document.getElementById('capture-fill'),{scale:2,useCORS:true,backgroundColor:'#ffffff'}); const l=document.createElement('a');l.download='De-Dien-Bai20.png';l.href=c.toDataURL('image/png');l.click();}catch(e){alert('Lỗi!');} document.getElementById('loading-overlay').style.display='none'; }
+
+// ======================== CHATBOT ========================
+const CHATBOT_KB = {
+    'định nghĩa': 'Tỉ lệ thức là đẳng thức của hai tỉ số:\n• Dạng: a/b = c/d (hay a:b = c:d)\n• Điều kiện: b ≠ 0 và d ≠ 0\n• a, d là ngoại tỉ; b, c là trung tỉ',
+    'ngoại tỉ': 'Trong tỉ lệ thức a:b = c:d:\n• Ngoại tỉ: a và d (hai số đứng ngoài)\n• Trung tỉ: b và c (hai số đứng giữa)\n• Tích ngoại tỉ = Tích trung tỉ: a×d = b×c',
+    'trung tỉ': 'Trong tỉ lệ thức a:b = c:d:\n• Trung tỉ: b và c (hai số đứng giữa)\n• Ngoại tỉ: a và d (hai số đứng ngoài)\n• a×d = b×c luôn đúng',
+    'nhân chéo': 'Tính chất nhân chéo của tỉ lệ thức:\n• Nếu a/b = c/d → a×d = b×c\n• Ngược lại: nếu a×d = b×c → a/b = c/d\n• Dùng để kiểm tra và tìm số hạng chưa biết\nVí dụ: 2/3 = 4/6 vì 2×6 = 3×4 = 12',
+    'tìm x': 'Cách tìm số hạng chưa biết trong TLT:\n• Nhân chéo → lập phương trình → giải\nVí dụ: x/5 = 6/10\n→ x×10 = 5×6 = 30\n→ x = 30÷10 = 3',
+    'kiểm tra': 'Kiểm tra tỉ lệ thức bằng nhân chéo:\n• Tính tích ngoại tỉ: a×d\n• Tính tích trung tỉ: b×c\n• Nếu bằng nhau → là tỉ lệ thức\nVí dụ: 3/4 và 9/12 → 3×12=36 = 4×9=36 ✓',
+    'bản đồ': 'Ứng dụng TLT trong bản đồ:\n• Tỉ lệ xích 1:n → 1cm = n cm thực\n• Công thức: d_bản_đồ / d_thực = 1/n\nVí dụ: TL 1:500000, đo 4cm → thực = 4×500000 cm = 20km',
+    'chia': 'Chia số m thành hai phần tỉ lệ a:b:\n• Tổng tỉ: a + b\n• Phần thứ nhất: m × a/(a+b)\n• Phần thứ hai: m × b/(a+b)\nVí dụ: chia 60 theo 1:2 → 20 và 40',
+    'ứng dụng': 'Ứng dụng tỉ lệ thức trong thực tế:\n• Bản đồ tỉ lệ xích\n• Công thức pha dung dịch\n• Bài toán chia theo tỉ lệ\n• Quy đổi đơn vị, vận tốc-thời gian-quãng đường\n• Tính toán trong kinh doanh',
+    'lập': 'Từ đẳng thức tích ad = bc, lập được 4 tỉ lệ thức:\n• a/b = c/d\n• a/c = b/d\n• d/b = c/a\n• d/c = b/a\nLưu ý: hoán vị ngoại tỉ hoặc trung tỉ với nhau'
+};
+
+function toggleChatbot(){ const w=document.getElementById('chatbot-window'); const t=document.getElementById('chatbot-toggle'); if(w.style.display==='flex'){w.style.display='none';t.innerHTML='💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>';}else{w.style.display='flex';t.innerHTML='✖<span class="chatbot-label">Đóng</span>';} }
+function addBotMessage(text){ const c=document.getElementById('chatbot-messages'); const d=document.createElement('div'); d.className='chat-message bot'; d.innerHTML=`<div class="bot-avatar">💬</div><div class="message-content">${text.replace(/\n/g,'<br>')}</div>`; c.appendChild(d); c.scrollTop=c.scrollHeight; }
+function addUserMessage(text){ const c=document.getElementById('chatbot-messages'); const d=document.createElement('div'); d.className='chat-message user'; d.innerHTML=`<div class="message-content">${text}</div>`; c.appendChild(d); c.scrollTop=c.scrollHeight; }
+function getBotResponse(q){ const lq=q.toLowerCase(); for(const[kw,ans] of Object.entries(CHATBOT_KB)){if(lq.includes(kw))return ans;} if(lq.includes('ví dụ'))return 'Ví dụ tỉ lệ thức:\n• 2/3 = 4/6 (vì 2×6 = 3×4 = 12)\n• Tìm x: 3/x = 9/12 → 3×12 = x×9 → x = 4\n• Bản đồ 1:200000, 5cm → 10km thực tế'; return 'Tôi có thể giúp bạn về:\n• Định nghĩa tỉ lệ thức\n• Nhân chéo và tính chất\n• Tìm số hạng chưa biết\n• Ứng dụng thực tế (bản đồ, chia tỉ lệ)\n• Ví dụ minh hoạ'; }
+function sendMessage(){ const i=document.getElementById('chatbot-input'); const q=i.value.trim(); if(!q)return; addUserMessage(q); i.value=''; setTimeout(()=>addBotMessage(getBotResponse(q)),500); }
+function sendQuickQuestion(q){ addUserMessage(q); setTimeout(()=>addBotMessage(getBotResponse(q)),500); }
+
+window.onload=init;
+</script>
+
+<!-- ===================== STATS & LIKE & PROGRESS ===================== -->
+<script>
+    const STORAGE_KEY = 'bai20_ti_le_thuc';
+
+    function loadStorage() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+        catch(e) { return {}; }
+    }
+    function saveStorage(data) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+    }
+
+    function initStats() {
+        const data = loadStorage();
+
+        data.visits = (data.visits || 0) + 1;
+        saveStorage(data);
+        document.getElementById('visit-count').textContent = data.visits;
+
+        const attempts = data.scores || [];
+        document.getElementById('attempt-count').textContent = attempts.length;
+        if (attempts.length > 0) {
+            document.getElementById('best-score').textContent = Math.max(...attempts.map(s => s.score)).toFixed(1);
+        }
+
+        data.likes = data.likes || 0;
+        document.getElementById('like-count').textContent = data.likes;
+        if (data.liked) document.getElementById('like-btn').classList.add('liked');
+
+        renderProgress(attempts);
+    }
+
+    function toggleLike() {
+        const data = loadStorage();
+        const btn = document.getElementById('like-btn');
+        if (data.liked) {
+            data.liked = false;
+            data.likes = Math.max(0, (data.likes || 1) - 1);
+            btn.classList.remove('liked');
+        } else {
+            data.liked = true;
+            data.likes = (data.likes || 0) + 1;
+            btn.classList.add('liked');
+            confetti({ particleCount: 60, spread: 60, origin: { y: 0.2 } });
+        }
+        document.getElementById('like-count').textContent = data.likes;
+        saveStorage(data);
+    }
+
+    function saveScore(score) {
+        const data = loadStorage();
+        if (!data.scores) data.scores = [];
+        data.scores.push({ score: parseFloat(score.toFixed(1)), time: new Date().toLocaleDateString('vi-VN') });
+        if (data.scores.length > 10) data.scores = data.scores.slice(-10);
+        document.getElementById('attempt-count').textContent = data.scores.length;
+        document.getElementById('best-score').textContent = Math.max(...data.scores.map(s => s.score)).toFixed(1);
+        saveStorage(data);
+        renderProgress(data.scores);
+    }
+
+    function renderProgress(attempts) {
+        const panel = document.getElementById('progress-panel');
+        const chart = document.getElementById('progress-chart');
+        const statsDiv = document.getElementById('progress-stats');
+        const trendDiv = document.getElementById('trend-display');
+
+        if (!attempts || attempts.length === 0) { panel.classList.add('hidden'); return; }
+        panel.classList.remove('hidden');
+
+        chart.innerHTML = attempts.map((s, i) => {
+            const pct = Math.max(4, (s.score / 10) * 100);
+            let color = '#ef4444';
+            if (s.score >= 9) color = '#10b981';
+            else if (s.score >= 7) color = '#3b82f6';
+            else if (s.score >= 5) color = '#f59e0b';
+            return `<div class="bar-wrap"><div class="bar-score">${s.score}</div><div class="bar" style="height:${pct}%;background:${color};"></div><div class="bar-label">L${i+1}</div></div>`;
+        }).join('');
+
+        const scores = attempts.map(s => s.score);
+        const avg = (scores.reduce((a,b) => a+b,0) / scores.length).toFixed(1);
+        const best = Math.max(...scores).toFixed(1);
+        const latest = scores[scores.length-1].toFixed(1);
+        statsDiv.innerHTML = `
+            <div class="bg-blue-50 rounded-xl p-3 border border-blue-100"><div class="font-black text-blue-700 text-lg">${avg}</div><div class="text-slate-500 text-xs">Điểm TB</div></div>
+            <div class="bg-green-50 rounded-xl p-3 border border-green-100"><div class="font-black text-green-700 text-lg">${best}</div><div class="text-slate-500 text-xs">Cao nhất</div></div>
+            <div class="bg-orange-50 rounded-xl p-3 border border-orange-100"><div class="font-black text-orange-700 text-lg">${latest}</div><div class="text-slate-500 text-xs">Lần này</div></div>
+        `;
+
+        if (scores.length >= 2) {
+            const diff = scores[scores.length-1] - scores[scores.length-2];
+            if (diff > 0) trendDiv.innerHTML = `<span class="trend-badge trend-up">📈 Tăng +${diff.toFixed(1)} điểm</span>`;
+            else if (diff < 0) trendDiv.innerHTML = `<span class="trend-badge trend-down">📉 Giảm ${diff.toFixed(1)} điểm</span>`;
+            else trendDiv.innerHTML = `<span class="trend-badge trend-same">➡️ Giữ nguyên</span>`;
+        } else {
+            trendDiv.innerHTML = `<span class="trend-badge trend-same">🆕 Lần đầu làm bài</span>`;
+        }
+    }
+
+    window.addEventListener('load', initStats);
+</script>
+<!-- ===================== END STATS ===================== -->
+
+<!-- COUNTAPI GLOBAL VIEW COUNTER -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var NAMESPACE = 'toan7-vi-cong-dong';
+        var PAGE_KEY  = 'bai-20.html';
+        var VISITED_KEY = 'toan7_visited_bai20';
+
+        var badge = document.getElementById('global-view-badge');
+
+        if (!localStorage.getItem(VISITED_KEY)) {
+            localStorage.setItem(VISITED_KEY, '1');
+            fetch('https://api.counterapi.dev/v1/' + NAMESPACE + '/' + PAGE_KEY + '/up')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (badge) badge.textContent = '👥 ' + (data.count || 0).toLocaleString('vi-VN') + ' người đã truy cập bài này';
+                })
+                .catch(function() { if (badge) badge.textContent = '👥 0 người đã truy cập bài này'; });
+        } else {
+            fetch('https://api.counterapi.dev/v1/' + NAMESPACE + '/' + PAGE_KEY + '/')
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (badge) badge.textContent = '👥 ' + (data.count || 0).toLocaleString('vi-VN') + ' người đã truy cập bài này';
+                })
+                .catch(function() { if (badge) badge.textContent = '👥 0 người đã truy cập bài này'; });
+        }
+    });
+</script>
+<!-- END COUNTAPI GLOBAL VIEW COUNTER -->
+</body>
+</html>
