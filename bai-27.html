@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 27: Phép Nhân Đa Thức Một Biến</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: { fontCache: 'global', scale: 1.1 },
+            options: { renderActions: { addMenu: [] } }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body { font-family: 'Comfortaa', cursive !important; scroll-behavior: smooth; line-height: 1.8; }
+        body *:not(svg):not(svg *):not(mjx-container):not(mjx-container *) {
+            font-family: 'Comfortaa', cursive !important;
+        }
+        mjx-container {
+            display: inline-block !important;
+            vertical-align: middle !important;
+            margin: 0 0.15em !important;
+            line-height: 0 !important;
+        }
+        mjx-container svg {
+            overflow: visible !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+        }
+        mjx-container svg path {
+            shape-rendering: geometricPrecision !important;
+            stroke: none !important;
+        }
+
+        nav {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .section-dashed { border: 3px dashed #cbd5e1; border-radius: 24px; transition: border-color 0.3s; }
+        .section-dashed:hover { border-color: #3b82f6; }
+
+        .check-btn { transition: all 0.2s; cursor: pointer; border: 2px solid #e2e8f0; }
+        .selected-true  { background-color: #22c55e !important; color: white !important; border-color: #16a34a !important; }
+        .selected-false { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+        .correct-highlight { border: 3px solid #22c55e !important; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
+
+        .mcq-option { border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s; border-radius: 16px; }
+        .mcq-option.selected { border-color: #3b82f6; background-color: #eff6ff; }
+        .mcq-option.correct  { border-color: #22c55e; background-color: #dcfce7; color: #166534; }
+        .mcq-option.wrong    { border-color: #ef4444; background-color: #fee2e2; color: #991b1b; }
+
+        .fill-input { border-bottom: 2px dashed #3b82f6; outline: none; text-align: center; width: 120px; font-weight: bold; color: #2563eb; background: transparent; }
+        .fill-correct { background-color: #dcfce7; border-color: #22c55e; border-style: solid; }
+        .fill-wrong   { background-color: #fee2e2; border-color: #ef4444; border-style: solid; }
+
+        .feedback-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border-left: 4px solid #ef4444; background-color: #fffafb; font-size: 0.85rem; }
+        .hint-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border: 1px dashed #eab308; background-color: #fefce8; color: #854d0e; font-size: 0.85rem; }
+
+        #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .loader { border: 6px solid #f3f3f3; border-top: 6px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+        .hint-btn { display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; border: 2px solid #f59e0b; padding: 6px 12px; border-radius: 12px; color: #92400e; font-size: 0.75rem; font-weight: bold; transition: all 0.2s; margin-left: 8px; cursor: pointer; }
+        .hint-btn:hover { background: #fde68a; transform: translateY(-1px); }
+
+        @keyframes bounce-in { 0%{transform:scale(0.9);opacity:0} 50%{transform:scale(1.05)} 100%{transform:scale(1);opacity:1} }
+        .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
+
+        .level-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+        .level-nhan-biet  { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .level-thong-hieu { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .level-van-dung   { background: #fecaca; color: #991b1b; border: 1px solid #ef4444; }
+
+        .score-excellent { background: linear-gradient(135deg,#10b981,#059669); color:white; animation: pulse-scale 1s ease-in-out infinite; }
+
+        /* ===== STATS BAR ===== */
+        #stats-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+        .stat-item { display:flex; align-items:center; gap:4px; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 10px; border-radius:20px; font-size:0.78rem; font-weight:bold; color:#1e40af; }
+        .stat-item span.val { font-size:0.85rem; font-weight:900; color:#1d4ed8; }
+        #like-btn { background:#fff0f0; border:1px solid #fca5a5; color:#dc2626; border-radius:20px; padding:4px 12px; font-size:0.78rem; font-weight:bold; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:4px; }
+        #like-btn:hover { background:#fee2e2; }
+        #like-btn.liked { background:#ef4444; border-color:#ef4444; color:white; animation:likeAnim 0.4s ease; }
+        @keyframes likeAnim { 0%{transform:scale(1);} 50%{transform:scale(1.3);} 100%{transform:scale(1);} }
+
+        /* ===== PROGRESS PANEL ===== */
+        #progress-panel { background:white; border-radius:20px; padding:20px; border:2px dashed #3b82f6; margin-bottom:0; }
+        #progress-chart { display:flex; align-items:flex-end; gap:8px; height:100px; padding:8px 0; }
+        .bar-wrap { display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; gap:4px; }
+        .bar { width:100%; min-height:4px; border-radius:6px 6px 0 0; transition:height 0.5s ease; }
+        .bar-label { font-size:0.65rem; color:#64748b; text-align:center; }
+        .bar-score { font-size:0.7rem; font-weight:bold; color:#1e40af; }
+        .trend-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:bold; }
+        .trend-up   { background:#dcfce7; color:#166534; }
+        .trend-down { background:#fee2e2; color:#991b1b; }
+        .trend-same { background:#f1f5f9; color:#475569; }
+        .score-good      { background: linear-gradient(135deg,#3b82f6,#2563eb); color:white; }
+        .score-average   { background: linear-gradient(135deg,#f59e0b,#d97706); color:white; }
+        .score-low       { background: linear-gradient(135deg,#ef4444,#dc2626); color:white; }
+        @keyframes pulse-scale { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+        .download-btn { background: linear-gradient(135deg,#8b5cf6,#6366f1); color:white; padding:10px 20px; border-radius:16px; font-weight:bold; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(139,92,246,0.3); font-size:0.875rem; }
+        .download-btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(139,92,246,0.4); }
+        .download-btn:active { transform:translateY(0); }
+
+        /* CHATBOT */
+        #chatbot-container { position:fixed; top:50%; right:20px; transform:translateY(-50%); z-index:1000; }
+        #chatbot-toggle { width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); border:none; cursor:pointer; box-shadow:0 8px 24px rgba(0,106,255,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:32px; transition:all 0.3s; position:relative; }
+        #chatbot-toggle:hover { transform:scale(1.1); box-shadow:0 12px 32px rgba(0,106,255,0.6); }
+        .chatbot-label { position:absolute; bottom:-28px; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; padding:4px 12px; border-radius:12px; font-size:10px; font-weight:bold; white-space:nowrap; box-shadow:0 4px 12px rgba(0,106,255,0.3); }
+        #chatbot-window { display:none; position:fixed; top:50%; right:100px; transform:translateY(-50%); width:340px; height:480px; background:white; border-radius:20px; box-shadow:0 8px 32px rgba(0,0,0,0.15); flex-direction:column; overflow:hidden; animation:slideUp 0.3s ease-out; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        #chatbot-header { background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+        #chatbot-close { background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s; }
+        #chatbot-close:hover { background:rgba(255,255,255,0.2); }
+        #chatbot-messages { flex:1; overflow-y:auto; padding:16px; background:#f8fafc; }
+        .chat-message { margin-bottom:12px; animation:fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .chat-message.bot { display:flex; gap:8px; }
+        .chat-message.user { display:flex; justify-content:flex-end; }
+        .message-content { padding:10px 14px; border-radius:16px; max-width:75%; font-size:0.9rem; line-height:1.4; }
+        .chat-message.bot .message-content { background:white; color:#1e293b; border:1px solid #e2e8f0; }
+        .chat-message.user .message-content { background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; }
+        .bot-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        #chatbot-input-area { padding:12px; border-top:1px solid #e2e8f0; background:white; display:flex; gap:8px; }
+        #chatbot-input { flex:1; padding:10px 14px; border:1px solid #e2e8f0; border-radius:20px; outline:none; font-size:0.9rem; transition:border-color 0.2s; }
+        #chatbot-input:focus { border-color:#00B2FF; }
+        #chatbot-send { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); border:none; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; transition:all 0.2s; }
+        #chatbot-send:hover { transform:scale(1.05); }
+        .quick-questions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .quick-question-btn { padding:6px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; font-size:0.75rem; cursor:pointer; transition:all 0.2s; color:#1e40af; }
+        .quick-question-btn:hover { background:#dbeafe; transform:translateY(-1px); }
+
+        /* GAME: NỐI CẶP TƯƠNG ỨNG */
+        .match-chip {
+            display: inline-block;
+            padding: 10px 18px;
+            border-radius: 14px;
+            font-weight: 900;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border: 2.5px solid #c7d2fe;
+            background: white;
+            color: #3730a3;
+            transition: all 0.22s cubic-bezier(.34,1.56,.64,1);
+            user-select: none;
+            min-width: 90px;
+            text-align: center;
+        }
+        .match-chip:hover { background: #ede9fe; border-color: #6366f1; transform: translateY(-2px) scale(1.04); box-shadow: 0 6px 16px rgba(99,102,241,0.2); }
+        .match-chip.selected { background: #6366f1 !important; color: white !important; border-color: #4338ca !important; box-shadow: 0 0 0 3px rgba(99,102,241,0.35); transform: scale(1.07); }
+        .match-chip.matched  { background: #dcfce7 !important; color: #166534 !important; border-color: #22c55e !important; cursor: default; pointer-events: none; }
+        .match-chip.wrong-flash { animation: wrong-flash-anim 0.5s; }
+        @keyframes wrong-flash-anim { 0%,100%{background:white} 40%{background:#fee2e2;border-color:#ef4444;color:#991b1b;} }
+        .match-slot {
+            min-height: 52px; min-width: 100px;
+            border: 2.5px dashed #c7d2fe;
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 0.95rem;
+            color: #94a3b8; background: #f8faff;
+            transition: all 0.2s;
+            padding: 8px 14px;
+            text-align: center;
+        }
+        .match-slot.highlight { border-color: #6366f1; background: #ede9fe; }
+        .match-slot.filled   { border-style: solid; border-color: #22c55e; background: #f0fdf4; color: #166534; font-weight: 900; }
+        .match-slot.wrong    { border-color: #ef4444; background: #fee2e2; animation: shake-match 0.4s; }
+        @keyframes shake-match { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+        #match-progress-dots { display:flex; gap:8px; justify-content:center; }
+        .match-dot { width:14px; height:14px; border-radius:50%; background:#e0e7ff; border:2px solid #c7d2fe; transition:all 0.3s; }
+        .match-dot.done  { background:#22c55e; border-color:#16a34a; }
+        .match-dot.active{ background:#6366f1; border-color:#4338ca; transform:scale(1.2); }
+
+        @keyframes shake-cl {
+            0%,100%{transform:translateX(0)}
+            20%{transform:translateX(-7px)}
+            40%{transform:translateX(7px)}
+            60%{transform:translateX(-4px)}
+            80%{transform:translateX(4px)}
+        }
+        #cl-touch-clone { position:fixed; pointer-events:none; z-index:9999; opacity:0.85; transform:scale(1.1); transition:none; display:none; }
+
+        @media (max-width: 640px) {
+            #chatbot-window { width:calc(100vw - 40px); height:60vh; top:50%; right:20px; transform:translateY(-50%); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 text-slate-800">
+
+    <nav class="p-3 shadow-sm mb-6">
+        <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <a href="index.html" class="flex items-center gap-2 text-orange-600 font-bold hover:opacity-80 transition-opacity shrink-0">
+                <span class="text-xl">🏠</span>
+                <span class="hidden sm:inline">Trang chủ</span>
+            </a>
+            <!-- STATS BAR INLINE -->
+            <div id="stats-bar" class="flex items-center gap-2 flex-wrap">
+                <div class="stat-item">👁️ <span class="val" id="visit-count">0</span></div>
+                <div class="stat-item">🏆 <span class="val" id="attempt-count">0</span> lần</div>
+                <div class="stat-item">⭐ <span class="val" id="best-score">--</span></div>
+                <button id="like-btn" onclick="toggleLike()">❤️ <span id="like-count">0</span></button>
+            </div>
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest hidden md:block">Toán 8 - Bài 27 ✨</div>
+        </div>
+    </nav>
+
+    <div id="loading-overlay">
+        <div class="loader mb-4"></div>
+        <p class="font-bold text-blue-600 animate-pulse">Đang tạo đề mới...</p>
+    </div>
+
+    <div id="cl-touch-clone"></div>
+
+    <div class="max-w-4xl mx-auto px-3 md:px-6 space-y-12">
+
+        <!-- TIÊU ĐỀ -->
+        <div class="text-center py-6">
+            <h1 class="text-3xl md:text-4xl font-black text-indigo-600 uppercase tracking-tighter flex items-center justify-center gap-3 flex-wrap">
+                <span>✖️</span> Bài 27: Phép Nhân Đa Thức Một Biến <span>📐</span>
+            </h1>
+            <p class="text-slate-500 font-bold mt-2">Nhân đơn thức với đa thức – Nhân đa thức với đa thức – Kết nối tri thức - Toán 8</p>
+            <!-- COUNTAPI GLOBAL VIEW BADGE -->
+            <p id="global-view-badge" class="text-slate-400 text-sm font-bold mt-1">👁 Đang tải...</p>
+        </div>
+
+        <!-- TIẾN BỘ HỌC TẬP -->
+        <div id="progress-panel" class="hidden">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h2 class="text-lg font-bold text-blue-800">📈 Tiến Bộ Học Tập</h2>
+                <div id="trend-display"></div>
+            </div>
+            <div id="progress-chart"></div>
+            <div id="progress-stats" class="mt-3 grid grid-cols-3 gap-3 text-center text-sm"></div>
+        </div>
+
+        <!-- KIẾN THỨC -->
+        <div id="capture-knowledge" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-blue-800">📖 Kiến Thức Trọng Tâm</h2>
+                <button onclick="downloadKnowledgePDF()" class="download-btn">
+                    <span>📥</span> Tải Offline
+                </button>
+            </div>
+
+            <!-- VIDEO placeholder -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🎬</span>
+                    <h3 class="font-bold text-blue-700 text-base">Video Bài Học</h3>
+                    <span class="text-xs bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">YouTube</span>
+                </div>
+                <div class="relative w-full rounded-2xl overflow-hidden border-2 border-blue-100 shadow-md bg-black" style="aspect-ratio:16/9;">
+                    <iframe src="https://www.youtube.com/embed/Hz1yElDUoPM"
+                        title="Video Bài Học - Phép nhân đa thức một biến"
+                        class="w-full h-full" style="width:100%;height:100%;position:absolute;top:0;left:0;"
+                        frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen>
+                    </iframe>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 text-center">💡 Xem video trước khi làm bài tập bên dưới</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+
+                <!-- Ô 1: Nhân đơn thức với đa thức -->
+                <div class="bg-indigo-50/60 p-5 rounded-2xl border border-indigo-100 space-y-3">
+                    <h3 class="font-bold text-indigo-700">1. Nhân đơn thức với đa thức</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• <strong>Quy tắc:</strong> Muốn nhân một đơn thức với một đa thức, ta nhân đơn thức với từng hạng tử của đa thức rồi cộng các tích lại.</li>
+                        <li>• <strong>Công thức:</strong></li>
+                        <li class="ml-4">\(A \cdot (B + C) = A \cdot B + A \cdot C\)</li>
+                        <li>• <strong>Ví dụ:</strong></li>
+                        <li class="ml-4">\(3x(2x^2 - 5x + 1) = 6x^3 - 15x^2 + 3x\)</li>
+                    </ul>
+                    <div class="flex justify-center mt-3">
+                        <canvas id="fig1" width="300" height="160" style="max-width:100%"></canvas>
+                    </div>
+                </div>
+
+                <!-- Ô 2: Nhân đa thức với đa thức -->
+                <div class="bg-emerald-50/60 p-5 rounded-2xl border border-emerald-100 space-y-3">
+                    <h3 class="font-bold text-emerald-700">2. Nhân đa thức với đa thức</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• <strong>Quy tắc:</strong> Muốn nhân một đa thức với một đa thức, ta nhân mỗi hạng tử của đa thức này với từng hạng tử của đa thức kia rồi cộng các tích lại.</li>
+                        <li>• <strong>Công thức:</strong></li>
+                        <li class="ml-4">\((A+B)(C+D) = AC + AD + BC + BD\)</li>
+                        <li>• <strong>Ví dụ:</strong></li>
+                        <li class="ml-4">\((x+2)(x^2-3x+1)\)</li>
+                        <li class="ml-4">\(= x^3 - 3x^2 + x + 2x^2 - 6x + 2\)</li>
+                        <li class="ml-4">\(= x^3 - x^2 - 5x + 2\)</li>
+                    </ul>
+                    <div class="flex justify-center mt-2">
+                        <canvas id="fig2" width="300" height="170" style="max-width:100%"></canvas>
+                    </div>
+                </div>
+
+                <!-- Ô 3: Tính chất phép nhân -->
+                <div class="bg-violet-50/60 p-5 rounded-2xl border border-violet-100 space-y-3">
+                    <h3 class="font-bold text-violet-700">3. Tính chất phép nhân đa thức</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• <strong>Giao hoán:</strong> \(A \cdot B = B \cdot A\)</li>
+                        <li>• <strong>Kết hợp:</strong> \((A \cdot B) \cdot C = A \cdot (B \cdot C)\)</li>
+                        <li>• <strong>Phân phối:</strong> \(A(B + C) = AB + AC\)</li>
+                        <li>• <strong>Bậc tích:</strong> bậc của tích bằng tổng bậc của các nhân tử</li>
+                        <li>• Nếu \(\deg(A)=m,\; \deg(B)=n\) thì \(\deg(A \cdot B)=m+n\)</li>
+                    </ul>
+                    <div class="flex justify-center mt-2">
+                        <canvas id="fig3" width="300" height="155" style="max-width:100%"></canvas>
+                    </div>
+                </div>
+
+                <!-- Ô 4: Tổng hợp & Vận dụng -->
+                <div class="bg-orange-50/60 p-5 rounded-2xl border border-orange-100 space-y-3">
+                    <h3 class="font-bold text-orange-700">4. Tổng hợp & Vận dụng</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• Thu gọn và sắp xếp kết quả theo bậc giảm dần</li>
+                        <li>• <strong>Ví dụ nâng cao:</strong></li>
+                        <li class="ml-4">\((2x-1)(x^2+3x-2)\)</li>
+                        <li class="ml-4">\(=2x^3+6x^2-4x-x^2-3x+2\)</li>
+                        <li class="ml-4">\(=2x^3+5x^2-7x+2\)</li>
+                        <li>• <strong>Lưu ý dấu:</strong> nhân hai số âm ra dương, nhân khác dấu ra âm</li>
+                    </ul>
+                    <div class="flex justify-center mt-2">
+                        <canvas id="fig4" width="300" height="170" style="max-width:100%"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng tóm tắt công thức -->
+            <div class="mt-6 p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50 border border-indigo-100">
+                <h3 class="font-bold text-indigo-700 mb-4 text-center text-base">📐 Sơ đồ tổng hợp – Phép nhân đa thức một biến</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center text-sm">
+                    <div class="bg-white rounded-xl p-4 border-2 border-indigo-200 shadow-sm">
+                        <div class="text-2xl mb-1">✖️</div>
+                        <div class="font-black text-indigo-700 mb-1">Đơn thức × Đa thức</div>
+                        <div class="text-slate-600">\(A(B+C) = AB + AC\)</div>
+                        <div class="text-xs text-slate-400 mt-1">Nhân từng hạng tử</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border-2 border-emerald-200 shadow-sm">
+                        <div class="text-2xl mb-1">✅</div>
+                        <div class="font-black text-emerald-700 mb-1">Đa thức × Đa thức</div>
+                        <div class="text-slate-600">\((A+B)(C+D) = AC+AD+BC+BD\)</div>
+                        <div class="text-xs text-slate-400 mt-1">Nhân chéo từng cặp</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border-2 border-violet-200 shadow-sm">
+                        <div class="text-2xl mb-1">⚠️</div>
+                        <div class="font-black text-violet-700 mb-1">Lưu ý</div>
+                        <div class="text-slate-600">Thu gọn, cộng đồng dạng</div>
+                        <div class="text-xs text-slate-400 mt-1">Chú ý dấu âm/dương</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== TRÒ CHƠI: NỐI CẶP TƯƠNG ỨNG ===================== -->
+        <div class="bg-white p-8 section-dashed shadow-md" id="match-game-section">
+            <h2 class="text-2xl font-black text-indigo-600 flex items-center gap-3 mb-1">
+                <span class="text-3xl">🔗</span> NỐI CẶP TƯƠNG ỨNG
+            </h2>
+            <p class="text-slate-600 mb-1 font-medium">
+                Nối đúng từng bước tính nhân đa thức. Nhấn vào biểu thức ở cột trái, rồi nhấn vào kết quả tương ứng ở cột phải!
+            </p>
+            <p class="text-xs text-indigo-500 font-bold mb-5">🎯 Tìm đúng tất cả các cặp để chinh phục trò chơi!</p>
+
+            <!-- Progress dots -->
+            <div id="match-progress-dots" class="mb-5"></div>
+
+            <!-- Score bar -->
+            <div class="flex items-center gap-3 mb-6">
+                <span class="text-sm font-bold text-indigo-700">Điểm:</span>
+                <div class="flex-1 bg-indigo-100 rounded-full h-3 overflow-hidden">
+                    <div id="match-score-fill" class="h-full rounded-full transition-all duration-700" style="width:0%;background:linear-gradient(90deg,#6366f1,#8b5cf6)"></div>
+                </div>
+                <span id="match-score-label" class="text-sm font-bold text-indigo-600">0/8</span>
+                <button onclick="resetMatchGame()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold py-1.5 px-4 rounded-xl text-xs border border-indigo-200 transition-all">🔄 Chơi lại</button>
+            </div>
+
+            <!-- Chọn bộ câu hỏi -->
+            <div id="match-round-info" class="text-center mb-4">
+                <span id="match-round-badge" class="inline-block px-4 py-1 rounded-full bg-indigo-100 text-indigo-700 font-bold text-sm"></span>
+            </div>
+
+            <!-- Game board: 2 cột -->
+            <div class="grid grid-cols-2 gap-8 mb-4">
+                <!-- Cột trái -->
+                <div>
+                    <div class="text-center font-bold text-indigo-600 mb-3 text-sm">✖️ Biểu thức</div>
+                    <div id="match-left" class="flex flex-col gap-3"></div>
+                </div>
+                <!-- Cột phải -->
+                <div>
+                    <div class="text-center font-bold text-emerald-600 mb-3 text-sm">📝 Kết quả</div>
+                    <div id="match-right" class="flex flex-col gap-3"></div>
+                </div>
+            </div>
+
+            <!-- Feedback -->
+            <div id="match-feedback" class="hidden mt-2 p-3 rounded-xl text-sm font-bold text-center"></div>
+
+            <!-- Completion reward -->
+            <div id="match-reward" class="hidden text-center space-y-3 py-8 animate-bounce-in">
+                <div class="text-5xl">🏅</div>
+                <h3 class="text-2xl font-black text-indigo-600">NỐI CẶP HOÀN HẢO! 🎉</h3>
+                <p class="text-violet-600 font-bold" id="match-final-score"></p>
+                <p class="text-indigo-400 text-sm animate-pulse">Tiếp tục chinh phục phần bài tập bên dưới! 👇</p>
+            </div>
+        </div>
+
+        <!-- MCQ -->
+        <div id="capture-mcq" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">📝 PHẦN 1: Trắc nghiệm (15 câu)</h2>
+                <button onclick="downloadMCQImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="mcq-container" class="space-y-8"></div>
+        </div>
+
+        <!-- T/F -->
+        <div id="capture-tf" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">✔️ PHẦN 2: Đúng/Sai (5 câu)</h2>
+                <button onclick="downloadTFImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="tf-container" class="space-y-10"></div>
+        </div>
+
+        <!-- FILL -->
+        <div id="capture-fill" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">🖋️ PHẦN 3: Điền đáp án (5 câu)</h2>
+                <button onclick="downloadFillImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="fill-container" class="space-y-6"></div>
+        </div>
+
+        <!-- NỘP BÀI -->
+        <div class="text-center py-12">
+            <button id="submit-btn" onclick="checkResults()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-16 rounded-full shadow-2xl transition-all active:scale-95 text-xl tracking-widest flex items-center gap-4 mx-auto">
+                <span>📤</span> NỘP BÀI
+            </button>
+            <div id="result-board" class="mt-8 hidden">
+                <div class="bg-white section-dashed p-8 inline-block shadow-xl w-full max-w-2xl">
+                    <div id="score-text" class="text-4xl font-black mb-2 p-6 rounded-2xl"></div>
+                    <div id="score-message" class="text-lg font-bold mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT -->
+    <div id="chatbot-container">
+        <button id="chatbot-toggle" onclick="toggleChatbot()">
+            💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>
+        </button>
+        <div id="chatbot-window">
+            <div id="chatbot-header">
+                <div>
+                    <div style="font-weight:bold;font-size:1rem;">Trợ lý Toán học</div>
+                    <div style="font-size:0.75rem;opacity:0.9;">Hỗ trợ 24/7</div>
+                </div>
+                <button id="chatbot-close" onclick="toggleChatbot()">×</button>
+            </div>
+            <div id="chatbot-messages">
+                <div class="chat-message bot">
+                    <div class="bot-avatar">💬</div>
+                    <div>
+                        <div class="message-content">
+                            Xin chào! Tôi có thể giúp bạn về <strong>phép nhân đa thức một biến</strong>. Hãy hỏi tôi!
+                        </div>
+                        <div class="quick-questions">
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Nhân đơn thức với đa thức là gì?')">Đơn thức × Đa thức?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Nhân đa thức với đa thức là gì?')">Đa thức × Đa thức?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Cho ví dụ phép nhân đa thức')">Ví dụ?</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chatbot-input-area">
+                <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button id="chatbot-send" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ======================== GAME: NỐI CẶP TƯƠNG ỨNG ========================
+    // Mỗi round là một bộ biểu thức, người chơi nối 4 cặp tương ứng
+    const MATCH_ROUNDS = [
+        {
+            title: "Đơn thức × Đa thức (bộ 1)",
+            left:  ["2x(x+3)", "3x²(x−1)", "−x(2x+5)", "4x(x²−2x+1)"],
+            right: ["2x²+6x", "3x³−3x²", "−2x²−5x", "4x³−8x²+4x"],
+            pairs: { "2x(x+3)":"2x²+6x", "3x²(x−1)":"3x³−3x²", "−x(2x+5)":"−2x²−5x", "4x(x²−2x+1)":"4x³−8x²+4x" },
+            exp: "Áp dụng quy tắc nhân đơn thức với từng hạng tử của đa thức."
+        },
+        {
+            title: "Đa thức × Đa thức (bộ 2)",
+            left:  ["(x+1)(x+2)", "(x−3)(x+3)", "(x+2)(x−5)", "(2x+1)(x−4)"],
+            right: ["x²+3x+2", "x²−9", "x²−3x−10", "2x²−7x−4"],
+            pairs: { "(x+1)(x+2)":"x²+3x+2", "(x−3)(x+3)":"x²−9", "(x+2)(x−5)":"x²−3x−10", "(2x+1)(x−4)":"2x²−7x−4" },
+            exp: "Nhân từng hạng tử của đa thức này với từng hạng tử của đa thức kia."
+        },
+        {
+            title: "Đơn thức × Đa thức (bộ 3)",
+            left:  ["5x²(2x−3)", "−2x(x²+4x−1)", "x³(x−2)", "3x(x²+x−2)"],
+            right: ["10x³−15x²", "−2x³−8x²+2x", "x⁴−2x³", "3x³+3x²−6x"],
+            pairs: { "5x²(2x−3)":"10x³−15x²", "−2x(x²+4x−1)":"−2x³−8x²+2x", "x³(x−2)":"x⁴−2x³", "3x(x²+x−2)":"3x³+3x²−6x" },
+            exp: "Nhân đơn thức với từng hạng tử, chú ý quy tắc lũy thừa và dấu."
+        },
+        {
+            title: "Đa thức × Đa thức (bộ 4)",
+            left:  ["(x+3)(x²−2x+1)", "(x−1)(x²+x+1)", "(2x−3)(x+2)", "(x+4)(x−4)"],
+            right: ["x³+x²−5x+3", "x³−1", "2x²+x−6", "x²−16"],
+            pairs: { "(x+3)(x²−2x+1)":"x³+x²−5x+3", "(x−1)(x²+x+1)":"x³−1", "(2x−3)(x+2)":"2x²+x−6", "(x+4)(x−4)":"x²−16" },
+            exp: "Nhân chéo từng hạng tử rồi thu gọn các hạng tử đồng dạng."
+        },
+    ];
+
+    // Chọn 2 rounds ngẫu nhiên, mỗi round 4 cặp → tổng 8 cặp
+    let matchScore = 0;
+    let matchTotal = 8;
+    let matchSelected = null; // { side: 'left'|'right', value: string }
+    let matchedPairs = new Set(); // "left_val"
+    let matchCurrentRound = 0;
+    let matchRoundPairs = []; // pairs for current 2 rounds
+    let matchWrongCount = 0;
+
+    function buildMatchRounds() {
+        const shuffled = [...MATCH_ROUNDS].sort(() => Math.random() - 0.5);
+        matchRoundPairs = shuffled.slice(0, 2);
+        matchTotal = matchRoundPairs.reduce((s, r) => s + Object.keys(r.pairs).length, 0);
+    }
+
+    function initMatchGame() {
+        matchScore = 0; matchSelected = null; matchedPairs = new Set(); matchCurrentRound = 0; matchWrongCount = 0;
+        buildMatchRounds();
+        document.getElementById('match-reward').classList.add('hidden');
+        document.getElementById('match-feedback').classList.add('hidden');
+        updateMatchProgress();
+        renderMatchRound(0);
+    }
+
+    function updateMatchProgress() {
+        const pct = (matchScore / matchTotal) * 100;
+        document.getElementById('match-score-fill').style.width = pct + '%';
+        document.getElementById('match-score-label').textContent = matchScore + '/' + matchTotal;
+        const dots = document.getElementById('match-progress-dots');
+        dots.innerHTML = '';
+        for (let i = 0; i < matchTotal; i++) {
+            const d = document.createElement('div');
+            d.className = 'match-dot' + (i < matchScore ? ' done' : i === matchScore ? ' active' : '');
+            dots.appendChild(d);
+        }
+    }
+
+    function renderMatchRound(roundIdx) {
+        if (roundIdx >= matchRoundPairs.length) { showMatchReward(); return; }
+        const round = matchRoundPairs[roundIdx];
+        matchCurrentRound = roundIdx;
+        matchSelected = null;
+        matchedPairs = new Set();
+        document.getElementById('match-round-badge').textContent = '🔺 ' + round.title;
+        document.getElementById('match-feedback').classList.add('hidden');
+
+        // Shuffle right side
+        const rightShuffled = [...round.right].sort(() => Math.random() - 0.5);
+
+        const leftDiv = document.getElementById('match-left');
+        const rightDiv = document.getElementById('match-right');
+        leftDiv.innerHTML = '';
+        rightDiv.innerHTML = '';
+
+        round.left.forEach(val => {
+            const chip = document.createElement('div');
+            chip.className = 'match-chip';
+            chip.id = 'mleft-' + val.replace(/[^a-zA-Z0-9]/g, '_');
+            chip.textContent = val;
+            chip.onclick = () => selectMatch('left', val, chip);
+            leftDiv.appendChild(chip);
+        });
+        rightShuffled.forEach(val => {
+            const chip = document.createElement('div');
+            chip.className = 'match-chip';
+            chip.id = 'mright-' + val.replace(/[^a-zA-Z0-9]/g, '_');
+            chip.textContent = val;
+            chip.onclick = () => selectMatch('right', val, chip);
+            rightDiv.appendChild(chip);
+        });
+    }
+
+    function selectMatch(side, val, chip) {
+        if (chip.classList.contains('matched')) return;
+        const round = matchRoundPairs[matchCurrentRound];
+
+        if (!matchSelected) {
+            // First selection
+            if (side === 'left') {
+                clearMatchSelection();
+                matchSelected = { side, val, chip };
+                chip.classList.add('selected');
+            }
+            // Must select left first
+            return;
+        }
+
+        if (matchSelected.side === side) {
+            // Re-select same side
+            clearMatchSelection();
+            matchSelected = { side, val, chip };
+            chip.classList.add('selected');
+            return;
+        }
+
+        // Second selection: check pair
+        const leftVal = side === 'right' ? matchSelected.val : val;
+        const rightVal = side === 'right' ? val : matchSelected.val;
+        const leftChip = side === 'right' ? matchSelected.chip : chip;
+        const rightChip = side === 'right' ? chip : matchSelected.chip;
+
+        const correctRight = round.pairs[leftVal];
+        if (correctRight === rightVal) {
+            // Correct!
+            leftChip.classList.remove('selected'); leftChip.classList.add('matched');
+            rightChip.classList.add('matched');
+            matchedPairs.add(leftVal);
+            matchScore++;
+            updateMatchProgress();
+            clearMatchSelection();
+            showMatchFeedback('✅ Đúng! ' + leftVal + ' ↔ ' + rightVal, true);
+            confetti({ particleCount: 30, spread: 50, origin: { y: 0.6 }, colors: ['#22c55e','#6366f1'] });
+
+            // Check if round complete
+            if (matchedPairs.size === Object.keys(round.pairs).length) {
+                setTimeout(() => {
+                    matchCurrentRound++;
+                    if (matchCurrentRound < matchRoundPairs.length) {
+                        renderMatchRound(matchCurrentRound);
+                    } else {
+                        showMatchReward();
+                    }
+                }, 900);
+            }
+        } else {
+            // Wrong
+            matchWrongCount++;
+            leftChip.classList.remove('selected');
+            leftChip.classList.add('wrong-flash');
+            rightChip.classList.add('wrong-flash');
+            setTimeout(() => { leftChip.classList.remove('wrong-flash'); rightChip.classList.remove('wrong-flash'); }, 600);
+            showMatchFeedback('❌ Chưa đúng! Hãy thử lại. Nhớ: ' + round.title, false);
+            clearMatchSelection();
+        }
+    }
+
+    function clearMatchSelection() {
+        matchSelected = null;
+        document.querySelectorAll('.match-chip.selected').forEach(c => c.classList.remove('selected'));
+    }
+
+    function showMatchFeedback(msg, ok) {
+        const fb = document.getElementById('match-feedback');
+        fb.textContent = msg;
+        fb.className = 'mt-2 p-3 rounded-xl text-sm font-bold text-center ' + (ok ? 'text-green-700 bg-green-50 border border-green-200' : 'text-red-700 bg-red-50 border border-red-200');
+        fb.classList.remove('hidden');
+        if (ok) setTimeout(() => fb.classList.add('hidden'), 1200);
+    }
+
+    function showMatchReward() {
+        document.getElementById('match-feedback').classList.add('hidden');
+        document.getElementById('match-reward').classList.remove('hidden');
+        document.getElementById('match-final-score').textContent =
+            'Nối đúng ' + matchScore + '/' + matchTotal + ' cặp! Số lần sai: ' + matchWrongCount;
+        confetti({ particleCount: 200, spread: 180, colors: ['#6366f1','#10b981','#f59e0b','#ef4444'] });
+        setTimeout(() => confetti({ particleCount: 150, spread: 160, origin: { y: 0.3 } }), 700);
+    }
+
+    function resetMatchGame() {
+        initMatchGame();
+    }
+
+    // ======================== QUESTION BANKS ========================
+    const QUESTION_BANK = {
+        nb: [
+            {
+                q: "Muốn nhân một đơn thức với một đa thức, ta làm như thế nào?",
+                opts: ["Nhân đơn thức với từng hạng tử của đa thức rồi cộng các tích lại","Cộng đơn thức vào từng hạng tử","Nhân các hệ số với nhau","Không thực hiện được"],
+                ans: 0,
+                exp: "Quy tắc: nhân đơn thức với từng hạng tử của đa thức, sau đó cộng các tích lại.",
+                hint: "A(B+C) = AB + AC"
+            },
+            {
+                q: "Kết quả của \\(2x(x+3)\\) là:",
+                opts: ["\\(2x^2+6x\\)","\\(2x^2+3\\)","\\(2x+6x\\)","\\(2x^2+6\\)"],
+                ans: 0,
+                exp: "2x·x = 2x², 2x·3 = 6x. Vậy 2x(x+3) = 2x²+6x.",
+                hint: "Nhân 2x với từng hạng tử: x và 3"
+            },
+            {
+                q: "\\(3x^2(x-1)\\) bằng:",
+                opts: ["\\(3x^3-3x^2\\)","\\(3x^3-1\\)","\\(3x^2-3x\\)","\\(3x^3+3x^2\\)"],
+                ans: 0,
+                exp: "3x²·x = 3x³, 3x²·(−1) = −3x². Kết quả: 3x³−3x².",
+                hint: "3x²·x = 3x³, 3x²·(−1) = −3x²"
+            },
+            {
+                q: "\\(-x(2x+5)\\) bằng:",
+                opts: ["\\(-2x^2-5x\\)","\\(-2x^2+5x\\)","\\(2x^2-5x\\)","\\(-2x-5x\\)"],
+                ans: 0,
+                exp: "−x·2x = −2x², −x·5 = −5x. Kết quả: −2x²−5x.",
+                hint: "Chú ý dấu: (−x)·2x = −2x²"
+            },
+            {
+                q: "Muốn nhân một đa thức với một đa thức, ta:",
+                opts: ["Nhân mỗi hạng tử của đa thức này với từng hạng tử của đa thức kia","Chỉ nhân hạng tử đầu tiên","Cộng các đa thức với nhau","Trừ bậc của hai đa thức"],
+                ans: 0,
+                exp: "Quy tắc: nhân từng cặp hạng tử rồi cộng lại, sau đó thu gọn.",
+                hint: "(A+B)(C+D) = AC+AD+BC+BD"
+            },
+            {
+                q: "Bậc của tích \\((x^2+1)(x^3-x)\\) là:",
+                opts: ["5","6","3","2"],
+                ans: 0,
+                exp: "Bậc của tích = bậc đa thức 1 + bậc đa thức 2 = 2+3 = 5.",
+                hint: "Bậc tích = tổng bậc các nhân tử"
+            },
+            {
+                q: "\\(x \\cdot x^3\\) bằng:",
+                opts: ["\\(x^4\\)","\\(x^3\\)","\\(2x^3\\)","\\(x^{-3}\\)"],
+                ans: 0,
+                exp: "x·x³ = x^(1+3) = x⁴.",
+                hint: "Cộng số mũ khi nhân cùng cơ số"
+            }
+        ],
+        th: [
+            {
+                q: "\\((x+1)(x+2)\\) rút gọn bằng:",
+                opts: ["\\(x^2+3x+2\\)","\\(x^2+2x+2\\)","\\(x^2+3x+1\\)","\\(x^2+x+2\\)"],
+                ans: 0,
+                exp: "x·x+x·2+1·x+1·2 = x²+2x+x+2 = x²+3x+2.",
+                hint: "Nhân chéo: x·x, x·2, 1·x, 1·2"
+            },
+            {
+                q: "\\((x-3)(x+3)\\) bằng:",
+                opts: ["\\(x^2-9\\)","\\(x^2+9\\)","\\(x^2-6x-9\\)","\\(x^2-3\\)"],
+                ans: 0,
+                exp: "x·x + x·3 −3·x −3·3 = x²+3x−3x−9 = x²−9.",
+                hint: "Đây là hằng đẳng thức (a-b)(a+b)=a²-b²"
+            },
+            {
+                q: "\\((x+2)(x-5)\\) bằng:",
+                opts: ["\\(x^2-3x-10\\)","\\(x^2+3x-10\\)","\\(x^2-3x+10\\)","\\(x^2-7x-10\\)"],
+                ans: 0,
+                exp: "x²−5x+2x−10 = x²−3x−10.",
+                hint: "−5x+2x = −3x; 2·(−5) = −10"
+            },
+            {
+                q: "Kết quả \\((2x+1)(x-4)\\) là:",
+                opts: ["\\(2x^2-7x-4\\)","\\(2x^2-7x+4\\)","\\(2x^2+7x-4\\)","\\(2x^2-4\\)"],
+                ans: 0,
+                exp: "2x·x−8x+x−4 = 2x²−7x−4.",
+                hint: "2x·(−4)+1·x = −8x+x = −7x"
+            },
+            {
+                q: "\\(5x^2(2x-3)\\) bằng:",
+                opts: ["\\(10x^3-15x^2\\)","\\(10x^3-3\\)","\\(10x^3+15x^2\\)","\\(10x-15x^2\\)"],
+                ans: 0,
+                exp: "5x²·2x = 10x³, 5x²·(−3) = −15x². Kết quả: 10x³−15x².",
+                hint: "5x²·2x = 10x³; 5x²·(−3) = −15x²"
+            }
+        ],
+        vd: [
+            {
+                q: "\\((x+3)(x^2-2x+1)\\) sau khi rút gọn bằng:",
+                opts: ["\\(x^3+x^2-5x+3\\)","\\(x^3+x^2+5x+3\\)","\\(x^3-x^2-5x+3\\)","\\(x^3+x^2-5x-3\\)"],
+                ans: 0,
+                exp: "x³−2x²+x+3x²−6x+3 = x³+x²−5x+3.",
+                hint: "Thu gọn: −2x²+3x² = x²; x−6x = −5x"
+            },
+            {
+                q: "Biết \\(2x(x+a) = 2x^2+6x\\). Tìm \\(a\\):",
+                opts: ["\\(a=3\\)","\\(a=6\\)","\\(a=2\\)","\\(a=1\\)"],
+                ans: 0,
+                exp: "2x·a = 6x → a = 3.",
+                hint: "2x·a = 6x → a = 6x÷2x = 3"
+            },
+            {
+                q: "\\((x-1)(x^2+x+1)\\) bằng:",
+                opts: ["\\(x^3-1\\)","\\(x^3+1\\)","\\(x^3-x^2-1\\)","\\(x^3-x\\)"],
+                ans: 0,
+                exp: "x³+x²+x−x²−x−1 = x³−1. Đây là hằng đẳng thức a³−b³.",
+                hint: "Thu gọn: x²−x² = 0; x−x = 0; còn lại x³−1"
+            }
+        ]
+    };
+
+    const TF_BANK = [
+        {
+            q: "Quy tắc nhân đơn thức với đa thức",
+            items: [
+                {t:"a) \\(2x(x+3) = 2x^2+6x\\)", a:true,  exp:"Đúng! 2x·x = 2x², 2x·3 = 6x.", h:"Nhân 2x với từng hạng tử"},
+                {t:"b) \\(3x(x-2) = 3x^2-2\\)", a:false, exp:"Sai! 3x·(−2) = −6x, kết quả đúng là 3x²−6x.", h:"Nhân 3x với cả hạng tử −2"},
+                {t:"c) \\(-x(2x+5) = -2x^2-5x\\)", a:true,  exp:"Đúng! (−x)·2x = −2x², (−x)·5 = −5x.", h:"Chú ý dấu âm nhân với hạng tử dương"},
+                {t:"d) \\(x^2(x^3+1) = x^5+x^2\\)", a:true,  exp:"Đúng! x²·x³ = x⁵, x²·1 = x².", h:"Cộng số mũ: x²·x³ = x^(2+3)"}
+            ]
+        },
+        {
+            q: "Nhân đa thức với đa thức",
+            items: [
+                {t:"a) \\((x+1)(x+2) = x^2+3x+2\\)", a:true,  exp:"Đúng! x²+2x+x+2 = x²+3x+2.", h:"x·x=x², x·2=2x, 1·x=x, 1·2=2"},
+                {t:"b) \\((x-3)(x+3) = x^2-6\\)", a:false, exp:"Sai! (x−3)(x+3) = x²−9, không phải x²−6.", h:"(a−b)(a+b)=a²−b²; b=3 nên b²=9"},
+                {t:"c) \\((x+2)(x-5) = x^2-3x-10\\)", a:true,  exp:"Đúng! x²−5x+2x−10 = x²−3x−10.", h:"−5x+2x = −3x"},
+                {t:"d) \\((x+1)(x+1) = x^2+1\\)", a:false, exp:"Sai! (x+1)² = x²+2x+1.", h:"Đừng quên hạng tử 2x ở giữa"}
+            ]
+        },
+        {
+            q: "Tính chất và bậc của tích",
+            items: [
+                {t:"a) Bậc của \\((x^2+1)(x^3-x)\\) là 5", a:true,  exp:"Đúng! Bậc = 2+3 = 5.", h:"Bậc tích = tổng bậc các nhân tử"},
+                {t:"b) \\((a+b)(c+d) = ac+bd\\)", a:false, exp:"Sai! Kết quả đúng là ac+ad+bc+bd.", h:"Phải nhân chéo đủ 4 cặp"},
+                {t:"c) \\(2x(x^2-3x+1) = 2x^3-6x^2+2x\\)", a:true,  exp:"Đúng! 2x·x²=2x³, 2x·(−3x)=−6x², 2x·1=2x.", h:"Nhân 2x với từng hạng tử"},
+                {t:"d) Phép nhân đa thức có tính giao hoán: \\(A\\cdot B = B\\cdot A\\)", a:true,  exp:"Đúng! Phép nhân đa thức có tính giao hoán.", h:"Tính giao hoán luôn đúng"}
+            ]
+        },
+        {
+            q: "Thu gọn và đặt nhân tử chung",
+            items: [
+                {t:"a) \\((x-1)(x^2+x+1) = x^3-1\\)", a:true,  exp:"Đúng! x³+x²+x−x²−x−1 = x³−1.", h:"Thu gọn: x²−x²=0; x−x=0"},
+                {t:"b) \\(x^2(x-2) + 2x(x-2) = x(x-2)(x+2)\\)", a:false, exp:"Sai! Đặt nhân tử chung (x−2): (x−2)(x²+2x) = x(x−2)(x+2). Điều này đúng.", h:"(x−2)(x²+2x) = x(x−2)(x+2) thực ra đúng"},
+                {t:"c) \\(3x^2 \\cdot 2x^3 = 6x^5\\)", a:true,  exp:"Đúng! 3·2=6, x²·x³=x⁵.", h:"Nhân hệ số rồi cộng số mũ"},
+                {t:"d) \\((2x+3)(2x-3) = 4x^2-9\\)", a:true,  exp:"Đúng! Hằng đẳng thức (a+b)(a−b)=a²−b²: (2x)²−3²=4x²−9.", h:"Hằng đẳng thức: (a+b)(a−b)=a²−b²"}
+            ]
+        },
+        {
+            q: "Vận dụng phép nhân đa thức",
+            items: [
+                {t:"a) \\((x+3)(x^2-2x+1) = x^3+x^2-5x+3\\)", a:true,  exp:"Đúng! x³−2x²+x+3x²−6x+3 = x³+x²−5x+3.", h:"Thu gọn: −2x²+3x²=x²; x−6x=−5x"},
+                {t:"b) Tích \\((x+1)(x-1)\\) có hạng tử \\(x\\) bằng 0", a:true,  exp:"Đúng! (x+1)(x−1)=x²−1, không có hạng tử x.", h:"x−x = 0 nên hạng tử bậc 1 bằng 0"},
+                {t:"c) \\((x+a)(x+b) = x^2+(a+b)x+ab\\)", a:true,  exp:"Đúng! x²+bx+ax+ab = x²+(a+b)x+ab.", h:"Đây là công thức nhân đa thức quan trọng"},
+                {t:"d) \\(-2x(x^2-x+3) = -2x^3+2x^2+6x\\)", a:false, exp:"Sai! (−2x)·3 = −6x, không phải +6x. Kết quả đúng: −2x³+2x²−6x.", h:"Chú ý: (−2x)·3 = −6x"}
+            ]
+        }
+    ];
+
+    const FILL_BANK = [
+        {q:"Tính \\(2x(x+4)\\). Hệ số của \\(x\\) trong kết quả là bao nhiêu?", a:"8", exp:"2x(x+4) = 2x²+8x. Hệ số của x là 8.", hint:"2x·4 = 8x"},
+        {q:"\\(3x^2(x-2) = 3x^3 + ax^2\\). Tìm \\(a\\).", a:"-6", exp:"3x²·(−2) = −6x². Vậy a = −6.", hint:"3x²·(−2) = −6x²"},
+        {q:"\\((x+3)(x-3) = x^2 + b\\). Tìm \\(b\\).", a:"-9", exp:"(x+3)(x−3) = x²−9. Vậy b = −9.", hint:"Hằng đẳng thức (a+b)(a−b) = a²−b²"},
+        {q:"\\((x+5)(x+1) = x^2 + cx + 5\\). Tìm \\(c\\).", a:"6", exp:"x²+x+5x+5 = x²+6x+5. Vậy c = 6.", hint:"x + 5x = 6x"},
+        {q:"Bậc của tích \\((x^2+x)(x^3-1)\\) là bao nhiêu?", a:"5", exp:"Bậc tích = 2 + 3 = 5.", hint:"Bậc tích = tổng bậc hai nhân tử"},
+        {q:"\\((x-1)(x^2+x+1) = x^3 - k\\). Tìm \\(k\\).", a:"1", exp:"(x−1)(x²+x+1) = x³−1. Vậy k = 1.", hint:"Thu gọn: tất cả trừ x³ và −1 triệt tiêu"},
+        {q:"Tính \\((x+2)(x-2)\\). Hệ số của \\(x^2\\) trong kết quả là bao nhiêu?", a:"1", exp:"(x+2)(x−2) = x²−4. Hệ số của x² là 1.", hint:"Hằng đẳng thức a²−b²; hệ số x² là 1"},
+        {q:"\\(5x^2 \\cdot 3x^3 = mx^5\\). Tìm \\(m\\).", a:"15", exp:"5·3 = 15, x²·x³ = x⁵. Vậy m = 15.", hint:"Nhân hệ số: 5×3 = 15"},
+        {q:"\\((2x+1)(x-4)\\). Hằng số (số tự do) trong kết quả là bao nhiêu?", a:"-4", exp:"(2x+1)(x−4) = 2x²−7x−4. Hằng số là −4.", hint:"1·(−4) = −4"},
+        {q:"\\(x(x^2-x+2) = x^3 + px^2 + 2x\\). Tìm \\(p\\).", a:"-1", exp:"x·(−x) = −x². Vậy p = −1.", hint:"x·(−x) = −x²"},
+        {q:"\\((x+a)(x+2) = x^2+5x+6\\). Tìm \\(a\\).", a:"3", exp:"a+2 = 5 → a = 3; kiểm tra: a·2 = 6 ✓.", hint:"Từ hệ số x: a+2 = 5"},
+        {q:"Khai triển \\((x-3)^2 = x^2 + qx + 9\\). Tìm \\(q\\).", a:"-6", exp:"(x−3)² = x²−6x+9. Vậy q = −6.", hint:"(a−b)² = a²−2ab+b²; 2·x·3 = 6x với dấu trừ"}
+    ];
+
+    // ======================== MAIN QUIZ ========================
+    let MCQ=[], TF=[], FILL=[];
+    let userMcq = Array(15).fill(null);
+    let userTf  = Array(5).fill(null).map(()=>Array(4).fill(null));
+    let submitted = false;
+
+    function shuffle(arr) {
+        for (let i=arr.length-1;i>0;i--) {
+            const j=Math.floor(Math.random()*(i+1));
+            [arr[i],arr[j]]=[arr[j],arr[i]];
+        }
+    }
+
+    function generateQuestions() {
+        MCQ=[];
+        const nb=[...QUESTION_BANK.nb]; shuffle(nb);
+        for (let i=0;i<7;i++) MCQ.push({...nb[i%nb.length], l:'nb'});
+        const th=[...QUESTION_BANK.th]; shuffle(th);
+        for (let i=0;i<5;i++) MCQ.push({...th[i%th.length], l:'th'});
+        const vd=[...QUESTION_BANK.vd]; shuffle(vd);
+        for (let i=0;i<3;i++) MCQ.push({...vd[i%vd.length], l:'vd'});
+        const tfPool=[...TF_BANK]; shuffle(tfPool); TF=tfPool.slice(0,5);
+        const fillPool=[...FILL_BANK]; shuffle(fillPool); FILL=fillPool.slice(0,5);
+    }
+
+    function init() { generateQuestions(); renderAll(); initMatchGame(); }
+
+    function toggleHint(id) {
+        const el=document.getElementById(id);
+        el.style.display=el.style.display==='block'?'none':'block';
+    }
+
+    function renderAll() {
+        const mcqBox=document.getElementById('mcq-container');
+        mcqBox.innerHTML='';
+        MCQ.forEach((d,i)=>{
+            if (!d||!d.q) return;
+            let badge='';
+            if (d.l==='nb') badge='<span class="level-badge level-nhan-biet">NHẬN BIẾT</span>';
+            else if (d.l==='th') badge='<span class="level-badge level-thong-hieu">THÔNG HIỂU</span>';
+            else badge='<span class="level-badge level-van-dung">VẬN DỤNG</span>';
+            let optsHtml=d.opts.map((o,j)=>`
+                <div id="mcq-${i}-${j}" class="mcq-option p-4 rounded-2xl" onclick="setMcq(${i},${j})">
+                    <span class="font-black mr-2 text-blue-500">${String.fromCharCode(65+j)}.</span>${o}
+                </div>`).join('');
+            mcqBox.innerHTML+=`
+                <div id="mcq-card-${i}" class="bg-slate-50 p-5 rounded-2xl border space-y-3">
+                    <div class="flex items-start justify-between flex-wrap gap-2">
+                        <span class="font-bold"><strong>Câu ${i+1}.</strong> ${d.q}</span>
+                        <div class="flex items-center gap-2">${badge}<button onclick="toggleHint('mcq-hint-${i}')" class="hint-btn">💡 Gợi ý</button></div>
+                    </div>
+                    <div id="mcq-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${optsHtml}</div>
+                    <div id="mcq-fb-${i}" class="feedback-box"></div>
+                </div>`;
+        });
+
+        const tfBox=document.getElementById('tf-container');
+        tfBox.innerHTML='';
+        TF.forEach((d,i)=>{
+            let rows=d.items.map((it,j)=>`
+                <tr class="border-b last:border-0">
+                    <td class="py-3 pr-4 text-sm">${it.t}</td>
+                    <td class="py-3 whitespace-nowrap">
+                        <button id="tf-btn-${i}-${j}-t" onclick="setTf(${i},${j},true)"  class="check-btn px-5 py-2 rounded-xl mr-2 font-bold text-sm bg-slate-100">Đúng</button>
+                        <button id="tf-btn-${i}-${j}-s" onclick="setTf(${i},${j},false)" class="check-btn px-5 py-2 rounded-xl font-bold text-sm bg-slate-100">Sai</button>
+                        <button onclick="toggleHint('tf-hint-${i}-${j}')" class="hint-btn">💡</button>
+                    </td>
+                </tr>
+                <tr><td colspan="2"><div id="tf-hint-${i}-${j}" class="hint-box">💡 ${it.h}</div><div id="tf-fb-${i}-${j}" class="feedback-box"></div></td></tr>`).join('');
+            tfBox.innerHTML+=`
+                <div class="bg-slate-50 p-5 rounded-2xl border space-y-2">
+                    <h4 class="font-bold text-blue-700">Câu ${i+1}: ${d.q}</h4>
+                    <table class="w-full"><tbody>${rows}</tbody></table>
+                </div>`;
+        });
+
+        const fillBox=document.getElementById('fill-container');
+        fillBox.innerHTML='';
+        FILL.forEach((d,i)=>{
+            fillBox.innerHTML+=`
+                <div class="bg-slate-50 p-5 rounded-2xl border space-y-2">
+                    <div class="flex items-start justify-between">
+                        <span><strong>Câu ${i+1}.</strong> ${d.q}</span>
+                        <button onclick="toggleHint('fill-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                    </div>
+                    <div id="fill-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <input type="text" id="fill-${i}" class="fill-input">
+                    </div>
+                    <div id="fill-fb-${i}" class="feedback-box"></div>
+                </div>`;
+        });
+
+        if (window.MathJax) MathJax.typesetPromise([
+            document.getElementById('mcq-container'),
+            document.getElementById('tf-container'),
+            document.getElementById('fill-container')
+        ]).catch(()=>{});
+    }
+
+    function setMcq(q,o) {
+        if (submitted) return;
+        userMcq[q]=o;
+        document.getElementById(`mcq-card-${q}`).querySelectorAll('.mcq-option').forEach(opt=>opt.classList.remove('selected'));
+        document.getElementById(`mcq-${q}-${o}`).classList.add('selected');
+    }
+    function setTf(q,i,v) {
+        if (submitted) return;
+        userTf[q][i]=v;
+        document.getElementById(`tf-btn-${q}-${i}-t`).classList.remove('selected-true');
+        document.getElementById(`tf-btn-${q}-${i}-s`).classList.remove('selected-false');
+        if (v) document.getElementById(`tf-btn-${q}-${i}-t`).classList.add('selected-true');
+        else   document.getElementById(`tf-btn-${q}-${i}-s`).classList.add('selected-false');
+    }
+
+    function celebrate(score) {
+        const pct=(score/10)*100;
+        if (pct>=90) {
+            const end=Date.now()+3000;
+            const iv=setInterval(()=>{if(Date.now()>end){clearInterval(iv);return;} confetti({particleCount:100,spread:160,origin:{y:0.6}});},250);
+        } else if (pct>=70) {
+            confetti({particleCount:150,spread:100,origin:{y:0.6}});
+            setTimeout(()=>confetti({particleCount:100,spread:80,origin:{y:0.6}}),500);
+        } else if (pct>=50) {
+            confetti({particleCount:100,spread:70,origin:{y:0.6}});
+        } else {
+            confetti({particleCount:50,spread:50,origin:{y:0.6}});
+        }
+    }
+
+    function checkResults() {
+        submitted=true;
+        let correct=0;
+        const total=MCQ.length+TF.length*4+FILL.length;
+
+        MCQ.forEach((d,i)=>{
+            const fb=document.getElementById(`mcq-fb-${i}`);
+            const opts=document.getElementById(`mcq-card-${i}`).querySelectorAll('.mcq-option');
+            opts[d.ans].classList.add('correct');
+            if (userMcq[i]===d.ans) {
+                correct++;
+                fb.innerHTML='✔️ <strong>Đúng!</strong> '+d.exp;
+                fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+            } else {
+                if (userMcq[i]!==null) opts[userMcq[i]].classList.add('wrong');
+                fb.innerHTML='❌ <strong>Sai!</strong> '+d.exp;
+                fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+            }
+            fb.style.display='block';
+        });
+
+        TF.forEach((d,i)=>{
+            d.items.forEach((it,j)=>{
+                const fb=document.getElementById(`tf-fb-${i}-${j}`);
+                if (userTf[i][j]===it.a) {
+                    correct++;
+                    fb.innerHTML='✔️ '+it.exp;
+                    fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+                } else {
+                    fb.innerHTML='❌ '+it.exp;
+                    fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+                }
+                fb.style.display='block';
+                if (it.a) document.getElementById(`tf-btn-${i}-${j}-t`).classList.add('correct-highlight');
+                else       document.getElementById(`tf-btn-${i}-${j}-s`).classList.add('correct-highlight');
+            });
+        });
+
+        FILL.forEach((d,i)=>{
+            const input=document.getElementById(`fill-${i}`);
+            const fb=document.getElementById(`fill-fb-${i}`);
+            const user=input.value.trim().toLowerCase().replace(/\s+/g,'').replace(/,/g,'.').replace(/°/g,'').replace(/cm/g,'');
+            const ans=d.a.toLowerCase().replace(/\s+/g,'').replace(/,/g,'.').replace(/°/g,'').replace(/cm/g,'');
+            let ok = user===ans;
+            if (!ok) {
+                function evalFrac(s){const m=s.match(/^(-?\d+)\/(\d+)$/);if(m)return parseInt(m[1])/parseInt(m[2]);const n=parseFloat(s);return isNaN(n)?null:n;}
+                const uVal=evalFrac(user), aVal=evalFrac(ans);
+                if (uVal!==null && aVal!==null && Math.abs(uVal-aVal)<0.01) ok=true;
+            }
+            if (ok) {
+                correct++;
+                input.classList.add('fill-correct');
+                fb.innerHTML='✔️ '+d.exp;
+                fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+            } else {
+                input.classList.add('fill-wrong');
+                fb.innerHTML='❌ Đáp án: <strong>'+d.a+'</strong>. '+d.exp;
+                fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+            }
+            fb.style.display='block';
+        });
+
+        const score=(correct/total)*10;
+        const pct=(correct/total)*100;
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('result-board').classList.remove('hidden');
+        const scoreText=document.getElementById('score-text');
+        scoreText.innerHTML=`<div class="text-center"><div class="text-5xl font-black mb-2">${score.toFixed(1)}/10</div><div class="text-lg">Đúng ${correct}/${total} câu (${pct.toFixed(0)}%)</div></div>`;
+        if (pct>=90)      {scoreText.classList.add('score-excellent'); document.getElementById('score-message').innerHTML='🎉 <span class="text-green-600">XUẤT SẮC!</span>';}
+        else if (pct>=70) {scoreText.classList.add('score-good');      document.getElementById('score-message').innerHTML='👏 <span class="text-blue-600">KHÁ TỐT!</span>';}
+        else if (pct>=50) {scoreText.classList.add('score-average');   document.getElementById('score-message').innerHTML='💪 <span class="text-orange-600">TRUNG BÌNH</span>';}
+        else              {scoreText.classList.add('score-low');       document.getElementById('score-message').innerHTML='📚 <span class="text-red-600">CẦN CỐ GẮNG</span>';}
+        celebrate(score);
+        saveScore(score);
+        showOptions();
+        if (window.MathJax) {
+            MathJax.typesetPromise([
+                document.getElementById('mcq-container'),
+                document.getElementById('tf-container'),
+                document.getElementById('fill-container'),
+                document.getElementById('result-board')
+            ]).catch(err => console.warn('MathJax typeset error:', err));
+        }
+        document.getElementById('result-board').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+
+    function showOptions() {
+        const old=document.getElementById('post-options');
+        if (old) old.remove();
+        const container=document.getElementById('result-board');
+        const div=document.createElement('div');
+        div.id='post-options';
+        div.className='mt-8 p-6 bg-white rounded-2xl shadow-xl border-2 border-blue-400 animate-bounce-in';
+        div.innerHTML=`
+            <h3 class="text-xl font-bold text-blue-800 mb-4 text-center">🌟 Tiếp tục?</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="regenerate('retry')"      class="p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all border-b-4 border-gray-300 active:border-b-0 font-bold text-gray-700">🔄 Làm lại</button>
+                <button onclick="regenerate('equivalent')" class="p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-all border-b-4 border-blue-300 active:border-b-0 font-bold text-blue-700">📚 Đề mới tương đương</button>
+                <button onclick="regenerate('harder')"     class="p-4 bg-orange-100 hover:bg-orange-200 rounded-xl transition-all border-b-4 border-orange-300 active:border-b-0 font-bold text-orange-700">🚀 Đề nâng cao</button>
+            </div>`;
+        container.appendChild(div);
+    }
+
+    async function regenerate(mode) {
+        document.getElementById('loading-overlay').style.display='flex';
+        await new Promise(r=>setTimeout(r,800));
+        submitted=false;
+        userMcq=Array(15).fill(null);
+        userTf=Array(5).fill(null).map(()=>Array(4).fill(null));
+        const opts=document.getElementById('post-options');
+        if (opts) opts.remove();
+        document.getElementById('result-board').classList.add('hidden');
+        document.getElementById('submit-btn').classList.remove('hidden');
+        if (mode!=='retry') generateQuestions();
+        renderAll();
+        document.getElementById('loading-overlay').style.display='none';
+        document.getElementById('capture-mcq').scrollIntoView({behavior:'smooth'});
+    }
+
+    // ======================== DOWNLOAD ========================
+    async function downloadKnowledgePDF() {
+        const el=document.getElementById('capture-knowledge');
+        const opt={margin:15,filename:'Kien-thuc-Phep-nhan-da-thuc-mot-bien.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+        try{await html2pdf().set(opt).from(el).save();}catch(e){alert('Lỗi tải PDF!');}
+    }
+    // ===== Hàm serialize SVG của MathJax thành ảnh PNG =====
+    function serializeSvgToDataUrl(svgEl, dpr) {
+        return new Promise((resolve) => {
+            const clone = svgEl.cloneNode(true);
+            clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            const bRect = svgEl.getBoundingClientRect();
+            const w = bRect.width || parseFloat(svgEl.getAttribute('width')) || 50;
+            const h = bRect.height || parseFloat(svgEl.getAttribute('height')) || 20;
+            clone.setAttribute('width', w);
+            clone.setAttribute('height', h);
+            const svgStr = new XMLSerializer().serializeToString(clone);
+            const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => {
+                const c = document.createElement('canvas');
+                c.width  = w * dpr;
+                c.height = h * dpr;
+                const ctx = c.getContext('2d');
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.drawImage(img, 0, 0, c.width, c.height);
+                URL.revokeObjectURL(url);
+                resolve({ dataUrl: c.toDataURL('image/png'), w, h });
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+            img.src = url;
+        });
+    }
+
+    // ===== Hàm chụp ảnh có MathJax: thay mjx-container bằng <img> PNG rồi dùng html2canvas =====
+    async function captureWithMathJax(elementId, filename) {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.style.display = 'flex';
+        loadingOverlay.querySelector('p').textContent = 'Đang tạo ảnh...';
+        try {
+            const element = document.getElementById(elementId);
+            const clone = element.cloneNode(true);
+            clone.style.cssText = `
+                position: fixed; top: 0; left: 0; z-index: -9999;
+                width: ${element.offsetWidth}px;
+                background: #ffffff; pointer-events: none;
+            `;
+            document.body.appendChild(clone);
+
+            const origContainers = Array.from(element.querySelectorAll('mjx-container'));
+            const cloneContainers = Array.from(clone.querySelectorAll('mjx-container'));
+            const DPR = 3;
+
+            await Promise.all(origContainers.map(async (orig, i) => {
+                const svg = orig.querySelector('svg');
+                const cloneItem = cloneContainers[i];
+                if (!svg || !cloneItem) return;
+                const result = await serializeSvgToDataUrl(svg, DPR);
+                if (!result) return;
+                const imgEl = document.createElement('img');
+                imgEl.src = result.dataUrl;
+                imgEl.style.cssText = `
+                    display: inline-block;
+                    width: ${result.w}px;
+                    height: ${result.h}px;
+                    vertical-align: ${orig.style.verticalAlign || 'middle'};
+                    margin: 0 1px;
+                `;
+                cloneItem.replaceWith(imgEl);
+            }));
+
+            await Promise.all(
+                Array.from(clone.querySelectorAll('img')).map(img =>
+                    img.complete ? Promise.resolve() :
+                    new Promise(r => { img.onload = r; img.onerror = r; })
+                )
+            );
+
+            const canvas = await html2canvas(clone, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                imageTimeout: 5000,
+                width: element.offsetWidth,
+                height: clone.scrollHeight
+            });
+
+            document.body.removeChild(clone);
+
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            loadingOverlay.style.display = 'none';
+        } catch (error) {
+            console.error('captureWithMathJax error:', error);
+            const orphan = document.querySelector('[style*="z-index: -9999"]');
+            if (orphan && document.body.contains(orphan)) document.body.removeChild(orphan);
+            loadingOverlay.style.display = 'none';
+            alert('Đã xảy ra lỗi khi tải ảnh: ' + error.message);
+        }
+    }
+
+    async function downloadMCQImage()  { await captureWithMathJax('capture-mcq',  'De-TN-Bai27.png'); }
+    async function downloadTFImage()   { await captureWithMathJax('capture-tf',   'De-DS-Bai27.png'); }
+    async function downloadFillImage() { await captureWithMathJax('capture-fill', 'De-Dien-Bai27.png'); }
+
+    // ======================== CHATBOT ========================
+    const CHATBOT_KNOWLEDGE = {
+        'nhân đơn thức với đa thức': 'Nhân đơn thức với đa thức:<br>• Quy tắc: nhân đơn thức với <b>từng hạng tử</b> của đa thức<br>• \\(A(B+C+D) = AB + AC + AD\\)<br>• Ví dụ: \\(2x(x^2-3x+1) = 2x^3-6x^2+2x\\)',
+        'đơn thức': 'Nhân đơn thức với đa thức:<br>• \\(A \\cdot (B+C) = A\\cdot B + A\\cdot C\\)<br>• Nhân hệ số với hệ số, lũy thừa với lũy thừa<br>• Ví dụ: \\(3x^2(2x-1) = 6x^3 - 3x^2\\)',
+        'nhân đa thức với đa thức': 'Nhân đa thức với đa thức:<br>• Nhân <b>mỗi hạng tử</b> của đa thức này với <b>từng hạng tử</b> của đa thức kia<br>• \\((A+B)(C+D) = AC+AD+BC+BD\\)<br>• Ví dụ: \\((x+2)(x-3) = x^2-3x+2x-6 = x^2-x-6\\)',
+        'ví dụ': '📌 Ví dụ nhân đa thức:<br>• \\(2x(x+3) = 2x^2+6x\\)<br>• \\((x+1)(x+2) = x^2+3x+2\\)<br>• \\((x-1)(x^2+x+1) = x^3-1\\)',
+        'bậc': 'Bậc của tích:<br>• Bậc của tích = <b>tổng bậc</b> của các nhân tử<br>• \\(\\deg(A\\cdot B) = \\deg(A) + \\deg(B)\\)<br>• Ví dụ: \\((x^2+1)(x^3-x)\\) có bậc = 2+3 = 5',
+        'dấu': 'Chú ý quy tắc dấu khi nhân:<br>• \\((+) \\cdot (+) = (+)\\)<br>• \\((-) \\cdot (-) = (+)\\)<br>• \\((+) \\cdot (-) = (-)\\)<br>• \\((-) \\cdot (+) = (-)\\)',
+        'thu gọn': 'Thu gọn sau khi nhân:<br>• Nhân xong, cộng/trừ các hạng tử <b>đồng dạng</b><br>• Sắp xếp kết quả theo bậc giảm dần<br>• Ví dụ: \\(x^2+2x-3x = x^2-x\\)',
+        'hằng đẳng thức': 'Các hằng đẳng thức cơ bản:<br>• \\((a+b)^2 = a^2+2ab+b^2\\)<br>• \\((a-b)^2 = a^2-2ab+b^2\\)<br>• \\((a+b)(a-b) = a^2-b^2\\)',
+    };
+
+    function toggleChatbot() {
+        const win=document.getElementById('chatbot-window');
+        const toggle=document.getElementById('chatbot-toggle');
+        if (win.style.display==='flex') {
+            win.style.display='none';
+            toggle.innerHTML='💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>';
+        } else {
+            win.style.display='flex';
+            toggle.innerHTML='✖<span class="chatbot-label">Đóng</span>';
+        }
+    }
+    function addBotMessage(text) {
+        const container=document.getElementById('chatbot-messages');
+        const div=document.createElement('div');
+        div.className='chat-message bot';
+        div.innerHTML=`<div class="bot-avatar">💬</div><div class="message-content">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop=container.scrollHeight;
+        if (window.MathJax) MathJax.typeset([container]);
+    }
+    function addUserMessage(text) {
+        const container=document.getElementById('chatbot-messages');
+        const div=document.createElement('div');
+        div.className='chat-message user';
+        div.innerHTML=`<div class="message-content">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop=container.scrollHeight;
+    }
+    function getBotResponse(question) {
+        const q=question.toLowerCase().trim();
+        for (const [kw,ans] of Object.entries(CHATBOT_KNOWLEDGE)) {
+            if (q.includes(kw)) return ans;
+        }
+        if (q.includes('nhân') && q.includes('đa thức')) return 'Để nhân đa thức với đa thức:<br>• Nhân từng cặp hạng tử<br>• \\((A+B)(C+D) = AC+AD+BC+BD\\)<br>• Thu gọn các hạng tử đồng dạng';
+        return '🤔 Chưa hiểu câu hỏi.<br>Bạn có thể hỏi:<br>• <em>"Nhân đơn thức với đa thức là gì?"</em><br>• <em>"Nhân đa thức với đa thức là gì?"</em><br>• <em>"Cho ví dụ phép nhân đa thức"</em>';
+    }
+    function sendMessage() {
+        const input=document.getElementById('chatbot-input');
+        const q=input.value.trim();
+        if (!q) return;
+        addUserMessage(q); input.value='';
+        setTimeout(()=>addBotMessage(getBotResponse(q)),500);
+    }
+    function sendQuickQuestion(q) {
+        addUserMessage(q);
+        setTimeout(()=>addBotMessage(getBotResponse(q)),500);
+    }
+
+
+    // ============================================================
+    // HÌNH VẼ TOÁN HỌC — Canvas rendering engine
+    // Tính toán hoàn toàn bằng toán học: bisector, normal, centroid offset
+    // ============================================================
+    (function() {
+      // --- Math helpers ---
+      function norm(ax, ay) {
+        const d = Math.hypot(ax, ay);
+        return d < 1e-9 ? [0,0] : [ax/d, ay/d];
+      }
+      function perp(ux, uy) { return [-uy, ux]; } // 90° CCW
+
+      // Label position: offset from vertex away from centroid
+      function labelPos(vx, vy, cx, cy, dist) {
+        const [ux, uy] = norm(vx - cx, vy - cy);
+        return [vx + ux * dist, vy + uy * dist];
+      }
+
+      // Angle arc from vertex toward p1 and p2, radius r
+      // Returns: {startAngle, endAngle, sweepAngle} in radians
+      function arcAngles(vx, vy, p1x, p1y, p2x, p2y) {
+        const a1 = Math.atan2(p1y - vy, p1x - vx);
+        const a2 = Math.atan2(p2y - vy, p2x - vx);
+        return { a1, a2 };
+      }
+
+      // Bisector unit vector at vertex toward p1 and p2
+      function bisectorDir(vx, vy, p1x, p1y, p2x, p2y) {
+        const [u1x, u1y] = norm(p1x - vx, p1y - vy);
+        const [u2x, u2y] = norm(p2x - vx, p2y - vy);
+        return norm(u1x + u2x, u1y + u2y);
+      }
+
+      // Tick marks perpendicular to segment, at midpoint, n ticks
+      function drawTick(ctx, ax, ay, bx, by, n, color, gap = 6, hw = 7) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        const mx = (ax + bx) / 2, my = (ay + by) / 2;
+        const [ux, uy] = norm(bx - ax, by - ay);
+        const [px, py] = perp(ux, uy);
+        const offsets = n === 1 ? [0] : n === 2 ? [-gap/2, gap/2] : [-gap, 0, gap];
+        offsets.forEach(off => {
+          const cx = mx + ux * off, cy = my + uy * off;
+          ctx.beginPath();
+          ctx.moveTo(cx - px * hw, cy - py * hw);
+          ctx.lineTo(cx + px * hw, cy + py * hw);
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
+      // Draw angle arc at vertex (vx,vy) toward p1 and p2
+      function drawArc(ctx, vx, vy, p1x, p1y, p2x, p2y, r, color) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.18;
+        ctx.lineWidth = 1.5;
+        const {a1, a2} = arcAngles(vx, vy, p1x, p1y, p2x, p2y);
+
+        // Determine sweep direction: go from a1 to a2 the shorter way
+        let da = a2 - a1;
+        while (da > Math.PI) da -= 2*Math.PI;
+        while (da < -Math.PI) da += 2*Math.PI;
+        const ccw = da < 0;
+
+        ctx.beginPath();
+        ctx.moveTo(vx, vy);
+        ctx.arc(vx, vy, r, a1, a2, ccw);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.arc(vx, vy, r, a1, a2, ccw);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Draw triangle outline + fill
+      function drawTriangle(ctx, pts, fillColor, strokeColor) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        pts.forEach(p => ctx.lineTo(p[0], p[1]));
+        ctx.closePath();
+        ctx.fillStyle = fillColor;
+        ctx.globalAlpha = 0.38;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Draw vertex label
+      function drawLabel(ctx, x, y, text, color, size = 14) {
+        ctx.save();
+        ctx.font = `bold ${size}px "Comfortaa", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y);
+        ctx.restore();
+      }
+
+      // Draw angle label at bisector direction
+      function drawAngleLabel(ctx, vx, vy, p1x, p1y, p2x, p2y, text, color, r = 28) {
+        const [bx, by] = bisectorDir(vx, vy, p1x, p1y, p2x, p2y);
+        const lx = vx + bx * r, ly = vy + by * r;
+        ctx.save();
+        ctx.font = `bold 11.5px "Comfortaa", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, lx, ly);
+        ctx.restore();
+      }
+
+      // Edge length label, offset outward from triangle centroid
+      function drawEdgeLabel(ctx, ax, ay, bx, by, cx, cy, text, color) {
+        const mx = (ax + bx) / 2, my = (ay + by) / 2;
+        const [ux, uy] = norm(bx - ax, by - ay);
+        const [px, py] = perp(ux, uy);
+        // choose side away from third point
+        const dot = (cx - mx) * px + (cy - my) * py;
+        const side = dot > 0 ? -1 : 1;
+        const lx = mx + px * 15 * side, ly = my + py * 15 * side;
+        ctx.save();
+        ctx.font = `bold 11px "Comfortaa", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, lx, ly);
+        ctx.restore();
+      }
+
+      // Centroid
+      function centroid(pts) {
+        return [
+          pts.reduce((s,p)=>s+p[0],0)/pts.length,
+          pts.reduce((s,p)=>s+p[1],0)/pts.length
+        ];
+      }
+
+      // ----------------------------------------------------------------
+      // FIGURE 1: Minh họa đơn thức × đa thức: A(B+C+D)
+      // ----------------------------------------------------------------
+      function drawFig1() {
+        const canvas = document.getElementById('fig1');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        ctx.font = 'bold 13px "Comfortaa", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // Draw box for A
+        const colors = ['#4f46e5','#059669','#d97706'];
+        function box(x,y,w,h,col,txt) {
+          ctx.save();
+          ctx.fillStyle = col+'22';
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(x,y,w,h,8);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = col;
+          ctx.fillText(txt, x+w/2, y+h/2);
+          ctx.restore();
+        }
+
+        // Row 1: 2x × (x² − 3x + 1)
+        box(10, 10, 50, 36, '#4f46e5', '2x');
+        ctx.fillStyle = '#475569'; ctx.font = 'bold 18px serif';
+        ctx.fillText('×', 68, 28);
+        ctx.font = 'bold 13px "Comfortaa", sans-serif';
+        box(80, 10, 60, 36, '#059669', 'x²');
+        ctx.fillStyle = '#475569'; ctx.fillText('−', 149, 28);
+        box(160, 10, 60, 36, '#d97706', '3x');
+        ctx.fillStyle = '#475569'; ctx.fillText('+', 229, 28);
+        box(240, 10, 50, 36, '#7c3aed', '1');
+
+        // Arrow down
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+        ctx.setLineDash([4,3]);
+        ctx.beginPath(); ctx.moveTo(150,46); ctx.lineTo(150,58); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath(); ctx.moveTo(145,56); ctx.lineTo(155,56); ctx.lineTo(150,64); ctx.fill();
+
+        // Row 2: result
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 13px "Comfortaa", sans-serif';
+        ctx.fillText('=', 18, 82);
+        box(32, 66, 72, 32, '#4f46e5', '2x³');
+        ctx.fillStyle = '#475569'; ctx.fillText('−', 114, 82);
+        box(124, 66, 72, 32, '#d97706', '6x²');
+        ctx.fillStyle = '#475569'; ctx.fillText('+', 206, 82);
+        box(216, 66, 72, 32, '#7c3aed', '2x');
+
+        // Caption
+        ctx.fillStyle = '#059669'; ctx.font = 'bold 11px "Comfortaa", sans-serif';
+        ctx.fillText('A(B+C+D) = AB + AC + AD', W/2, H - 10);
+      }
+
+      // ----------------------------------------------------------------
+      // FIGURE 2: Minh họa đa thức × đa thức (x+2)(x−3)
+      // ----------------------------------------------------------------
+      function drawFig2() {
+        const canvas = document.getElementById('fig2');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        ctx.font = 'bold 12px "Comfortaa", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        function box(x,y,w,h,col,txt) {
+          ctx.save();
+          ctx.fillStyle = col+'22';
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.roundRect(x,y,w,h,6);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = col;
+          ctx.fillText(txt, x+w/2, y+h/2);
+          ctx.restore();
+        }
+
+        // (x+2)(x−3) grid
+        const labels1 = ['x', '+2'], labels2 = ['x', '−3'];
+        const cols1 = ['#4f46e5','#059669'], cols2 = ['#4f46e5','#d97706'];
+        const results = [['x²','−3x'],['+2x','−6']];
+        const resCols = [['#4f46e5','#d97706'],['#059669','#7c3aed']];
+        const ox = 55, oy = 28, cw = 65, ch = 38;
+
+        // Header row
+        labels2.forEach((l,j) => box(ox+j*cw, 5, cw-4, 22, cols2[j], l));
+        // Header col
+        labels1.forEach((l,i) => box(8, oy+i*ch, 40, ch-4, cols1[i], l));
+        // Grid
+        labels1.forEach((_,i) => labels2.forEach((_,j) => {
+          box(ox+j*cw, oy+i*ch, cw-4, ch-4, resCols[i][j], results[i][j]);
+        }));
+
+        // Arrows
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1;
+        ctx.setLineDash([3,2]);
+        ctx.beginPath(); ctx.moveTo(28, oy+ch); ctx.lineTo(28, oy+2*ch+8); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Bottom: result
+        ctx.fillStyle = '#1e293b'; ctx.font = 'bold 11px "Comfortaa", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('= x² − 3x + 2x − 6 = x² − x − 6', W/2, H - 10);
+      }
+
+      // ----------------------------------------------------------------
+      // FIGURE 3: Tính chất bậc tích
+      // ----------------------------------------------------------------
+      function drawFig3() {
+        const canvas = document.getElementById('fig3');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        function pill(x,y,w,h,col,txt,sub) {
+          ctx.save();
+          ctx.fillStyle = col+'18';
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(x,y,w,h,12);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = col;
+          ctx.font = 'bold 12px "Comfortaa", sans-serif';
+          ctx.fillText(txt, x+w/2, y+h/2 - (sub?6:0));
+          if (sub) {
+            ctx.font = 'bold 9.5px "Comfortaa", sans-serif';
+            ctx.fillStyle = col+'cc';
+            ctx.fillText(sub, x+w/2, y+h/2+8);
+          }
+          ctx.restore();
+        }
+
+        pill(10,  12, 80, 46, '#4f46e5', 'A(x)', 'bậc m');
+        ctx.fillStyle = '#64748b'; ctx.font = 'bold 22px serif';
+        ctx.fillText('·', 97, 35);
+        pill(108, 12, 80, 46, '#059669', 'B(x)', 'bậc n');
+
+        // Arrow
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(150, 58); ctx.lineTo(150, 72); ctx.stroke();
+        ctx.fillStyle = '#94a3b8';
+        ctx.beginPath(); ctx.moveTo(144,70); ctx.lineTo(156,70); ctx.lineTo(150,78); ctx.fill();
+
+        pill(60, 80, 178, 46, '#7c3aed', 'A(x)·B(x)', 'bậc m+n');
+
+        // Caption
+        ctx.fillStyle = '#475569'; ctx.font = 'bold 10.5px "Comfortaa", sans-serif';
+        ctx.fillText('deg(A·B) = deg(A) + deg(B)', W/2, H - 10);
+      }
+
+      // ----------------------------------------------------------------
+      // FIGURE 4: Ví dụ (2x−1)(x²+3x−2)
+      // ----------------------------------------------------------------
+      function drawFig4() {
+        const canvas = document.getElementById('fig4');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        ctx.font = 'bold 11.5px "Comfortaa", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+
+        const lines = [
+          { text: '(2x − 1)(x² + 3x − 2)', color: '#1e293b' },
+          { text: '= 2x·x² + 2x·3x + 2x·(−2) + (−1)·x² + (−1)·3x + (−1)·(−2)', color: '#4f46e5', small: true },
+          { text: '= 2x³ + 6x² − 4x − x² − 3x + 2', color: '#d97706' },
+          { text: '= 2x³ + 5x² − 7x + 2', color: '#059669' },
+        ];
+
+        lines.forEach((l, i) => {
+          ctx.save();
+          ctx.fillStyle = l.color;
+          ctx.font = l.small
+            ? 'bold 9px "Comfortaa", sans-serif'
+            : 'bold 11.5px "Comfortaa", sans-serif';
+          ctx.fillText(l.text, 10, 20 + i * 36);
+          ctx.restore();
+        });
+
+        // Underline final answer
+        ctx.strokeStyle = '#059669';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4,2]);
+        ctx.beginPath(); ctx.moveTo(10, H-28); ctx.lineTo(W-10, H-28); ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#059669'; ctx.font = 'bold 10.5px "Comfortaa", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Thu gọn hạng tử đồng dạng → sắp xếp bậc giảm dần', W/2, H - 12);
+      }
+
+      // Render all figures after page load
+      function renderAllFigs() {
+        drawFig1(); drawFig2(); drawFig3(); drawFig4();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderAllFigs);
+      } else {
+        renderAllFigs();
+      }
+    })();
+
+    window.onload = function() { init(); renderAllFigs(); initStats(); };
+
+    // ===================== STATS & LIKE & PROGRESS (bai-13) =====================
+    const STORAGE_KEY = 'bai27_phep_nhan_da_thuc_mot_bien';
+
+    function loadStorage() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+        catch(e) { return {}; }
+    }
+    function saveStorage(data) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+    }
+
+    function initStats() {
+        const data = loadStorage();
+
+        data.visits = (data.visits || 0) + 1;
+        saveStorage(data);
+        document.getElementById('visit-count').textContent = data.visits;
+
+        const attempts = data.scores || [];
+        document.getElementById('attempt-count').textContent = attempts.length;
+        if (attempts.length > 0) {
+            const best = Math.max(...attempts.map(s => s.score));
+            document.getElementById('best-score').textContent = best.toFixed(1);
+        }
+
+        data.likes = data.likes || 0;
+        document.getElementById('like-count').textContent = data.likes;
+        if (data.liked) document.getElementById('like-btn').classList.add('liked');
+
+        renderProgress(attempts);
+    }
+
+    function toggleLike() {
+        const data = loadStorage();
+        const btn = document.getElementById('like-btn');
+        if (data.liked) {
+            data.liked = false;
+            data.likes = Math.max(0, (data.likes || 1) - 1);
+            btn.classList.remove('liked');
+        } else {
+            data.liked = true;
+            data.likes = (data.likes || 0) + 1;
+            btn.classList.add('liked');
+            confetti({ particleCount: 60, spread: 60, origin: { y: 0.2 } });
+        }
+        document.getElementById('like-count').textContent = data.likes;
+        saveStorage(data);
+    }
+
+    function saveScore(score) {
+        const data = loadStorage();
+        if (!data.scores) data.scores = [];
+        data.scores.push({ score: parseFloat(score.toFixed(1)), time: new Date().toLocaleDateString('vi-VN') });
+        if (data.scores.length > 10) data.scores = data.scores.slice(-10);
+        document.getElementById('attempt-count').textContent = data.scores.length;
+        document.getElementById('best-score').textContent = Math.max(...data.scores.map(s => s.score)).toFixed(1);
+        saveStorage(data);
+        renderProgress(data.scores);
+    }
+
+    function renderProgress(attempts) {
+        const panel = document.getElementById('progress-panel');
+        const chart = document.getElementById('progress-chart');
+        const statsDiv = document.getElementById('progress-stats');
+        const trendDiv = document.getElementById('trend-display');
+
+        if (!attempts || attempts.length === 0) { panel.classList.add('hidden'); return; }
+        panel.classList.remove('hidden');
+
+        chart.innerHTML = attempts.map((s, i) => {
+            const pct = Math.max(4, (s.score / 10) * 100);
+            const color = s.score >= 9 ? '#10b981' : s.score >= 7 ? '#3b82f6' : s.score >= 5 ? '#f59e0b' : '#ef4444';
+            return `<div class="bar-wrap">
+                <div class="bar-score">${s.score}</div>
+                <div class="bar" style="height:${pct}%;background:${color};"></div>
+                <div class="bar-label">L${i+1}</div>
+            </div>`;
+        }).join('');
+
+        const scores = attempts.map(s => s.score);
+        const avg = (scores.reduce((a,b) => a+b,0) / scores.length).toFixed(1);
+        const best = Math.max(...scores).toFixed(1);
+        const latest = scores[scores.length-1].toFixed(1);
+        statsDiv.innerHTML = `
+            <div class="bg-blue-50 rounded-xl p-3 border border-blue-100"><div class="font-black text-blue-700 text-lg">${avg}</div><div class="text-slate-500 text-xs">Điểm TB</div></div>
+            <div class="bg-green-50 rounded-xl p-3 border border-green-100"><div class="font-black text-green-700 text-lg">${best}</div><div class="text-slate-500 text-xs">Cao nhất</div></div>
+            <div class="bg-orange-50 rounded-xl p-3 border border-orange-100"><div class="font-black text-orange-700 text-lg">${latest}</div><div class="text-slate-500 text-xs">Lần này</div></div>`;
+
+        if (scores.length >= 2) {
+            const diff = scores[scores.length-1] - scores[scores.length-2];
+            trendDiv.innerHTML = diff > 0
+                ? `<span class="trend-badge trend-up">📈 Tăng +${diff.toFixed(1)} điểm</span>`
+                : diff < 0
+                ? `<span class="trend-badge trend-down">📉 Giảm ${diff.toFixed(1)} điểm</span>`
+                : `<span class="trend-badge trend-same">➡️ Giữ nguyên</span>`;
+        } else {
+            trendDiv.innerHTML = `<span class="trend-badge trend-same">🆕 Lần đầu làm bài</span>`;
+        }
+    }
+    // ===================== END STATS =====================
+    </script>
+
+    <!-- COUNTAPI GLOBAL VIEW COUNTER - bai-27.html -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var NAMESPACE   = 'toan7-vi-cong-dong';
+            var PAGE_KEY    = 'bai-27.html';
+            var VISITED_KEY = 'toan7_visited_bai27';
+
+            var badge = document.getElementById('global-view-badge');
+
+            if (!localStorage.getItem(VISITED_KEY)) {
+                localStorage.setItem(VISITED_KEY, '1');
+                fetch('https://api.counterapi.dev/v1/' + NAMESPACE + '/' + PAGE_KEY + '/up')
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (badge) badge.textContent = '👥 ' + (data.count || 0).toLocaleString('vi-VN') + ' người đã truy cập bài này';
+                    })
+                    .catch(function() { if (badge) badge.textContent = '👥 0 người đã truy cập bài này'; });
+            } else {
+                fetch('https://api.counterapi.dev/v1/' + NAMESPACE + '/' + PAGE_KEY + '/')
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (badge) badge.textContent = '👥 ' + (data.count || 0).toLocaleString('vi-VN') + ' người đã truy cập bài này';
+                    })
+                    .catch(function() { if (badge) badge.textContent = '👥 0 người đã truy cập bài này'; });
+            }
+        });
+    </script>
+    <!-- END COUNTAPI GLOBAL VIEW COUNTER -->
+</body>
+</html>
