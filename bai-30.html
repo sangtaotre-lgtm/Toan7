@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 30: Làm Quen Với Xác Suất Của Biến Cố</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: { 
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: {
+                scale: 1,
+                matchFontHeight: false,
+                fontCache: 'local'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body { font-family: 'Comfortaa', cursive; scroll-behavior: smooth; line-height: 1.8; }
+
+        /* Áp dụng Comfortaa cho toàn trang trừ MathJax */
+        body, p, span, div, h1, h2, h3, h4, h5, h6,
+        a, li, ul, ol, td, th, table, input, button,
+        textarea, select, label, nav, header, footer,
+        section, article, aside, main {
+            font-family: 'Comfortaa', cursive;
+        }
+
+        /* MathJax SVG: scale nhỏ lại cho cân với text Comfortaa */
+        mjx-container {
+            display: inline-block !important;
+            vertical-align: -0.2em !important;
+            margin: 0 0.1em !important;
+            transform: scale(0.95);
+            transform-origin: center baseline;
+        }
+
+        nav {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .section-dashed { border: 3px dashed #cbd5e1; border-radius: 24px; transition: border-color 0.3s; }
+        .section-dashed:hover { border-color: #3b82f6; }
+
+        .check-btn { transition: all 0.2s; cursor: pointer; border: 2px solid #e2e8f0; }
+        .selected-true  { background-color: #22c55e !important; color: white !important; border-color: #16a34a !important; }
+        .selected-false { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+        .correct-highlight { border: 3px solid #22c55e !important; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
+
+        .mcq-option { border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s; border-radius: 16px; }
+        .mcq-option.selected { border-color: #3b82f6; background-color: #eff6ff; }
+        .mcq-option.correct  { border-color: #22c55e; background-color: #dcfce7; color: #166534; }
+        .mcq-option.wrong    { border-color: #ef4444; background-color: #fee2e2; color: #991b1b; }
+
+        .fill-input { border-bottom: 2px dashed #3b82f6; outline: none; text-align: center; width: 120px; font-weight: bold; color: #2563eb; background: transparent; }
+        .fill-correct { background-color: #dcfce7; border-color: #22c55e; border-style: solid; }
+        .fill-wrong   { background-color: #fee2e2; border-color: #ef4444; border-style: solid; }
+
+        .feedback-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border-left: 4px solid #ef4444; background-color: #fffafb; font-size: 0.85rem; }
+        .hint-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border: 1px dashed #eab308; background-color: #fefce8; color: #854d0e; font-size: 0.85rem; }
+
+        #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .loader { border: 6px solid #f3f3f3; border-top: 6px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+        .hint-btn { display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; border: 2px solid #f59e0b; padding: 6px 12px; border-radius: 12px; color: #92400e; font-size: 0.75rem; font-weight: bold; transition: all 0.2s; margin-left: 8px; cursor: pointer; }
+        .hint-btn:hover { background: #fde68a; transform: translateY(-1px); }
+
+        @keyframes bounce-in { 0%{transform:scale(0.9);opacity:0} 50%{transform:scale(1.05)} 100%{transform:scale(1);opacity:1} }
+        .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
+
+        .level-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+        .level-nhan-biet  { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .level-thong-hieu { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .level-van-dung   { background: #fecaca; color: #991b1b; border: 1px solid #ef4444; }
+
+        .score-excellent { background: linear-gradient(135deg,#10b981,#059669); color:white; animation: pulse-scale 1s ease-in-out infinite; }
+        .score-good      { background: linear-gradient(135deg,#3b82f6,#2563eb); color:white; }
+        .score-average   { background: linear-gradient(135deg,#f59e0b,#d97706); color:white; }
+        .score-low       { background: linear-gradient(135deg,#ef4444,#dc2626); color:white; }
+        @keyframes pulse-scale { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+        .download-btn { background: linear-gradient(135deg,#8b5cf6,#6366f1); color:white; padding:10px 20px; border-radius:16px; font-weight:bold; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(139,92,246,0.3); font-size:0.875rem; }
+        .download-btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(139,92,246,0.4); }
+        .download-btn:active { transform:translateY(0); }
+
+        /* CHATBOT */
+        #chatbot-container { position:fixed; top:50%; right:20px; transform:translateY(-50%); z-index:1000; }
+        #chatbot-toggle { width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); border:none; cursor:pointer; box-shadow:0 8px 24px rgba(0,106,255,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:32px; transition:all 0.3s; position:relative; }
+        #chatbot-toggle:hover { transform:scale(1.1); box-shadow:0 12px 32px rgba(0,106,255,0.6); }
+        .chatbot-label { position:absolute; bottom:-28px; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; padding:4px 12px; border-radius:12px; font-size:10px; font-weight:bold; white-space:nowrap; box-shadow:0 4px 12px rgba(0,106,255,0.3); }
+        #chatbot-window { display:none; position:fixed; top:50%; right:100px; transform:translateY(-50%); width:340px; height:480px; background:white; border-radius:20px; box-shadow:0 8px 32px rgba(0,0,0,0.15); flex-direction:column; overflow:hidden; animation:slideUp 0.3s ease-out; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        #chatbot-header { background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+        #chatbot-close { background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s; }
+        #chatbot-close:hover { background:rgba(255,255,255,0.2); }
+        #chatbot-messages { flex:1; overflow-y:auto; padding:16px; background:#f8fafc; }
+        .chat-message { margin-bottom:12px; animation:fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .chat-message.bot { display:flex; gap:8px; }
+        .chat-message.user { display:flex; justify-content:flex-end; }
+        .message-content { padding:10px 14px; border-radius:16px; max-width:75%; font-size:0.9rem; line-height:1.4; }
+        .chat-message.bot .message-content { background:white; color:#1e293b; border:1px solid #e2e8f0; }
+        .chat-message.user .message-content { background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; }
+        .bot-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        #chatbot-input-area { padding:12px; border-top:1px solid #e2e8f0; background:white; display:flex; gap:8px; }
+        #chatbot-input { flex:1; padding:10px 14px; border:1px solid #e2e8f0; border-radius:20px; outline:none; font-size:0.9rem; transition:border-color 0.2s; }
+        #chatbot-input:focus { border-color:#00B2FF; }
+        #chatbot-send { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); border:none; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; transition:all 0.2s; }
+        #chatbot-send:hover { transform:scale(1.05); }
+        .quick-questions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .quick-question-btn { padding:6px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; font-size:0.75rem; cursor:pointer; transition:all 0.2s; color:#1e40af; }
+        .quick-question-btn:hover { background:#dbeafe; transform:translateY(-1px); }
+
+        /* ===================== GAME: MÔ PHỎNG XÁC SUẤT ===================== */
+        #sim-canvas-wrap { position: relative; display: flex; justify-content: center; }
+        #sim-result-log { max-height: 110px; overflow-y: auto; }
+        #sim-result-log::-webkit-scrollbar { width: 4px; }
+        #sim-result-log::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 4px; }
+
+        .dice-face {
+            width: 64px; height: 64px;
+            background: white;
+            border: 3px solid #6366f1;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+            transition: all 0.15s;
+        }
+        .dice-dot {
+            width: 10px; height: 10px;
+            background: #1e1b4b;
+            border-radius: 50%;
+        }
+        .dice-rolling {
+            animation: diceRoll 0.5s ease-in-out;
+        }
+        @keyframes diceRoll {
+            0%   { transform: rotate(0deg) scale(1); }
+            25%  { transform: rotate(-15deg) scale(1.15); }
+            50%  { transform: rotate(15deg) scale(0.9); }
+            75%  { transform: rotate(-8deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+        .bar-chart-bar {
+            transition: height 0.5s cubic-bezier(.4,0,.2,1), background-color 0.3s;
+            border-radius: 8px 8px 0 0;
+            min-height: 4px;
+        }
+        .sim-tab-btn { transition: all 0.2s; }
+        .sim-tab-btn.active { background: #6366f1; color: white; }
+
+        @media (max-width: 640px) {
+            #chatbot-window { width:calc(100vw - 40px); height:60vh; top:50%; right:20px; transform:translateY(-50%); }
+        }
+
+        /* ===== BỔ SUNG: STATS BAR ===== */
+        #stats-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .stat-item { display: flex; align-items: center; gap: 4px; background: #eff6ff; border: 1px solid #bfdbfe; padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: bold; color: #1e40af; }
+        .stat-item span.val { font-size: 0.85rem; font-weight: 900; color: #1d4ed8; }
+        /* ===== BỔ SUNG: LIKE BUTTON ===== */
+        #like-btn { background: #fff0f0; border: 1px solid #fca5a5; color: #dc2626; border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: bold; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+        #like-btn:hover { background: #fee2e2; }
+        #like-btn.liked { background: #ef4444; border-color: #ef4444; color: white; animation: likeAnim 0.4s ease; }
+        @keyframes likeAnim { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        /* ===== BỔ SUNG: PROGRESS CHART ===== */
+        #progress-panel { background: white; border-radius: 20px; padding: 20px; border: 2px dashed #3b82f6; }
+        #progress-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; padding: 8px 0; }
+        .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; gap: 4px; }
+        .bar { width: 100%; min-height: 4px; border-radius: 6px 6px 0 0; transition: height 0.5s ease; }
+        .bar-label { font-size: 0.65rem; color: #64748b; text-align: center; }
+        .bar-score { font-size: 0.7rem; font-weight: bold; color: #1e40af; }
+        .trend-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .trend-up { background: #dcfce7; color: #166534; }
+        .trend-down { background: #fee2e2; color: #991b1b; }
+        .trend-same { background: #f1f5f9; color: #475569; }
+        /* ===== KẾT THÚC BỔ SUNG CSS ===== */
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 text-slate-800">
+
+    <nav class="p-3 shadow-sm mb-0">
+        <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <a href="index.html" class="flex items-center gap-2 text-orange-600 font-bold hover:opacity-80 transition-opacity shrink-0">
+                <span class="text-xl">🏠</span>
+                <span class="hidden sm:inline">Trang chủ</span>
+            </a>
+            <!-- BỔ SUNG: STATS INLINE -->
+            <div id="stats-bar" class="flex items-center gap-2 flex-wrap">
+                <div class="stat-item">👁️ <span class="val" id="visit-count">0</span></div>
+                <div class="stat-item">📝 <span class="val" id="attempt-count">0</span> lần</div>
+                <div class="stat-item">⭐ <span class="val" id="best-score">--</span></div>
+                <button id="like-btn" onclick="toggleLike()">❤️ <span id="like-count">0</span></button>
+            </div>
+            <!-- KẾT THÚC BỔ SUNG -->
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest hidden md:block">Toán 7 - Bài 30 ✨</div>
+        </div>
+    </nav>
+
+    <div id="loading-overlay">
+        <div class="loader mb-4"></div>
+        <p class="font-bold text-blue-600 animate-pulse">Đang tạo đề mới...</p>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-3 md:px-6 space-y-12">
+
+        <!-- TIÊU ĐỀ -->
+        <div class="text-center py-6">
+            <h1 class="text-3xl md:text-4xl font-black text-teal-700 uppercase tracking-tighter flex items-center justify-center gap-3 flex-wrap">
+                <span>🎲</span> Bài 30: Làm Quen Với Xác Suất Của Biến Cố <span>✏️</span>
+            </h1>
+            <p class="text-slate-500 font-bold mt-2">Xác Suất Thực Nghiệm – Kết nối tri thức - Toán 7</p>
+            <!-- COUNTAPI GLOBAL VIEW COUNTER - hiển thị lượt xem toàn cầu -->
+            <p id="global-view-badge" class="text-slate-400 text-sm font-bold mt-1">👁 Đang tải...</p>
+            <!-- END COUNTAPI GLOBAL VIEW COUNTER -->
+        </div>
+
+        <!-- BỔ SUNG: TIẾN BỘ HỌC TẪP -->
+        <div id="progress-panel" class="hidden">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h2 class="text-lg font-bold text-blue-800">📈 Tiến BỘ Học Tập</h2>
+                <div id="trend-display"></div>
+            </div>
+            <div id="progress-chart"></div>
+            <div id="progress-stats" class="mt-3 grid grid-cols-3 gap-3 text-center text-sm"></div>
+        </div>
+        <!-- KẾT THÚC BỔ SUNG -->
+
+        <!-- KIẾN THỨC -->
+        <div id="capture-knowledge" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-blue-800">📖 Kiến Thức Trọng Tâm</h2>
+                <button onclick="downloadKnowledgePDF()" class="download-btn">
+                    <span>📥</span> Tải Offline
+                </button>
+            </div>
+
+            <!-- VIDEO -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🎬</span>
+                    <h3 class="font-bold text-blue-700 text-base">Video Bài Học</h3>
+                    <span class="text-xs bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">YouTube</span>
+                </div>
+                <div class="relative w-full rounded-2xl overflow-hidden border-2 border-blue-100 shadow-md bg-black" style="aspect-ratio:16/9;">
+                    <iframe src="https://www.youtube.com/embed/ou9_BmTBK0s"
+                        title="Video Bài Học - Làm quen với xác suất của biến cố"
+                        class="w-full h-full" style="width:100%;height:100%;position:absolute;top:0;left:0;"
+                        frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen>
+                    </iframe>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 text-center">💡 Xem video trước khi làm bài tập bên dưới</p>
+            </div>
+
+            <!-- ===== NỘI DUNG BÁM SÁT SGK KẾT NỐI TRI THỨC TOÁN 7 ===== -->
+
+            <!-- PHẦN 1: Hoạt động khởi động — Thí nghiệm tung đồng xu -->
+            <div class="mb-5 p-5 rounded-2xl bg-amber-50 border-2 border-amber-200">
+                <h3 class="font-bold text-amber-800 mb-3 flex items-center gap-2">🔬 Hoạt động: Thí nghiệm tung đồng xu</h3>
+                <p class="text-slate-700 text-sm mb-3">Tung một đồng xu liên tiếp nhiều lần và ghi lại kết quả:</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse rounded-xl overflow-hidden">
+                        <thead>
+                            <tr class="bg-amber-600 text-white">
+                                <th class="p-2 text-left">Số lần tung (n)</th>
+                                <th class="p-2 text-center">10</th>
+                                <th class="p-2 text-center">50</th>
+                                <th class="p-2 text-center">100</th>
+                                <th class="p-2 text-center">500</th>
+                                <th class="p-2 text-center">1000</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-white border-b border-amber-100">
+                                <td class="p-2 font-medium">Số lần xuất hiện mặt N (m)</td>
+                                <td class="p-2 text-center text-amber-700 font-bold">4</td>
+                                <td class="p-2 text-center text-amber-700 font-bold">23</td>
+                                <td class="p-2 text-center text-amber-700 font-bold">48</td>
+                                <td class="p-2 text-center text-amber-700 font-bold">241</td>
+                                <td class="p-2 text-center text-amber-700 font-bold">493</td>
+                            </tr>
+                            <tr class="bg-amber-50">
+                                <td class="p-2 font-medium">Tỉ số m/n</td>
+                                <td class="p-2 text-center text-blue-700 font-bold">0,4</td>
+                                <td class="p-2 text-center text-blue-700 font-bold">0,46</td>
+                                <td class="p-2 text-center text-blue-700 font-bold">0,48</td>
+                                <td class="p-2 text-center text-blue-700 font-bold">0,482</td>
+                                <td class="p-2 text-center text-blue-700 font-bold">0,493</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-amber-800 mt-3 font-medium">📌 <strong>Nhận xét:</strong> Khi n tăng dần, tỉ số m/n tiến gần đến <strong>0,5</strong>. Giá trị 0,5 là <em>xác suất của biến cố "xuất hiện mặt N"</em>.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+
+                <!-- Ô 1: Xác suất của biến cố (SGK định nghĩa chính) -->
+                <div class="bg-teal-50/60 p-5 rounded-2xl border-2 border-teal-300 space-y-3">
+                    <h3 class="font-bold text-teal-700 text-base">📌 1. Xác suất của biến cố</h3>
+                    <div class="bg-teal-100 rounded-xl p-3 border border-teal-300">
+                        <p class="text-teal-900 font-bold text-sm">🔷 Định nghĩa (SGK):</p>
+                        <p class="text-teal-800 text-sm mt-1">Thực hiện phép thử <strong>N</strong> lần. Biến cố A xảy ra <strong>n</strong> lần.</p>
+                        <p class="text-center text-teal-900 font-black text-base mt-2">\(P(A) \approx \dfrac{n}{N}\)</p>
+                        <p class="text-teal-700 text-xs mt-1 text-center">Khi N đủ lớn, tỉ số này ổn định, gọi là <strong>xác suất của A</strong></p>
+                    </div>
+                    <ul class="space-y-1 text-slate-700">
+                        <li>✦ <strong>N</strong>: số lần thực hiện phép thử</li>
+                        <li>✦ <strong>n</strong>: số lần biến cố A xảy ra</li>
+                        <li>✦ <strong>\(0 \le P(A) \le 1\)</strong> với mọi biến cố A</li>
+                    </ul>
+                    <!-- SVG: đồng xu hai mặt -->
+                    <div class="flex justify-center mt-2">
+                        <svg width="200" height="90" viewBox="0 0 200 90">
+                            <defs>
+                                <marker id="arr1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#0d9488"/></marker>
+                            </defs>
+                            <!-- Đồng xu mặt N -->
+                            <circle cx="35" cy="45" r="28" fill="#fef9c3" stroke="#ca8a04" stroke-width="2.5"/>
+                            <text x="35" y="41" font-size="10" fill="#92400e" font-weight="bold" text-anchor="middle">MẶT</text>
+                            <text x="35" y="54" font-size="12" fill="#b45309" font-weight="bold" text-anchor="middle">N</text>
+                            <!-- Mũi tên -->
+                            <line x1="68" y1="35" x2="90" y2="22" stroke="#0d9488" stroke-width="1.8" marker-end="url(#arr1)"/>
+                            <line x1="68" y1="55" x2="90" y2="68" stroke="#dc2626" stroke-width="1.8" marker-end="url(#arr1)"/>
+                            <!-- Kết quả -->
+                            <rect x="93" y="10" width="100" height="24" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+                            <text x="143" y="26" font-size="10" fill="#166534" font-weight="bold" text-anchor="middle">Mặt Ngửa (N) — P = 0,5</text>
+                            <rect x="93" y="56" width="100" height="24" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+                            <text x="143" y="72" font-size="10" fill="#991b1b" font-weight="bold" text-anchor="middle">Mặt Sấp (S) — P = 0,5</text>
+                            <text x="100" y="88" font-size="8" fill="#6366f1" font-weight="bold" text-anchor="middle">P(N) + P(S) = 0,5 + 0,5 = 1</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Ô 2: Ví dụ SGK — Tung xúc xắc -->
+                <div class="bg-blue-50/60 p-5 rounded-2xl border-2 border-blue-300 space-y-3">
+                    <h3 class="font-bold text-blue-700 text-base">🎲 2. Ví dụ 1 (SGK): Tung xúc xắc</h3>
+                    <p class="text-slate-700 text-sm">Tung một xúc xắc cân đối 6 mặt (mặt 1, 2, 3, 4, 5, 6).</p>
+                    <div class="bg-blue-100 rounded-xl p-3 border border-blue-200 space-y-2">
+                        <p class="font-bold text-blue-800 text-sm">Xác định xác suất các biến cố:</p>
+                        <div class="grid grid-cols-1 gap-1">
+                            <div class="flex items-center gap-2 bg-white rounded-lg p-2">
+                                <span class="text-blue-600 font-bold text-xs w-24 shrink-0">A: "xuất hiện mặt 6"</span>
+                                <span class="text-blue-900 font-black">\(P(A) = \dfrac{1}{6}\)</span>
+                            </div>
+                            <div class="flex items-center gap-2 bg-white rounded-lg p-2">
+                                <span class="text-emerald-600 font-bold text-xs w-24 shrink-0">B: "mặt chẵn"</span>
+                                <span class="text-emerald-900 font-black">\(P(B) = \dfrac{3}{6} = \dfrac{1}{2}\)</span>
+                            </div>
+                            <div class="flex items-center gap-2 bg-white rounded-lg p-2">
+                                <span class="text-violet-600 font-bold text-xs w-24 shrink-0">C: "mặt &gt; 4"</span>
+                                <span class="text-violet-900 font-black">\(P(C) = \dfrac{2}{6} = \dfrac{1}{3}\)</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- SVG xúc xắc 6 mặt -->
+                    <div class="flex justify-center mt-1">
+                        <svg width="200" height="72" viewBox="0 0 200 72">
+                            <!-- 6 mặt xúc xắc -->
+                            <rect x="2"   y="10" width="28" height="28" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+                            <circle cx="16" cy="24" r="3.5" fill="#1e293b"/>
+                            <text x="16" y="46" font-size="9" fill="#64748b" text-anchor="middle" font-weight="bold">1</text>
+
+                            <rect x="36" y="10" width="28" height="28" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+                            <circle cx="43" cy="18" r="3" fill="#1e293b"/><circle cx="57" cy="32" r="3" fill="#1e293b"/>
+                            <text x="50" y="46" font-size="9" fill="#64748b" text-anchor="middle" font-weight="bold">2</text>
+
+                            <rect x="70" y="10" width="28" height="28" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+                            <circle cx="77" cy="17" r="3" fill="#1e40af"/><circle cx="84" cy="24" r="3" fill="#1e40af"/><circle cx="91" cy="31" r="3" fill="#1e40af"/>
+                            <text x="84" y="46" font-size="9" fill="#3b82f6" text-anchor="middle" font-weight="bold">3✓</text>
+
+                            <rect x="104" y="10" width="28" height="28" rx="5" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                            <circle cx="111" cy="17" r="3" fill="#15803d"/><circle cx="125" cy="17" r="3" fill="#15803d"/>
+                            <circle cx="111" cy="31" r="3" fill="#15803d"/><circle cx="125" cy="31" r="3" fill="#15803d"/>
+                            <text x="118" y="46" font-size="9" fill="#16a34a" text-anchor="middle" font-weight="bold">4✓</text>
+
+                            <rect x="138" y="10" width="28" height="28" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+                            <circle cx="144" cy="16" r="2.5" fill="#1e293b"/><circle cx="152" cy="16" r="2.5" fill="#1e293b"/>
+                            <circle cx="152" cy="24" r="2.5" fill="#1e293b"/>
+                            <circle cx="144" cy="32" r="2.5" fill="#1e293b"/><circle cx="152" cy="32" r="2.5" fill="#1e293b"/>
+                            <text x="152" y="46" font-size="9" fill="#64748b" text-anchor="middle" font-weight="bold">5</text>
+
+                            <rect x="170" y="10" width="28" height="28" rx="5" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+                            <circle cx="177" cy="16" r="2.5" fill="#15803d"/><circle cx="191" cy="16" r="2.5" fill="#15803d"/>
+                            <circle cx="177" cy="24" r="2.5" fill="#15803d"/><circle cx="191" cy="24" r="2.5" fill="#15803d"/>
+                            <circle cx="177" cy="32" r="2.5" fill="#15803d"/><circle cx="191" cy="32" r="2.5" fill="#15803d"/>
+                            <text x="184" y="46" font-size="9" fill="#16a34a" text-anchor="middle" font-weight="bold">6✓</text>
+
+                            <text x="100" y="62" font-size="8" fill="#3b82f6" text-anchor="middle" font-weight="bold">Mặt chẵn (✓): {2, 4, 6} → P(B) = 3/6 = 1/2</text>
+                            <text x="100" y="72" font-size="8" fill="#16a34a" text-anchor="middle" font-weight="bold">Mặt &gt; 4 (✓): {5, 6} → P(C) = 2/6 = 1/3</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Ô 3: Ví dụ SGK — Rút thẻ -->
+                <div class="bg-emerald-50/60 p-5 rounded-2xl border-2 border-emerald-300 space-y-3">
+                    <h3 class="font-bold text-emerald-700 text-base">🃏 3. Ví dụ 2 (SGK): Rút thẻ ngẫu nhiên</h3>
+                    <p class="text-slate-700 text-sm">Một hộp có 10 tấm thẻ đánh số <strong>1, 2, 3, …, 10</strong>. Rút ngẫu nhiên 1 thẻ.</p>
+                    <div class="bg-emerald-100 rounded-xl p-3 border border-emerald-200 space-y-2">
+                        <div class="flex items-center gap-2 bg-white rounded-lg p-2">
+                            <span class="text-emerald-700 font-bold text-xs w-28 shrink-0">A: "rút được thẻ số 5"</span>
+                            <span class="text-emerald-900 font-black">\(P(A) = \dfrac{1}{10}\)</span>
+                        </div>
+                        <div class="flex items-center gap-2 bg-white rounded-lg p-2">
+                            <span class="text-blue-700 font-bold text-xs w-28 shrink-0">B: "số chia hết cho 3"</span>
+                            <span class="text-blue-900 font-black">\(P(B) = \dfrac{3}{10}\)</span>
+                        </div>
+                        <p class="text-xs text-emerald-700">B = {3, 6, 9} → có 3 thẻ thỏa mãn</p>
+                        <div class="flex items-center gap-2 bg-white rounded-lg p-2">
+                            <span class="text-violet-700 font-bold text-xs w-28 shrink-0">C: "số lẻ"</span>
+                            <span class="text-violet-900 font-black">\(P(C) = \dfrac{5}{10} = \dfrac{1}{2}\)</span>
+                        </div>
+                        <p class="text-xs text-violet-700">C = {1, 3, 5, 7, 9} → có 5 thẻ thỏa mãn</p>
+                    </div>
+                    <!-- Minh họa 10 thẻ -->
+                    <div class="flex flex-wrap gap-1 justify-center mt-1">
+                        <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-orange-100 border-2 border-orange-300 font-black text-orange-700 text-xs">1</span>
+                        <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 border border-slate-300 font-bold text-slate-600 text-xs">2</span>
+                        <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-100 border-2 border-blue-400 font-black text-blue-700 text-xs">3</span>
+                        <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 border border-slate-300 font-bold text-slate-600 text-xs">4</span>
+                        <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-orange-100 border-2 border-orange-300 font-black text-orange-700 text-xs">5</span>
+                        <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-100 border-2 border-blue-400 font-black text-blue-700 text-xs">6</span>
+                        <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-orange-100 border-2 border-orange-300 font-black text-orange-700 text-xs">7</span>
+                        <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 border border-slate-300 font-bold text-slate-600 text-xs">8</span>
+                        <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-100 border-2 border-blue-400 font-black text-blue-700 text-xs">9</span>
+                        <span class="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 border border-slate-300 font-bold text-slate-600 text-xs">10</span>
+                    </div>
+                    <p class="text-xs text-center text-slate-500"><span class="text-orange-600 font-bold">■ Lẻ</span> &nbsp;|&nbsp; <span class="text-blue-600 font-bold">■ Chia hết cho 3</span> &nbsp;|&nbsp; <span class="text-slate-500 font-bold">■ Khác</span></p>
+                </div>
+
+                <!-- Ô 4: Nhận xét & Tính chất SGK -->
+                <div class="bg-violet-50/60 p-5 rounded-2xl border-2 border-violet-300 space-y-3">
+                    <h3 class="font-bold text-violet-700 text-base">📝 4. Nhận xét (SGK)</h3>
+                    <div class="space-y-2">
+                        <div class="bg-violet-100 rounded-xl p-3 border border-violet-200">
+                            <p class="font-bold text-violet-800 text-sm mb-1">🔶 Tính chất xác suất:</p>
+                            <ul class="space-y-1 text-slate-700 text-sm">
+                                <li>• \(P(A)\) là một số trong đoạn \([0; 1]\)</li>
+                                <li>• Nếu A <strong>chắc chắn xảy ra</strong>: \(P(A) = 1\)</li>
+                                <li>• Nếu A <strong>không thể xảy ra</strong>: \(P(A) = 0\)</li>
+                            </ul>
+                        </div>
+                        <div class="bg-rose-50 rounded-xl p-3 border border-rose-200">
+                            <p class="font-bold text-rose-700 text-sm mb-1">🔸 Chú ý:</p>
+                            <p class="text-slate-700 text-sm">Để tính xác suất theo định nghĩa (SGK), ta cần:</p>
+                            <ol class="list-decimal ml-4 text-sm text-slate-700 space-y-1 mt-1">
+                                <li>Xác định tất cả các kết quả <strong>đồng khả năng</strong></li>
+                                <li>Đếm số kết quả <strong>thuộc biến cố A</strong></li>
+                                <li>Tính \(P(A) = \dfrac{\text{số KQ thuộc A}}{\text{tổng số KQ có thể}}\)</li>
+                            </ol>
+                        </div>
+                    </div>
+                    <!-- SVG trục số xác suất -->
+                    <div class="flex justify-center mt-1">
+                        <svg width="200" height="48" viewBox="0 0 200 48">
+                            <line x1="10" y1="24" x2="190" y2="24" stroke="#7c3aed" stroke-width="2.5"/>
+                            <line x1="10" y1="18" x2="10" y2="30" stroke="#7c3aed" stroke-width="2"/>
+                            <line x1="100" y1="18" x2="100" y2="30" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3,2"/>
+                            <line x1="190" y1="18" x2="190" y2="30" stroke="#7c3aed" stroke-width="2"/>
+                            <text x="10" y="42" font-size="10" fill="#7c3aed" font-weight="bold" text-anchor="middle">0</text>
+                            <text x="100" y="42" font-size="10" fill="#64748b" font-weight="bold" text-anchor="middle">0,5</text>
+                            <text x="190" y="42" font-size="10" fill="#7c3aed" font-weight="bold" text-anchor="middle">1</text>
+                            <text x="10" y="12" font-size="8" fill="#dc2626" font-weight="bold" text-anchor="middle">Không</text>
+                            <text x="10" y="20" font-size="8" fill="#dc2626" font-weight="bold" text-anchor="middle">thể</text>
+                            <text x="190" y="12" font-size="8" fill="#16a34a" font-weight="bold" text-anchor="middle">Chắc</text>
+                            <text x="190" y="20" font-size="8" fill="#16a34a" font-weight="bold" text-anchor="middle">chắn</text>
+                            <!-- Điểm ví dụ -->
+                            <circle cx="100" cy="24" r="5" fill="#f59e0b"/>
+                            <text x="100" y="12" font-size="7.5" fill="#b45309" text-anchor="middle">P(N) tung xu</text>
+                            <circle cx="33" cy="24" r="4" fill="#3b82f6"/>
+                            <text x="33" y="12" font-size="7" fill="#1d4ed8" text-anchor="middle">1/6</text>
+                        </svg>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bảng tóm tắt công thức SGK -->
+            <div class="mt-5 p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-teal-50 border-2 border-teal-200">
+                <h3 class="font-bold text-teal-700 mb-4 text-center text-base">📊 Tóm tắt kiến thức — Bài 30</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-teal-600 text-white">
+                                <th class="p-3 rounded-tl-xl text-left">Khái niệm</th>
+                                <th class="p-3 text-center">Công thức / Ký hiệu</th>
+                                <th class="p-3 rounded-tr-xl text-left">Ví dụ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-amber-50 border-b border-teal-100">
+                                <td class="p-3 font-medium">Xác suất của biến cố A</td>
+                                <td class="p-3 text-center text-amber-700 font-bold">\(P(A) \approx \dfrac{n}{N}\)</td>
+                                <td class="p-3 text-xs text-slate-600">n: số lần A xảy ra; N: số lần thử</td>
+                            </tr>
+                            <tr class="bg-emerald-50 border-b border-teal-100">
+                                <td class="p-3 font-medium">Công thức (đồng khả năng)</td>
+                                <td class="p-3 text-center text-emerald-700 font-bold">\(P(A) = \dfrac{\text{số KQ thuộc A}}{\text{tổng KQ}}\)</td>
+                                <td class="p-3 text-xs text-slate-600">P(mặt chẵn khi tung xúc xắc) = 3/6</td>
+                            </tr>
+                            <tr class="bg-violet-50 border-b border-teal-100">
+                                <td class="p-3 font-medium">Khoảng giá trị</td>
+                                <td class="p-3 text-center text-violet-700 font-bold">\(0 \le P(A) \le 1\)</td>
+                                <td class="p-3 text-xs text-slate-600">Không thể = 0; Chắc chắn = 1</td>
+                            </tr>
+                            <tr class="bg-rose-50">
+                                <td class="p-3 font-medium">Điều kiện tính theo công thức</td>
+                                <td class="p-3 text-center text-rose-700 font-bold">Kết quả <strong>đồng khả năng</strong></td>
+                                <td class="p-3 text-xs text-slate-600">Xúc xắc cân đối, đồng xu đồng chất…</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== TRÒ CHƠI: MÔ PHỎNG XÁC SUẤT ===================== -->
+        <div class="bg-white p-8 section-dashed shadow-md" id="memory-game-section">
+            <h2 class="text-2xl font-black text-indigo-700 flex items-center gap-3 mb-2">
+                <span class="text-3xl">🎲</span> MÔ PHỎNG XÁC SUẤT
+            </h2>
+            <p class="text-slate-600 mb-1 font-medium">Tự tay làm thí nghiệm tung xúc xắc ảo — quan sát <strong>xác suất thực nghiệm</strong> hội tụ về xác suất lý thuyết!</p>
+            <p class="text-xs text-indigo-500 font-bold mb-5">🔬 Tung càng nhiều lần, kết quả càng gần <strong>1/6 ≈ 0,167</strong> — đúng như SGK!</p>
+
+            <!-- Chọn chế độ -->
+            <div class="flex flex-wrap gap-2 mb-5">
+                <button class="sim-tab-btn active px-4 py-2 rounded-xl font-bold text-sm border-2 border-indigo-300" onclick="simSetMode('dice')" id="tab-dice">🎲 Tung xúc xắc</button>
+                <button class="sim-tab-btn px-4 py-2 rounded-xl font-bold text-sm border-2 border-indigo-300 bg-indigo-50 text-indigo-600" onclick="simSetMode('coin')" id="tab-coin">🪙 Tung đồng xu</button>
+                <button class="sim-tab-btn px-4 py-2 rounded-xl font-bold text-sm border-2 border-indigo-300 bg-indigo-50 text-indigo-600" onclick="simSetMode('bag')" id="tab-bag">🎯 Rút thẻ (1–10)</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Cột trái: điều khiển + xúc xắc -->
+                <div class="space-y-4">
+                    <!-- Hiển thị đối tượng -->
+                    <div class="flex justify-center items-center min-h-[90px]" id="sim-object-display">
+                        <!-- Rendered by JS -->
+                    </div>
+
+                    <!-- Biến cố cần theo dõi -->
+                    <div class="bg-indigo-50 rounded-2xl p-3 border border-indigo-200">
+                        <p class="text-xs font-bold text-indigo-600 mb-2">🎯 Biến cố đang theo dõi:</p>
+                        <div id="sim-event-label" class="font-black text-indigo-800 text-sm text-center"></div>
+                        <div class="mt-2 flex justify-between text-xs font-bold">
+                            <span class="text-slate-500">Xác suất LT:</span>
+                            <span id="sim-theory-p" class="text-indigo-700"></span>
+                        </div>
+                    </div>
+
+                    <!-- Nút tung -->
+                    <div class="flex flex-wrap gap-2 justify-center">
+                        <button onclick="simRoll(1)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-5 py-3 rounded-2xl shadow-lg transition-all active:scale-95 text-sm">▶ Tung 1 lần</button>
+                        <button onclick="simRoll(10)" class="bg-violet-500 hover:bg-violet-600 text-white font-bold px-4 py-3 rounded-2xl transition-all text-sm">× 10</button>
+                        <button onclick="simRoll(50)" class="bg-purple-500 hover:bg-purple-600 text-white font-bold px-4 py-3 rounded-2xl transition-all text-sm">× 50</button>
+                        <button onclick="simReset()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-3 rounded-2xl transition-all text-sm">🔄 Reset</button>
+                    </div>
+
+                    <!-- Thống kê tóm tắt -->
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div class="bg-slate-50 rounded-xl p-2 border border-slate-200">
+                            <div id="sim-total" class="font-black text-slate-700 text-lg">0</div>
+                            <div class="text-slate-500">Tổng lần</div>
+                        </div>
+                        <div class="bg-green-50 rounded-xl p-2 border border-green-200">
+                            <div id="sim-hit" class="font-black text-green-700 text-lg">0</div>
+                            <div class="text-slate-500">Lần A xảy ra</div>
+                        </div>
+                        <div class="bg-indigo-50 rounded-xl p-2 border border-indigo-200">
+                            <div id="sim-prob" class="font-black text-indigo-700 text-lg">—</div>
+                            <div class="text-slate-500">P(A) thực nghiệm</div>
+                        </div>
+                    </div>
+
+                    <!-- Nhận xét thông minh -->
+                    <div id="sim-remark" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-800 font-medium"></div>
+                </div>
+
+                <!-- Cột phải: biểu đồ cột + log -->
+                <div class="space-y-4">
+                    <!-- Biểu đồ cột tần suất -->
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-2">📊 Tần suất các kết quả:</p>
+                        <div id="sim-bar-chart" class="flex items-end gap-1 justify-center" style="height:120px;">
+                            <!-- rendered by JS -->
+                        </div>
+                        <div id="sim-bar-labels" class="flex gap-1 justify-center mt-1 text-xs font-bold text-slate-500"></div>
+                    </div>
+
+                    <!-- Đường hội tụ xác suất -->
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">📈 Xác suất thực nghiệm hội tụ:</p>
+                        <div class="bg-slate-50 rounded-xl p-2 border border-slate-200 overflow-hidden" style="height:80px; position:relative;">
+                            <canvas id="sim-convergence-canvas" width="400" height="72" style="width:100%;height:72px;"></canvas>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1 text-center">— Thực nghiệm &nbsp;&#8203;— — Lý thuyết</p>
+                    </div>
+
+                    <!-- Log kết quả gần đây -->
+                    <div>
+                        <p class="text-xs font-bold text-slate-500 mb-1">🗒️ Kết quả gần đây:</p>
+                        <div id="sim-result-log" class="bg-slate-50 rounded-xl p-2 border border-slate-200 flex flex-wrap gap-1 content-start"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phần thưởng sau 200 lần -->
+            <div id="sim-reward" class="hidden text-center space-y-3 py-6 animate-bounce-in mt-4">
+                <div class="text-5xl">🏆</div>
+                <h3 class="text-xl font-black text-indigo-600">THÍ NGHIỆM THÀNH CÔNG! 🎉</h3>
+                <p id="sim-reward-msg" class="text-blue-600 font-bold animate-pulse"></p>
+            </div>
+        </div>
+
+        <!-- MCQ -->
+        <div id="capture-mcq" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">📝 PHẦN 1: Trắc nghiệm (15 câu)</h2>
+                <button onclick="downloadMCQImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="mcq-container" class="space-y-8"></div>
+        </div>
+
+        <!-- T/F -->
+        <div id="capture-tf" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">✔️ PHẦN 2: Đúng/Sai (5 câu)</h2>
+                <button onclick="downloadTFImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="tf-container" class="space-y-10"></div>
+        </div>
+
+        <!-- FILL -->
+        <div id="capture-fill" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">🖋️ PHẦN 3: Điền đáp án (5 câu)</h2>
+                <button onclick="downloadFillImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="fill-container" class="space-y-6"></div>
+        </div>
+
+        <!-- NỘP BÀI -->
+        <div class="text-center py-12">
+            <button id="submit-btn" onclick="checkResults()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-16 rounded-full shadow-2xl transition-all active:scale-95 text-xl tracking-widest flex items-center gap-4 mx-auto">
+                <span>📤</span> NỘP BÀI
+            </button>
+            <div id="result-board" class="mt-8 hidden">
+                <div class="bg-white section-dashed p-8 inline-block shadow-xl w-full max-w-2xl">
+                    <div id="score-text" class="text-4xl font-black mb-2 p-6 rounded-2xl"></div>
+                    <div id="score-message" class="text-lg font-bold mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT -->
+    <div id="chatbot-container">
+        <button id="chatbot-toggle" onclick="toggleChatbot()">
+            💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>
+        </button>
+        <div id="chatbot-window">
+            <div id="chatbot-header">
+                <div>
+                    <div style="font-weight:bold;font-size:1rem;">Trợ lý Toán học</div>
+                    <div style="font-size:0.75rem;opacity:0.9;">Hỗ trợ 24/7</div>
+                </div>
+                <button id="chatbot-close" onclick="toggleChatbot()">×</button>
+            </div>
+            <div id="chatbot-messages">
+                <div class="chat-message bot">
+                    <div class="bot-avatar">💬</div>
+                    <div>
+                        <div class="message-content">
+                            Xin chào! Tôi có thể giúp bạn về <strong>xác suất của biến cố</strong>. Hãy hỏi tôi bất cứ điều gì!
+                        </div>
+                        <div class="quick-questions">
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Xác suất là gì?')">Xác suất là gì?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Biến cố là gì?')">Biến cố là gì?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Công thức tính xác suất?')">Công thức tính?</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chatbot-input-area">
+                <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button id="chatbot-send" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ======================== GAME: MÔ PHỎNG XÁC SUẤT ========================
+    const SIM_MODES = {
+        dice: {
+            label: 'Tung xúc xắc 6 mặt',
+            outcomes: [1,2,3,4,5,6],
+            eventLabel: 'A: "Xuất hiện mặt chẵn" = {2, 4, 6}',
+            theoryP: '3/6 = 0,500',
+            theoryVal: 3/6,
+            isHit: v => [2,4,6].includes(v),
+            colors: ['#6366f1','#f59e0b','#10b981','#ef4444','#3b82f6','#a855f7'],
+            rollLabel: v => v.toString(),
+        },
+        coin: {
+            label: 'Tung đồng xu',
+            outcomes: ['N','S'],
+            eventLabel: 'A: "Xuất hiện mặt Ngửa (N)"',
+            theoryP: '1/2 = 0,500',
+            theoryVal: 1/2,
+            isHit: v => v === 'N',
+            colors: ['#f59e0b','#64748b'],
+            rollLabel: v => v,
+        },
+        bag: {
+            label: 'Rút thẻ số (1–10)',
+            outcomes: [1,2,3,4,5,6,7,8,9,10],
+            eventLabel: 'A: "Rút được số chia hết cho 3" = {3, 6, 9}',
+            theoryP: '3/10 = 0,300',
+            theoryVal: 3/10,
+            isHit: v => v % 3 === 0,
+            colors: Array.from({length:10}, (_,i) => `hsl(${200+i*16},70%,52%)`),
+            rollLabel: v => v.toString(),
+        }
+    };
+
+    let simMode = 'dice';
+    let simTotal = 0, simHit = 0;
+    let simHistory = [];   // array of {v, hit}
+    let simPHistory = [];  // running P(A) after each roll
+    let simRolling = false;
+
+    function simSetMode(m) {
+        simMode = m;
+        simReset();
+        document.querySelectorAll('.sim-tab-btn').forEach(b => b.classList.remove('active'));
+        const tab = document.getElementById('tab-' + m);
+        if (tab) { tab.classList.add('active'); }
+        simRenderObject();
+        const cfg = SIM_MODES[m];
+        document.getElementById('sim-event-label').textContent = cfg.eventLabel;
+        document.getElementById('sim-theory-p').textContent = cfg.theoryP;
+        simRenderBarChart();
+    }
+
+    function simReset() {
+        simTotal = 0; simHit = 0; simHistory = []; simPHistory = [];
+        document.getElementById('sim-total').textContent = '0';
+        document.getElementById('sim-hit').textContent = '0';
+        document.getElementById('sim-prob').textContent = '—';
+        document.getElementById('sim-result-log').innerHTML = '';
+        document.getElementById('sim-remark').classList.add('hidden');
+        document.getElementById('sim-reward').classList.add('hidden');
+        simRenderBarChart();
+        simDrawConvergence();
+        simRenderObject();
+    }
+
+    function simRenderObject(lastVal) {
+        const cfg = SIM_MODES[simMode];
+        const el = document.getElementById('sim-object-display');
+        if (simMode === 'dice') {
+            const val = lastVal || null;
+            const dotsMap = {
+                1: [[50,50]],
+                2: [[28,28],[72,72]],
+                3: [[28,28],[50,50],[72,72]],
+                4: [[28,28],[72,28],[28,72],[72,72]],
+                5: [[28,28],[72,28],[50,50],[28,72],[72,72]],
+                6: [[28,25],[72,25],[28,50],[72,50],[28,75],[72,75]],
+            };
+            const dots = val ? dotsMap[val] : dotsMap[1];
+            const fillColor = val ? (cfg.isHit(val) ? '#dcfce7' : '#f8fafc') : '#f8fafc';
+            const borderColor = val ? (cfg.isHit(val) ? '#16a34a' : '#6366f1') : '#6366f1';
+            el.innerHTML = `<svg width="100" height="100" viewBox="0 0 100 100">
+                <rect x="5" y="5" width="90" height="90" rx="18" fill="${fillColor}" stroke="${borderColor}" stroke-width="4"/>
+                ${dots.map(d => `<circle cx="${d[0]}" cy="${d[1]}" r="7" fill="${borderColor}"/>`).join('')}
+                ${val ? `<text x="50" y="108" font-size="11" fill="${borderColor}" font-weight="bold" text-anchor="middle">Mặt ${val}${cfg.isHit(val) ? ' ✓' : ''}</text>` : '<text x="50" y="108" font-size="10" fill="#94a3b8" text-anchor="middle">Nhấn TUNG!</text>'}
+            </svg>`;
+        } else if (simMode === 'coin') {
+            const val = lastVal || null;
+            const isN = val === 'N';
+            el.innerHTML = `<div style="text-align:center">
+                <div style="width:80px;height:80px;border-radius:50%;background:${val ? (isN ? '#fef9c3' : '#f1f5f9') : '#f1f5f9'};border:4px solid ${val ? (isN ? '#ca8a04' : '#64748b') : '#6366f1'};display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 4px 16px rgba(99,102,241,0.2);transition:all 0.3s;">
+                    <span style="font-size:${val?'2rem':'1.5rem'};font-weight:900;color:${val?(isN?'#92400e':'#374151'):'#6366f1'}">${val || '?'}</span>
+                </div>
+                <div style="font-size:11px;font-weight:bold;color:${val?(isN?'#ca8a04':'#475569'):'#94a3b8'};margin-top:6px">${val ? (isN ? 'Mặt Ngửa ✓' : 'Mặt Sấp') : 'Nhấn TUNG!'}</div>
+            </div>`;
+        } else {
+            const val = lastVal || null;
+            const isHit = val && cfg.isHit(val);
+            el.innerHTML = `<div style="text-align:center">
+                <div style="width:80px;height:80px;border-radius:16px;background:${val ? (isHit ? '#dcfce7' : '#eff6ff') : '#eff6ff'};border:4px solid ${val ? (isHit ? '#16a34a' : '#3b82f6') : '#6366f1'};display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 4px 16px rgba(99,102,241,0.2);transition:all 0.3s;">
+                    <span style="font-size:2rem;font-weight:900;color:${val?(isHit?'#15803d':'#1d4ed8'):'#6366f1'}">${val || '?'}</span>
+                </div>
+                <div style="font-size:11px;font-weight:bold;color:${val?(isHit?'#16a34a':'#374151'):'#94a3b8'};margin-top:6px">${val ? (isHit ? 'Chia hết cho 3 ✓' : 'Không chia hết') : 'Nhấn TUNG!'}</div>
+            </div>`;
+        }
+    }
+
+    function simRenderBarChart() {
+        const cfg = SIM_MODES[simMode];
+        const chartEl = document.getElementById('sim-bar-chart');
+        const labelEl = document.getElementById('sim-bar-labels');
+        const counts = {};
+        cfg.outcomes.forEach(o => counts[o] = 0);
+        simHistory.forEach(h => counts[h.v]++);
+        const maxCount = Math.max(...Object.values(counts), 1);
+        const barH = 100;
+        chartEl.innerHTML = cfg.outcomes.map((o, i) => {
+            const h = Math.max(4, (counts[o] / maxCount) * barH);
+            const hit = cfg.isHit(o);
+            const color = hit ? '#6366f1' : '#cbd5e1';
+            return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:${barH}px;justify-content:flex-end;">
+                <span style="font-size:9px;font-weight:bold;color:${hit?'#4338ca':'#94a3b8'}">${counts[o]}</span>
+                <div class="bar-chart-bar" style="width:100%;height:${h}px;background:${color};"></div>
+            </div>`;
+        }).join('');
+        labelEl.innerHTML = cfg.outcomes.map((o, i) => {
+            const hit = cfg.isHit(o);
+            return `<span style="flex:1;text-align:center;font-size:10px;font-weight:bold;color:${hit?'#4338ca':'#94a3b8'}">${o}</span>`;
+        }).join('');
+    }
+
+    function simDrawConvergence() {
+        const canvas = document.getElementById('sim-convergence-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        const cfg = SIM_MODES[simMode];
+        const tp = cfg.theoryVal;
+        // Grid
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+        [0, 0.25, 0.5, 0.75, 1].forEach(v => {
+            const y = H - v * H;
+            ctx.beginPath(); ctx.setLineDash([3,3]); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        });
+        ctx.setLineDash([]);
+        // Theory line
+        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.5; ctx.setLineDash([6,4]);
+        ctx.beginPath(); ctx.moveTo(0, H - tp * H); ctx.lineTo(W, H - tp * H); ctx.stroke();
+        ctx.setLineDash([]);
+        // Empirical line
+        if (simPHistory.length > 1) {
+            ctx.strokeStyle = '#6366f1'; ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            simPHistory.forEach((p, i) => {
+                const x = (i / (simPHistory.length - 1)) * W;
+                const y = H - p * H;
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+        }
+        // Labels
+        ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 9px sans-serif';
+        ctx.fillText('1', 2, 10); ctx.fillText('0', 2, H - 2);
+        ctx.fillStyle = '#ef4444'; ctx.font = 'bold 8px sans-serif';
+        ctx.fillText(`LT=${tp.toFixed(3)}`, W - 46, H - tp * H - 4);
+    }
+
+    async function simRoll(times) {
+        if (simRolling) return;
+        simRolling = true;
+        const cfg = SIM_MODES[simMode];
+        const delay = times === 1 ? 80 : (times <= 10 ? 60 : 0);
+
+        for (let t = 0; t < times; t++) {
+            const outcomes = cfg.outcomes;
+            const val = outcomes[Math.floor(Math.random() * outcomes.length)];
+            const hit = cfg.isHit(val);
+            simTotal++; if (hit) simHit++;
+            simHistory.push({v: val, hit});
+            simPHistory.push(simHit / simTotal);
+
+            if (times === 1 || t % 5 === 0 || t === times - 1) {
+                simRenderObject(val);
+                simRenderBarChart();
+                simDrawConvergence();
+
+                document.getElementById('sim-total').textContent = simTotal;
+                document.getElementById('sim-hit').textContent = simHit;
+                const emp = simHit / simTotal;
+                document.getElementById('sim-prob').textContent = emp.toFixed(3);
+
+                // Log chips (last 20)
+                const logEl = document.getElementById('sim-result-log');
+                const chip = document.createElement('span');
+                const chipColor = hit ? 'background:#dcfce7;border:1px solid #16a34a;color:#15803d' : 'background:#f1f5f9;border:1px solid #cbd5e1;color:#475569';
+                chip.style.cssText = `display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;font-size:11px;font-weight:bold;${chipColor}`;
+                chip.textContent = cfg.rollLabel(val);
+                logEl.appendChild(chip);
+                if (logEl.children.length > 40) logEl.removeChild(logEl.firstChild);
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+
+            if (delay > 0) await new Promise(r => setTimeout(r, delay));
+        }
+
+        // Smart remark
+        const emp = simHit / simTotal;
+        const diff = Math.abs(emp - cfg.theoryVal);
+        const remarkEl = document.getElementById('sim-remark');
+        remarkEl.classList.remove('hidden');
+        if (simTotal >= 200) {
+            document.getElementById('sim-reward').classList.remove('hidden');
+            document.getElementById('sim-reward-msg').textContent = `Sau ${simTotal} lần: P(A) thực nghiệm = ${emp.toFixed(3)}, lý thuyết = ${cfg.theoryVal.toFixed(3)}. Sai lệch: ${diff.toFixed(3)} — quá gần rồi! 🎯`;
+            confetti({ particleCount: 120, spread: 120, origin: { y: 0.5 }, colors: ['#6366f1','#f59e0b','#10b981'] });
+        }
+        if (diff < 0.05) remarkEl.innerHTML = `✅ <strong>Rất tốt!</strong> P(A) thực nghiệm = <strong>${emp.toFixed(3)}</strong> ≈ lý thuyết <strong>${cfg.theoryVal.toFixed(3)}</strong>. Kết quả đang hội tụ!`;
+        else if (simTotal < 20) remarkEl.innerHTML = `💡 Mới có <strong>${simTotal}</strong> lần — hãy tung thêm để xem P(A) tiến gần đến <strong>${cfg.theoryVal.toFixed(3)}</strong>!`;
+        else remarkEl.innerHTML = `📊 P(A) thực nghiệm = <strong>${emp.toFixed(3)}</strong>. Lý thuyết = <strong>${cfg.theoryVal.toFixed(3)}</strong>. Hãy tung thêm để gần hơn!`;
+
+        simRolling = false;
+    }
+
+    function initMemGame() {
+        simSetMode('dice');
+    }
+
+    // ======================== QUESTION BANKS ========================
+    const QUESTION_BANK = {
+        nb: [
+            {
+                q: "Xác suất của một biến cố có thể nhận giá trị nào sau đây?",
+                opts: ["Từ 0 đến 1","Từ 0 đến 100","Từ 1 đến 10","Từ -1 đến 1"],
+                ans: 0,
+                exp: "Xác suất của một biến cố luôn thỏa mãn \\(0 \\le P(A) \\le 1\\).",
+                hint: "Xác suất luôn trong khoảng [0; 1]"
+            },
+            {
+                q: "Biến cố chắc chắn có xác suất bằng:",
+                opts: ["1","0","0,5","Không xác định"],
+                ans: 0,
+                exp: "Biến cố chắc chắn luôn xảy ra nên xác suất bằng 1.",
+                hint: "Chắc chắn = luôn luôn xảy ra"
+            },
+            {
+                q: "Biến cố không thể có xác suất bằng:",
+                opts: ["0","1","0,5","-1"],
+                ans: 0,
+                exp: "Biến cố không thể không bao giờ xảy ra nên xác suất bằng 0.",
+                hint: "Không thể = không bao giờ xảy ra"
+            },
+            {
+                q: "Tung một đồng xu cân đối. Xác suất xuất hiện mặt Ngửa là:",
+                opts: ["\\(\\dfrac{1}{2}\\)","\\(\\dfrac{1}{4}\\)","\\(1\\)","\\(0\\)"],
+                ans: 0,
+                exp: "Có 2 kết quả đồng khả năng (Ngửa, Sấp). P(Ngửa) = 1/2.",
+                hint: "Đồng xu có 2 mặt đồng khả năng"
+            },
+            {
+                q: "Tung một xúc xắc cân đối 6 mặt. Số kết quả có thể là:",
+                opts: ["6","2","3","12"],
+                ans: 0,
+                exp: "Xúc xắc 6 mặt có 6 kết quả có thể: 1, 2, 3, 4, 5, 6.",
+                hint: "Xúc xắc 6 mặt → 6 kết quả"
+            },
+            {
+                q: "Phép thử ngẫu nhiên là:",
+                opts: ["Hành động có kết quả không đoán trước được","Hành động luôn cho cùng một kết quả","Phép tính toán học","Hành động đã biết trước kết quả"],
+                ans: 0,
+                exp: "Phép thử ngẫu nhiên là hành động/thí nghiệm có kết quả không đoán trước được.",
+                hint: "Ngẫu nhiên = không đoán trước được"
+            },
+            {
+                q: "Biến cố A là:",
+                opts: ["Tập hợp một số kết quả của phép thử","Toàn bộ kết quả của phép thử","Kết quả duy nhất của phép thử","Kết quả không thể xảy ra"],
+                ans: 0,
+                exp: "Biến cố A là tập hợp một số kết quả có thể xảy ra trong phép thử.",
+                hint: "Biến cố = tập hợp một số kết quả"
+            }
+        ],
+        th: [
+            {
+                q: "Tung xúc xắc 1 lần. Xác suất xuất hiện mặt có số chấm chẵn là:",
+                opts: ["\\(\\dfrac{1}{2}\\)","\\(\\dfrac{1}{3}\\)","\\(\\dfrac{2}{3}\\)","\\(\\dfrac{1}{6}\\)"],
+                ans: 0,
+                exp: "Mặt chẵn: {2, 4, 6} gồm 3 kết quả. P = 3/6 = 1/2.",
+                hint: "Mặt chẵn: 2, 4, 6 → 3 kết quả trong 6"
+            },
+            {
+                q: "Tung xúc xắc 120 lần, mặt số 3 xuất hiện 22 lần. Xác suất thực nghiệm là:",
+                opts: ["\\(\\dfrac{22}{120}\\)","\\(\\dfrac{1}{6}\\)","\\(\\dfrac{120}{22}\\)","\\(\\dfrac{22}{6}\\)"],
+                ans: 0,
+                exp: "Xác suất thực nghiệm: P(A) = m/n = 22/120.",
+                hint: "P = số lần xảy ra / tổng số lần thử"
+            },
+            {
+                q: "Túi có 4 bi đỏ và 6 bi xanh. Lấy ngẫu nhiên 1 bi. P(bi đỏ) = ?",
+                opts: ["\\(\\dfrac{4}{10}\\)","\\(\\dfrac{6}{10}\\)","\\(\\dfrac{4}{6}\\)","\\(\\dfrac{1}{4}\\)"],
+                ans: 0,
+                exp: "Tổng 10 bi. P(đỏ) = 4/10 = 2/5.",
+                hint: "P = số bi đỏ / tổng số bi"
+            },
+            {
+                q: "Nếu \\(P(A) = 0{,}3\\) thì \\(P(\\bar{A})\\) (biến cố đối) bằng:",
+                opts: ["\\(0{,}7\\)","\\(0{,}3\\)","\\(1{,}3\\)","\\(0\\)"],
+                ans: 0,
+                exp: "P(Ā) = 1 - P(A) = 1 - 0,3 = 0,7.",
+                hint: "P(A) + P(Ā) = 1"
+            },
+            {
+                q: "Tung đồng xu 200 lần, mặt Ngửa xuất hiện 98 lần. Xác suất thực nghiệm của mặt Ngửa là:",
+                opts: ["\\(0{,}49\\)","\\(0{,}5\\)","\\(0{,}51\\)","\\(98\\)"],
+                ans: 0,
+                exp: "P(Ngửa) = 98/200 = 0,49.",
+                hint: "98 ÷ 200 = ?"
+            },
+            {
+                q: "Rút ngẫu nhiên 1 lá bài từ bộ 52 lá. P(lá bích) = ?",
+                opts: ["\\(\\dfrac{13}{52}\\)","\\(\\dfrac{1}{52}\\)","\\(\\dfrac{4}{52}\\)","\\(\\dfrac{1}{4}\\)"],
+                ans: 0,
+                exp: "Có 13 lá bích trong 52 lá. P = 13/52 = 1/4.",
+                hint: "Bộ bài: 4 chất × 13 lá mỗi chất"
+            }
+        ],
+        vd: [
+            {
+                q: "Tung xúc xắc 2 lần. Xác suất để tổng 2 mặt bằng 7 là (biết có 36 kết quả đồng khả năng):",
+                opts: ["\\(\\dfrac{6}{36}\\)","\\(\\dfrac{7}{36}\\)","\\(\\dfrac{5}{36}\\)","\\(\\dfrac{1}{7}\\)"],
+                ans: 0,
+                exp: "Các cặp có tổng 7: (1,6),(2,5),(3,4),(4,3),(5,2),(6,1) → 6 cặp. P = 6/36 = 1/6.",
+                hint: "Liệt kê các cặp có tổng = 7"
+            },
+            {
+                q: "Tung đồng xu 3 lần. Không gian mẫu có bao nhiêu phần tử?",
+                opts: ["\\(8\\)","\\(6\\)","\\(3\\)","\\(9\\)"],
+                ans: 0,
+                exp: "Mỗi lần 2 kết quả, tung 3 lần: \\(2^3 = 8\\) kết quả.",
+                hint: "2 × 2 × 2 = ?"
+            },
+            {
+                q: "Túi có 3 bi đỏ, 2 bi xanh, 1 bi vàng. P(không lấy được bi đỏ) = ?",
+                opts: ["\\(\\dfrac{3}{6}\\)","\\(\\dfrac{3}{3}\\)","\\(\\dfrac{1}{2}\\)","\\(\\dfrac{2}{3}\\)"],
+                ans: 0,
+                exp: "P(đỏ) = 3/6 = 1/2. P(không đỏ) = 1 - 1/2 = 1/2 = 3/6.",
+                hint: "P(không đỏ) = 1 - P(đỏ)"
+            }
+        ]
+    };
+
+    const TF_BANK = [
+        {
+            q: "Xác suất và biến cố cơ bản",
+            items: [
+                {t:"a) Xác suất của biến cố luôn nằm trong đoạn [0; 1]", a:true,  exp:"Đúng! \\(0 \\le P(A) \\le 1\\) với mọi biến cố A.", h:"0 ≤ P(A) ≤ 1"},
+                {t:"b) Biến cố chắc chắn có xác suất bằng 0", a:false, exp:"Sai! Biến cố chắc chắn có xác suất bằng 1, vì nó luôn luôn xảy ra.", h:"Chắc chắn → P = 1"},
+                {t:"c) Biến cố không thể có xác suất bằng 0", a:true,  exp:"Đúng! Biến cố không thể không bao giờ xảy ra nên P = 0.", h:"Không thể → P = 0"},
+                {t:"d) Phép thử ngẫu nhiên là hành động có kết quả không đoán trước được", a:true,  exp:"Đúng! Đó là định nghĩa phép thử ngẫu nhiên.", h:"Ngẫu nhiên = không đoán trước được"}
+            ]
+        },
+        {
+            q: "Xác suất thực nghiệm",
+            items: [
+                {t:"a) Xác suất thực nghiệm \\(P(A) = m/n\\) trong đó \\(m\\) là số lần A xảy ra", a:true,  exp:"Đúng! m là số lần A xảy ra, n là tổng số lần thực hiện phép thử.", h:"P(A) = m/n"},
+                {t:"b) Tung đồng xu 100 lần, Ngửa xuất hiện 55 lần, xác suất thực nghiệm là 0,55", a:true,  exp:"Đúng! P = 55/100 = 0,55.", h:"55/100 = 0,55"},
+                {t:"c) Khi n rất lớn, xác suất thực nghiệm luôn bằng đúng xác suất lý thuyết", a:false, exp:"Sai! Khi n rất lớn, xác suất thực nghiệm CHỈ GẦN BẰNG xác suất lý thuyết, không nhất thiết bằng đúng.", h:"Chỉ gần bằng, không hoàn toàn bằng"},
+                {t:"d) n càng lớn, xác suất thực nghiệm càng ổn định", a:true,  exp:"Đúng! Đây là tính ổn định của xác suất khi số lần thử tăng lên.", h:"n tăng → kết quả ổn định hơn"}
+            ]
+        },
+        {
+            q: "Xác suất lý thuyết (đồng khả năng)",
+            items: [
+                {t:"a) Tung xúc xắc 6 mặt cân đối, P(mặt 4) = 1/6", a:true,  exp:"Đúng! 6 kết quả đồng khả năng, 1 kết quả là mặt 4.", h:"1 kết quả / 6 tổng"},
+                {t:"b) Tung đồng xu cân đối, P(Sấp) = 1/3", a:false, exp:"Sai! Đồng xu chỉ có 2 mặt đồng khả năng, P(Sấp) = 1/2.", h:"2 mặt đồng khả năng → P = 1/2"},
+                {t:"c) Túi có 5 bi đỏ và 5 bi xanh, P(bi đỏ) = 1/2", a:true,  exp:"Đúng! 10 bi tổng, 5 bi đỏ, P = 5/10 = 1/2.", h:"5/10 = 1/2"},
+                {t:"d) Nếu có 4 kết quả đồng khả năng, mỗi kết quả có xác suất 1/4", a:true,  exp:"Đúng! P = 1/n với n kết quả đồng khả năng.", h:"Đồng khả năng: P = 1/n"}
+            ]
+        },
+        {
+            q: "Biến cố đối và tổng xác suất",
+            items: [
+                {t:"a) P(A) + P(Ā) = 1 với mọi biến cố A", a:true,  exp:"Đúng! A và Ā là hai biến cố đối nhau, tổng xác suất bằng 1.", h:"P(A) + P(Ā) = 1"},
+                {t:"b) Nếu P(A) = 0,6 thì P(A không xảy ra) = 0,4", a:true,  exp:"Đúng! P(Ā) = 1 - 0,6 = 0,4.", h:"1 - 0,6 = 0,4"},
+                {t:"c) Hai biến cố có thể cùng có xác suất bằng 0,7", a:false, exp:"Sai! Nếu hai biến cố đối nhau thì tổng xác suất phải bằng 1, không thể cả hai đều bằng 0,7.", h:"Nếu hai biến cố đối: tổng = 1"},
+                {t:"d) P(A) = 1,2 là không thể xảy ra", a:true,  exp:"Đúng! Xác suất luôn \\(\\le 1\\), giá trị 1,2 là không hợp lệ.", h:"P(A) không thể vượt quá 1"}
+            ]
+        },
+        {
+            q: "Vận dụng xác suất",
+            items: [
+                {t:"a) Tung xúc xắc 1 lần, P(số chẵn) = 1/2", a:true,  exp:"Đúng! Số chẵn: {2,4,6} → 3 kết quả. P = 3/6 = 1/2.", h:"Số chẵn: 2, 4, 6 → P = 3/6"},
+                {t:"b) Tung xúc xắc 1 lần, P(số lớn hơn 6) = 1/6", a:false, exp:"Sai! Xúc xắc chỉ có các mặt từ 1 đến 6, không có số nào > 6, P = 0 (biến cố không thể).", h:"Không có mặt > 6 → P = 0"},
+                {t:"c) Rút ngẫu nhiên 1 bi từ túi có 3 bi đỏ, P(bi đỏ) = 1", a:false, exp:"Sai! P(bi đỏ) = 3/3 = 1 chỉ đúng nếu TẤT CẢ bi trong túi đều là bi đỏ.", h:"Nếu túi chỉ có bi đỏ → P = 1"},
+                {t:"d) Xác suất thực nghiệm và lý thuyết thường xấp xỉ nhau khi n đủ lớn", a:true,  exp:"Đúng! Đây là nội dung cơ bản của lý thuyết xác suất.", h:"n lớn → thực nghiệm ≈ lý thuyết"}
+            ]
+        }
+    ];
+
+    const FILL_BANK = [
+        {q:"Tung đồng xu cân đối 1 lần. Xác suất xuất hiện mặt Ngửa bằng?", a:"0.5", exp:"P(Ngửa) = 1/2 = 0,5.", hint:"Đồng xu 2 mặt đồng khả năng"},
+        {q:"Tung xúc xắc cân đối 1 lần. Xác suất xuất hiện mặt số 5 bằng? (dạng phân số a/b)", a:"1/6", exp:"P(mặt 5) = 1/6.", hint:"Xúc xắc 6 mặt đồng khả năng"},
+        {q:"Thực hiện phép thử 50 lần, biến cố A xảy ra 20 lần. Xác suất thực nghiệm P(A) bằng?", a:"0.4", exp:"P(A) = 20/50 = 0,4.", hint:"P = m/n = 20/50"},
+        {q:"Nếu P(A) = 0,35 thì P(Ā) (biến cố đối) bằng?", a:"0.65", exp:"P(Ā) = 1 - 0,35 = 0,65.", hint:"P(A) + P(Ā) = 1"},
+        {q:"Túi có 2 bi đỏ và 8 bi xanh. Xác suất lấy được bi đỏ là? (dạng phân số)", a:"2/10", exp:"P(đỏ) = 2/10 = 1/5.", hint:"Số bi đỏ / tổng số bi"},
+        {q:"Biến cố chắc chắn có xác suất bằng bao nhiêu?", a:"1", exp:"Biến cố chắc chắn luôn xảy ra, P = 1.", hint:"Chắc chắn = luôn xảy ra"},
+        {q:"Biến cố không thể có xác suất bằng bao nhiêu?", a:"0", exp:"Biến cố không thể không bao giờ xảy ra, P = 0.", hint:"Không thể = không bao giờ xảy ra"},
+        {q:"Tung xúc xắc 1 lần, xác suất ra mặt chẵn là? (dạng phân số)", a:"1/2", exp:"Mặt chẵn: {2,4,6} → P = 3/6 = 1/2.", hint:"Số chẵn: 2, 4, 6 trong {1,2,3,4,5,6}"},
+        {q:"Tung đồng xu 200 lần, mặt Ngửa xuất hiện 104 lần. Xác suất thực nghiệm là?", a:"0.52", exp:"P = 104/200 = 0,52.", hint:"104 ÷ 200"},
+        {q:"Rút 1 lá từ bộ 52 lá bài, P(lá tép) = ? (dạng phân số, rút gọn)", a:"1/4", exp:"13 lá tép / 52 tổng = 1/4.", hint:"13/52 rút gọn"},
+        {q:"Xác suất của một biến cố có thể bằng 1,5 không? (có/không)", a:"không", exp:"Không! Xác suất luôn \\(0 \\le P \\le 1\\), không thể bằng 1,5.", hint:"P luôn trong [0; 1]"},
+        {q:"P(A) = 3/4. Xác suất biến cố đối của A bằng?", a:"1/4", exp:"P(Ā) = 1 - 3/4 = 1/4.", hint:"1 - 3/4"}
+    ];
+
+    // ======================== MAIN QUIZ ========================
+    let MCQ=[], TF=[], FILL=[];
+    let userMcq = Array(15).fill(null);
+    let userTf  = Array(5).fill(null).map(()=>Array(4).fill(null));
+    let submitted = false;
+
+    function shuffle(arr) {
+        for (let i=arr.length-1;i>0;i--) {
+            const j=Math.floor(Math.random()*(i+1));
+            [arr[i],arr[j]]=[arr[j],arr[i]];
+        }
+    }
+
+    function generateQuestions() {
+        MCQ=[];
+        const nb=[...QUESTION_BANK.nb]; shuffle(nb);
+        for (let i=0;i<7;i++) MCQ.push({...nb[i%nb.length], l:'nb'});
+        const th=[...QUESTION_BANK.th]; shuffle(th);
+        for (let i=0;i<5;i++) MCQ.push({...th[i%th.length], l:'th'});
+        const vd=[...QUESTION_BANK.vd]; shuffle(vd);
+        for (let i=0;i<3;i++) MCQ.push({...vd[i%vd.length], l:'vd'});
+        const tfPool=[...TF_BANK]; shuffle(tfPool); TF=tfPool.slice(0,5);
+        const fillPool=[...FILL_BANK]; shuffle(fillPool); FILL=fillPool.slice(0,5);
+    }
+
+    function init() { generateQuestions(); renderAll(); }
+
+    function toggleHint(id) {
+        const el=document.getElementById(id);
+        el.style.display=el.style.display==='block'?'none':'block';
+    }
+
+    function renderAll() {
+        const mcqBox=document.getElementById('mcq-container');
+        mcqBox.innerHTML='';
+        MCQ.forEach((d,i)=>{
+            if (!d||!d.q) return;
+            let badge='';
+            if (d.l==='nb') badge='<span class="level-badge level-nhan-biet">NHẬN BIẾT</span>';
+            else if (d.l==='th') badge='<span class="level-badge level-thong-hieu">THÔNG HIỂU</span>';
+            else badge='<span class="level-badge level-van-dung">VẬN DỤNG</span>';
+            const opts=(d.opts||[]).map((o,j)=>
+                `<div onclick="setMcq(${i},${j})" id="mcq-${i}-${j}" class="mcq-option p-4 bg-white shadow-sm flex items-center mb-2">
+                    <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 mr-3 font-bold text-xs">${String.fromCharCode(65+j)}</span> ${o}
+                </div>`
+            ).join('');
+            mcqBox.innerHTML+=`
+                <div class="p-5 border-b" id="mcq-card-${i}">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-bold text-blue-600">CÂU ${i+1} ${badge}</span>
+                        <button onclick="toggleHint('mcq-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                    </div>
+                    <p class="mb-4 text-slate-700 font-medium">${d.q}</p>
+                    <div id="mcq-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${opts}</div>
+                    <div id="mcq-fb-${i}" class="feedback-box"></div>
+                </div>`;
+        });
+
+        const tfBox=document.getElementById('tf-container');
+        tfBox.innerHTML='';
+        TF.forEach((d,i)=>{
+            const rows=d.items.map((it,j)=>`
+                <tr class="border-b">
+                    <td class="py-4 px-4 text-sm font-medium">
+                        ${it.t}
+                        <button onclick="toggleHint('tf-hint-${i}-${j}')" class="hint-btn">💡 Gợi ý</button>
+                        <div id="tf-hint-${i}-${j}" class="hint-box">💡 ${it.h}</div>
+                        <div id="tf-fb-${i}-${j}" class="feedback-box"></div>
+                    </td>
+                    <td class="p-2 text-center"><button onclick="setTf(${i},${j},true)"  id="tf-btn-${i}-${j}-t" class="check-btn w-10 h-10 rounded-xl">Đ</button></td>
+                    <td class="p-2 text-center"><button onclick="setTf(${i},${j},false)" id="tf-btn-${i}-${j}-s" class="check-btn w-10 h-10 rounded-xl">S</button></td>
+                </tr>`).join('');
+            tfBox.innerHTML+=`
+                <div class="bg-slate-50 rounded-2xl border overflow-hidden">
+                    <div class="bg-white p-4 font-bold text-blue-800 border-b">Câu ${i+1}: ${d.q}</div>
+                    <table class="w-full"><tbody>${rows}</tbody></table>
+                </div>`;
+        });
+
+        const fillBox=document.getElementById('fill-container');
+        fillBox.innerHTML='';
+        FILL.forEach((d,i)=>{
+            fillBox.innerHTML+=`
+                <div class="bg-slate-50 p-5 rounded-2xl border space-y-2">
+                    <div class="flex items-start justify-between">
+                        <span><strong>Câu ${i+1}.</strong> ${d.q}</span>
+                        <button onclick="toggleHint('fill-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                    </div>
+                    <div id="fill-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <input type="text" id="fill-${i}" class="fill-input">
+                    </div>
+                    <div id="fill-fb-${i}" class="feedback-box"></div>
+                </div>`;
+        });
+
+        if (window.MathJax) MathJax.typesetPromise([
+            document.getElementById('mcq-container'),
+            document.getElementById('tf-container'),
+            document.getElementById('fill-container')
+        ]).catch(()=>{});
+    }
+
+    function setMcq(q,o) {
+        if (submitted) return;
+        userMcq[q]=o;
+        document.getElementById(`mcq-card-${q}`).querySelectorAll('.mcq-option').forEach(opt=>opt.classList.remove('selected'));
+        document.getElementById(`mcq-${q}-${o}`).classList.add('selected');
+    }
+    function setTf(q,i,v) {
+        if (submitted) return;
+        userTf[q][i]=v;
+        document.getElementById(`tf-btn-${q}-${i}-t`).classList.remove('selected-true');
+        document.getElementById(`tf-btn-${q}-${i}-s`).classList.remove('selected-false');
+        if (v) document.getElementById(`tf-btn-${q}-${i}-t`).classList.add('selected-true');
+        else   document.getElementById(`tf-btn-${q}-${i}-s`).classList.add('selected-false');
+    }
+
+    function celebrate(score) {
+        const pct=(score/10)*100;
+        if (pct>=90) {
+            const end=Date.now()+3000;
+            const iv=setInterval(()=>{if(Date.now()>end){clearInterval(iv);return;} confetti({particleCount:100,spread:160,origin:{y:0.6}});},250);
+        } else if (pct>=70) {
+            confetti({particleCount:150,spread:100,origin:{y:0.6}});
+            setTimeout(()=>confetti({particleCount:100,spread:80,origin:{y:0.6}}),500);
+        } else if (pct>=50) {
+            confetti({particleCount:100,spread:70,origin:{y:0.6}});
+        } else {
+            confetti({particleCount:50,spread:50,origin:{y:0.6}});
+        }
+    }
+
+    function checkResults() {
+        submitted=true;
+        let correct=0;
+        const total=MCQ.length+TF.length*4+FILL.length;
+
+        MCQ.forEach((d,i)=>{
+            const fb=document.getElementById(`mcq-fb-${i}`);
+            const opts=document.getElementById(`mcq-card-${i}`).querySelectorAll('.mcq-option');
+            opts[d.ans].classList.add('correct');
+            if (userMcq[i]===d.ans) {
+                correct++;
+                fb.innerHTML='&#10004;&#65039; <strong>Đúng!</strong> '+d.exp;
+                fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+            } else {
+                if (userMcq[i]!==null) opts[userMcq[i]].classList.add('wrong');
+                fb.innerHTML='&#10060; <strong>Sai!</strong> '+d.exp;
+                fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+            }
+            fb.style.display='block';
+        });
+
+        TF.forEach((d,i)=>{
+            d.items.forEach((it,j)=>{
+                const fb=document.getElementById(`tf-fb-${i}-${j}`);
+                if (userTf[i][j]===it.a) {
+                    correct++;
+                    fb.innerHTML='&#10004;&#65039; '+it.exp;
+                    fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+                } else {
+                    fb.innerHTML='&#10060; '+it.exp;
+                    fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+                }
+                fb.style.display='block';
+                if (it.a) document.getElementById(`tf-btn-${i}-${j}-t`).classList.add('correct-highlight');
+                else       document.getElementById(`tf-btn-${i}-${j}-s`).classList.add('correct-highlight');
+            });
+        });
+
+        FILL.forEach((d,i)=>{
+            const input=document.getElementById(`fill-${i}`);
+            const fb=document.getElementById(`fill-fb-${i}`);
+            const normalize = s => s.trim().toLowerCase()
+                .replace(/\s+/g,'').replace(/,/g,'.').replace(/°/g,'')
+                .replace(/song\s*song/g,'∥').replace(/bang\s*nhau/g,'bằngnhau');
+            const user = normalize(input.value);
+            const ans  = normalize(d.a);
+            let ok = user === ans;
+            // numeric tolerance
+            if (!ok) {
+                const uNum = parseFloat(user), aNum = parseFloat(ans);
+                if (!isNaN(uNum) && !isNaN(aNum) && Math.abs(uNum - aNum) < 0.01) ok = true;
+            }
+            // aliases
+            const aliases = {
+                '∥': ['∥','//','song song','songson','parallel'],
+                'có': ['có','co','yes','đúng','dung'],
+                'không': ['không','khong','no','sai'],
+                'bằng nhau': ['bằngnhau','bang nhau','bangnhau','equal'],
+                'bù nhau': ['bùnhau','bu nhau','bunhau'],
+            };
+            if (!ok) {
+                for (const [key, vals] of Object.entries(aliases)) {
+                    const normKey = normalize(key);
+                    if (normKey === ans && vals.some(v => normalize(v) === user)) { ok = true; break; }
+                }
+            }
+            if (ok) {
+                correct++;
+                input.classList.add('fill-correct');
+                fb.innerHTML='&#10004;&#65039; '+d.exp;
+                fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+            } else {
+                input.classList.add('fill-wrong');
+                fb.innerHTML='&#10060; Đáp án: <strong>'+d.a+'</strong>. '+d.exp;
+                fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+            }
+            fb.style.display='block';
+        });
+
+        const score=(correct/total)*10;
+        const pct=(correct/total)*100;
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('result-board').classList.remove('hidden');
+        const scoreText=document.getElementById('score-text');
+        scoreText.innerHTML=`<div class="text-center"><div class="text-5xl font-black mb-2">${score.toFixed(1)}/10</div><div class="text-lg">Đúng ${correct}/${total} câu (${pct.toFixed(0)}%)</div></div>`;
+        if (pct>=90)      {scoreText.classList.add('score-excellent'); document.getElementById('score-message').innerHTML='&#127881; <span class="text-green-600">XUẤT SẮC!</span>';}
+        else if (pct>=70) {scoreText.classList.add('score-good');      document.getElementById('score-message').innerHTML='&#128079; <span class="text-blue-600">KHÁ TỐT!</span>';}
+        else if (pct>=50) {scoreText.classList.add('score-average');   document.getElementById('score-message').innerHTML='&#128170; <span class="text-orange-600">TRUNG BÌNH</span>';}
+        else              {scoreText.classList.add('score-low');       document.getElementById('score-message').innerHTML='&#128218; <span class="text-red-600">CẦN CỐ GẮNG</span>';}
+        celebrate(score);
+        showOptions();
+        if (window.MathJax) {
+            MathJax.typesetPromise([
+                document.getElementById('mcq-container'),
+                document.getElementById('tf-container'),
+                document.getElementById('fill-container'),
+                document.getElementById('result-board')
+            ]).catch(err => console.warn('MathJax typeset error:', err));
+        }
+        document.getElementById('result-board').scrollIntoView({behavior:'smooth',block:'center'});
+        saveScore(score); // BỔ SUNG
+    }
+
+    function showOptions() {
+        const old=document.getElementById('post-options');
+        if (old) old.remove();
+        const container=document.getElementById('result-board');
+        const div=document.createElement('div');
+        div.id='post-options';
+        div.className='mt-8 p-6 bg-white rounded-2xl shadow-xl border-2 border-blue-400 animate-bounce-in';
+        div.innerHTML=`
+            <h3 class="text-xl font-bold text-blue-800 mb-4 text-center">&#127775; Tiếp tục?</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="regenerate('retry')"      class="p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all border-b-4 border-gray-300 active:border-b-0 font-bold text-gray-700">&#128260; Làm lại</button>
+                <button onclick="regenerate('equivalent')" class="p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-all border-b-4 border-blue-300 active:border-b-0 font-bold text-blue-700">&#128218; Đề mới tương đương</button>
+                <button onclick="regenerate('harder')"     class="p-4 bg-orange-100 hover:bg-orange-200 rounded-xl transition-all border-b-4 border-orange-300 active:border-b-0 font-bold text-orange-700">&#128640; Đề nâng cao</button>
+            </div>`;
+        container.appendChild(div);
+    }
+
+    async function regenerate(mode) {
+        document.getElementById('loading-overlay').style.display='flex';
+        await new Promise(r=>setTimeout(r,800));
+        submitted=false;
+        userMcq=Array(15).fill(null);
+        userTf=Array(5).fill(null).map(()=>Array(4).fill(null));
+        const opts=document.getElementById('post-options');
+        if (opts) opts.remove();
+        document.getElementById('result-board').classList.add('hidden');
+        document.getElementById('submit-btn').classList.remove('hidden');
+        if (mode!=='retry') generateQuestions();
+        renderAll();
+        document.getElementById('loading-overlay').style.display='none';
+        document.getElementById('capture-mcq').scrollIntoView({behavior:'smooth'});
+    }
+
+    // ======================== DOWNLOAD ========================
+
+    // Serialize một SVG (fontCache:local → tự chứa đủ) thành data URL PNG
+    function serializeSvgToDataUrl(svgEl, dpr) {
+        return new Promise((resolve) => {
+            const clone = svgEl.cloneNode(true);
+            clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            const bRect = svgEl.getBoundingClientRect();
+            const w = bRect.width || parseFloat(svgEl.getAttribute('width')) || 50;
+            const h = bRect.height || parseFloat(svgEl.getAttribute('height')) || 20;
+            clone.setAttribute('width', w);
+            clone.setAttribute('height', h);
+            const svgStr = new XMLSerializer().serializeToString(clone);
+            const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => {
+                const c = document.createElement('canvas');
+                c.width = w * dpr; c.height = h * dpr;
+                const ctx = c.getContext('2d');
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.drawImage(img, 0, 0, c.width, c.height);
+                URL.revokeObjectURL(url);
+                resolve({ dataUrl: c.toDataURL('image/png'), w, h });
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+            img.src = url;
+        });
+    }
+
+    // Chờ MathJax render xong hoàn toàn trước khi chụp
+    async function waitForMathJax() {
+        if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+            await window.MathJax.startup.promise;
+        }
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            await window.MathJax.typesetPromise();
+        }
+        await new Promise(r => setTimeout(r, 300));
+    }
+
+    // Hàm chụp ảnh phần đề — thay mọi mjx-container bằng <img> PNG rồi dùng html2canvas
+    async function captureWithMathJax(elementId, filename) {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.style.display = 'flex';
+        loadingOverlay.querySelector('p').textContent = 'Đang chờ công thức toán render...';
+        await waitForMathJax();
+        loadingOverlay.querySelector('p').textContent = 'Đang tạo ảnh...';
+        try {
+            const element = document.getElementById(elementId);
+            const clone = element.cloneNode(true);
+            clone.style.cssText = `
+                position: fixed; top: 0; left: 0; z-index: -9999;
+                width: ${element.offsetWidth}px;
+                background: #ffffff; pointer-events: none;
+            `;
+            document.body.appendChild(clone);
+
+            const origContainers = Array.from(element.querySelectorAll('mjx-container'));
+            const cloneContainers = Array.from(clone.querySelectorAll('mjx-container'));
+            const DPR = 3;
+
+            await Promise.all(origContainers.map(async (orig, i) => {
+                const svg = orig.querySelector('svg');
+                const cloneItem = cloneContainers[i];
+                if (!svg || !cloneItem) return;
+                const result = await serializeSvgToDataUrl(svg, DPR);
+                if (!result) return;
+                const imgEl = document.createElement('img');
+                imgEl.src = result.dataUrl;
+                imgEl.style.cssText = `
+                    display: inline-block;
+                    width: ${result.w}px; height: ${result.h}px;
+                    vertical-align: ${orig.style.verticalAlign || 'middle'};
+                    margin: 0 1px;
+                `;
+                cloneItem.replaceWith(imgEl);
+            }));
+
+            await Promise.all(
+                Array.from(clone.querySelectorAll('img')).map(img =>
+                    img.complete ? Promise.resolve() :
+                    new Promise(r => { img.onload = r; img.onerror = r; })
+                )
+            );
+
+            const canvas = await html2canvas(clone, {
+                scale: 2, useCORS: true, allowTaint: true,
+                backgroundColor: '#ffffff', logging: false,
+                imageTimeout: 5000,
+                width: element.offsetWidth,
+                height: clone.scrollHeight
+            });
+
+            document.body.removeChild(clone);
+
+            const ua = navigator.userAgent;
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+            const isWebView = /FBAN|FBAV|FB_IAB|ZaloApp|zalo|Instagram|Line\/|MicroMessenger|WebView|(iPhone|iPod|iPad)(?!.*Safari)/i.test(ua);
+            const dataUrl = canvas.toDataURL('image/png');
+
+            if (!isMobile) {
+                // ── MÁY TÍNH: download thẳng ──────────────────────────
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } else if (isWebView) {
+                // ── ZALO / FACEBOOK / INSTAGRAM BROWSER ───────────────
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:99999;overflow:auto;-webkit-overflow-scrolling:touch;padding:20px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;';
+                overlay.innerHTML = `
+                    <div style="background:#1e293b;border-radius:16px;padding:16px 20px;max-width:360px;width:100%;margin-top:20px;">
+                        <div style="font-size:2rem;margin-bottom:8px;">⚠️</div>
+                        <p style="color:white;font-weight:bold;font-size:1rem;margin:0 0 8px;">Không lưu được trong Zalo/Facebook</p>
+                        <p style="color:#94a3b8;font-size:0.82rem;margin:0 0 16px;line-height:1.6;">
+                            Trình duyệt trong ứng dụng không cho phép lưu ảnh.<br>
+                            Hãy mở trang bằng <b style="color:#38bdf8">Chrome</b> hoặc <b style="color:#38bdf8">Safari</b>:
+                        </p>
+                        <div style="background:#0f172a;border-radius:12px;padding:12px;text-align:left;font-size:0.8rem;color:#cbd5e1;line-height:2;">
+                            <div>1️⃣ Nhấn <b style="color:white">⋮</b> hoặc <b style="color:white">···</b> góc trên bên phải</div>
+                            <div>2️⃣ Chọn <b style="color:#4ade80">"Mở bằng trình duyệt"</b></div>
+                            <div>3️⃣ Bấm nút tải ảnh lại</div>
+                        </div>
+                        <p style="color:#64748b;font-size:0.75rem;margin:12px 0 4px;">Hoặc xem ảnh bên dưới rồi chụp màn hình</p>
+                        <button onclick="this.closest('div').parentNode.style.justifyContent='flex-start'"
+                            style="background:#3b82f6;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.85rem;cursor:pointer;margin-bottom:4px;">
+                            📷 Xem ảnh để chụp màn hình
+                        </button>
+                        <button onclick="this.closest('[style*=z-index]').remove()"
+                            style="background:#475569;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.85rem;cursor:pointer;margin-top:4px;">
+                            ✖ Đóng
+                        </button>
+                    </div>
+                    <img src="${dataUrl}" style="max-width:100%;border-radius:12px;margin-top:16px;display:block;">
+                `;
+                document.body.appendChild(overlay);
+
+            } else {
+                // ── CHROME / SAFARI / TRÌNH DUYỆT THẬT ───────────────
+                let saved = false;
+                if (navigator.canShare) {
+                    try {
+                        const blob = await (await fetch(dataUrl)).blob();
+                        const file = new File([blob], filename, { type: 'image/png' });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({ files: [file], title: filename });
+                            saved = true;
+                        }
+                    } catch(e) {}
+                }
+                if (!saved) {
+                    const win = window.open('', '_blank');
+                    if (win) {
+                        win.document.write(`<!DOCTYPE html><html><head>
+                            <meta name="viewport" content="width=device-width,initial-scale=1">
+                            <title>${filename}</title>
+                            <style>body{margin:0;background:#000;display:flex;flex-direction:column;align-items:center;padding:16px;font-family:sans-serif;}p{color:#fbbf24;font-size:0.9rem;text-align:center;margin-bottom:10px;}img{max-width:100%;border-radius:8px;}</style>
+                        </head><body>
+                            <p>📱 Giữ tay vào ảnh → chọn <b>Lưu ảnh</b></p>
+                            <img src="${dataUrl}">
+                        </body></html>`);
+                        win.document.close();
+                    } else {
+                        const overlay = document.createElement('div');
+                        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:99999;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px;text-align:center;';
+                        const imgEl = document.createElement('img');
+                        imgEl.src = dataUrl;
+                        imgEl.style.cssText = 'max-width:100%;border-radius:12px;margin-top:10px;display:block;margin-left:auto;margin-right:auto;';
+                        overlay.innerHTML = '<p style="color:white;font-weight:bold;font-size:1rem;margin-bottom:4px;">📱 Giữ tay vào ảnh → chọn <b>Lưu ảnh</b></p><button onclick="this.parentNode.remove()" style="background:#ef4444;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.9rem;margin-bottom:12px;cursor:pointer;">✖ Đóng</button>';
+                        overlay.appendChild(imgEl);
+                        document.body.appendChild(overlay);
+                    }
+                }
+            }
+
+            loadingOverlay.style.display = 'none';
+        } catch (error) {
+            console.error('captureWithMathJax error:', error);
+            if (document.body.contains(document.querySelector('[style*="z-index: -9999"]'))) {
+                document.body.removeChild(document.querySelector('[style*="z-index: -9999"]'));
+            }
+            loadingOverlay.style.display = 'none';
+            alert('Đã xảy ra lỗi khi tải ảnh: ' + error.message);
+        }
+    }
+
+    async function downloadKnowledgePDF() {
+        await captureWithMathJax('capture-knowledge', 'Kien-thuc-Xac-Suat-Bien-Co.png');
+    }
+    async function downloadMCQImage() {
+        await captureWithMathJax('capture-mcq', 'De-Trac-Nghiem-Bai30.png');
+    }
+    async function downloadTFImage() {
+        await captureWithMathJax('capture-tf', 'De-Dung-Sai-Bai30.png');
+    }
+    async function downloadFillImage() {
+        await captureWithMathJax('capture-fill', 'De-Tra-Loi-Ngan-Bai30.png');
+    }
+
+    // ======================== CHATBOT ========================
+    const CHATBOT_KNOWLEDGE = {
+        'xác suất':       'Xác suất của biến cố A:<br>• Ký hiệu: \\(P(A)\\)<br>• Giá trị: \\(0 \\le P(A) \\le 1\\)<br>• P = 0: biến cố không thể; P = 1: biến cố chắc chắn<br>• Công thức: \\(P(A) = \\dfrac{m}{n}\\) (m: số lần A xảy ra, n: tổng số lần)',
+        'biến cố':        'Biến cố trong xác suất:<br>• Là tập hợp một số kết quả của phép thử<br>• Ký hiệu: A, B, C…<br>• Biến cố chắc chắn: P = 1<br>• Biến cố không thể: P = 0<br>• Ví dụ: A = "xuất hiện mặt Ngửa khi tung đồng xu"',
+        'phép thử':       'Phép thử ngẫu nhiên:<br>• Là hành động/thí nghiệm có kết quả không đoán trước được<br>• Ví dụ: tung đồng xu, tung xúc xắc, rút bài<br>• Mỗi phép thử có một tập hợp các kết quả có thể',
+        'công thức':      'Công thức tính xác suất:<br>1. Thực nghiệm: \\(P(A) = \\dfrac{m}{n}\\) (m lần A xảy ra / n lần thử)<br>2. Lý thuyết (đồng khả năng): \\(P(A) = \\dfrac{\\text{số KQ thuộc A}}{\\text{tổng KQ}}\\)<br>3. Biến cố đối: \\(P(\\bar{A}) = 1 - P(A)\\)',
+        'thực nghiệm':    'Xác suất thực nghiệm:<br>• Thực hiện phép thử n lần<br>• A xảy ra m lần<br>• \\(P(A) = m/n\\)<br>• n càng lớn, kết quả càng ổn định<br>• Ví dụ: tung xu 100 lần, Ngửa 52 lần → P ≈ 0,52',
+        'đồng khả năng':  'Kết quả đồng khả năng:<br>• Mỗi kết quả có cùng khả năng xảy ra<br>• Ví dụ: xúc xắc cân đối, đồng xu đồng chất<br>• Công thức: \\(P(A) = \\dfrac{\\text{số KQ thuộc A}}{\\text{tổng KQ}}\\)',
+        'biến cố đối':    'Biến cố đối:<br>• Ā là biến cố đối của A (A không xảy ra)<br>• \\(P(A) + P(\\bar{A}) = 1\\)<br>• Ví dụ: P(Ngửa) + P(Sấp) = 1/2 + 1/2 = 1',
+        'ví dụ':          '📌 Ví dụ xác suất:<br>• Tung xúc xắc: P(mặt 3) = 1/6 ≈ 0,167<br>• Tung đồng xu: P(Ngửa) = 1/2 = 0,5<br>• Túi 3 đỏ + 7 xanh: P(đỏ) = 3/10 = 0,3<br>• P(chắc chắn) = 1; P(không thể) = 0',
+    };
+
+    function toggleChatbot() {
+        const win=document.getElementById('chatbot-window');
+        const toggle=document.getElementById('chatbot-toggle');
+        if (win.style.display==='flex') {
+            win.style.display='none';
+            toggle.innerHTML='&#128172;<span class="chatbot-label">Chatbot Hỗ Trợ</span>';
+        } else {
+            win.style.display='flex';
+            toggle.innerHTML='&#10006;<span class="chatbot-label">Đóng</span>';
+        }
+    }
+    function addBotMessage(text) {
+        const container=document.getElementById('chatbot-messages');
+        const div=document.createElement('div');
+        div.className='chat-message bot';
+        div.innerHTML=`<div class="bot-avatar">&#128172;</div><div class="message-content">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop=container.scrollHeight;
+        if (window.MathJax) MathJax.typesetPromise([container]).catch(()=>{});
+    }
+    function addUserMessage(text) {
+        const container=document.getElementById('chatbot-messages');
+        const div=document.createElement('div');
+        div.className='chat-message user';
+        div.innerHTML=`<div class="message-content">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop=container.scrollHeight;
+    }
+    function getBotResponse(question) {
+        const q=question.toLowerCase().trim();
+        for (const [kw,ans] of Object.entries(CHATBOT_KNOWLEDGE)) {
+            if (q.includes(kw)) return ans;
+        }
+        if (q.includes('xúc xắc') || q.includes('xuc xac')) return '🎲 Xúc xắc cân đối có 6 mặt đồng khả năng (1→6). Mỗi mặt có xác suất P = 1/6. Ví dụ: P(mặt chẵn) = P({2,4,6}) = 3/6 = 1/2.';
+        return '🤔 Chưa hiểu câu hỏi.<br>Bạn có thể hỏi:<br>• <em>"Xác suất là gì?"</em><br>• <em>"Công thức tính xác suất?"</em><br>• <em>"Biến cố đối là gì?"</em>';
+    }
+    function sendMessage() {
+        const input=document.getElementById('chatbot-input');
+        const q=input.value.trim();
+        if (!q) return;
+        addUserMessage(q); input.value='';
+        setTimeout(()=>addBotMessage(getBotResponse(q)),500);
+    }
+    function sendQuickQuestion(q) {
+        addUserMessage(q);
+        setTimeout(()=>addBotMessage(getBotResponse(q)),500);
+    }
+
+    window.onload = function() { init(); initMemGame(); initStats(); };
+    </script>
+
+    <!-- ===================== BỔ SUNG: STATS & LIKE & PROGRESS ===================== -->
+    <script>
+        const STORAGE_KEY = 'bai30_xac_suat_bien_co';
+
+        function loadStorage() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+            catch(e) { return {}; }
+        }
+        function saveStorage(data) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+        }
+
+        function initStats() {
+            const data = loadStorage();
+            data.visits = (data.visits || 0) + 1;
+            saveStorage(data);
+            document.getElementById('visit-count').textContent = data.visits;
+
+            const attempts = data.scores || [];
+            document.getElementById('attempt-count').textContent = attempts.length;
+            if (attempts.length > 0) {
+                const best = Math.max(...attempts.map(s => s.score));
+                document.getElementById('best-score').textContent = best.toFixed(1);
+            }
+
+            // Like — hiển thị trạng thái đã like chưa (localStorage)
+            // Số like thực tế sẽ load từ Firebase bên dưới
+            if (data.liked) {
+                document.getElementById('like-btn').classList.add('liked');
+            }
+            // Load số like toàn cầu từ Firebase
+            loadGlobalLikes();
+
+            // Biểu đồ tiến bộ
+            renderProgress(attempts);
+        }
+
+        // ── Like toàn cầu (Firebase) ──────────────────────────────────
+        const FIREBASE_LIKE_URL = 'https://toan7-tieu-son-default-rtdb.firebaseio.com/likes/bai-30.json';
+
+        async function loadGlobalLikes() {
+            try {
+                const res = await fetch(FIREBASE_LIKE_URL);
+                const val = await res.json();
+                document.getElementById('like-count').textContent = (typeof val === 'number' ? val : 0).toLocaleString('vi-VN');
+            } catch(e) {}
+        }
+
+        async function changeGlobalLike(delta) {
+            const MAX_RETRY = 5;
+            for (let i = 0; i < MAX_RETRY; i++) {
+                try {
+                    const readRes = await fetch(FIREBASE_LIKE_URL, { headers: { 'X-Firebase-ETag': 'true' } });
+                    const etag = readRes.headers.get('ETag');
+                    const current = await readRes.json();
+                    const newVal = Math.max(0, (typeof current === 'number' ? current : 0) + delta);
+                    const writeRes = await fetch(FIREBASE_LIKE_URL, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'if-match': etag },
+                        body: JSON.stringify(newVal)
+                    });
+                    if (writeRes.ok) {
+                        document.getElementById('like-count').textContent = newVal.toLocaleString('vi-VN');
+                        return;
+                    }
+                } catch(e) { return; }
+            }
+        }
+
+        async function toggleLike() {
+            const data = loadStorage();
+            const btn = document.getElementById('like-btn');
+            if (data.liked) {
+                data.liked = false;
+                btn.classList.remove('liked');
+                saveStorage(data);
+                await changeGlobalLike(-1);
+            } else {
+                data.liked = true;
+                btn.classList.add('liked');
+                saveStorage(data);
+                if (typeof confetti === 'function') confetti({ particleCount: 60, spread: 60, origin: { y: 0.2 } });
+                await changeGlobalLike(+1);
+            }
+        }
+        // ── Kết thúc Like toàn cầu ───────────────────────────────────
+
+        function saveScore(score) {
+            const data = loadStorage();
+            if (!data.scores) data.scores = [];
+            data.scores.push({ score: parseFloat(score.toFixed(1)), time: new Date().toLocaleDateString('vi-VN') });
+            if (data.scores.length > 10) data.scores = data.scores.slice(-10);
+            document.getElementById('attempt-count').textContent = data.scores.length;
+            document.getElementById('best-score').textContent = Math.max(...data.scores.map(s => s.score)).toFixed(1);
+            saveStorage(data);
+            renderProgress(data.scores);
+        }
+
+        function renderProgress(attempts) {
+            const panel = document.getElementById('progress-panel');
+            const chart = document.getElementById('progress-chart');
+            const statsDiv = document.getElementById('progress-stats');
+            const trendDiv = document.getElementById('trend-display');
+            if (!attempts || attempts.length === 0) { panel.classList.add('hidden'); return; }
+            panel.classList.remove('hidden');
+            chart.innerHTML = attempts.map((s, i) => {
+                const pct = Math.max(4, (s.score / 10) * 100);
+                const color = s.score >= 9 ? '#10b981' : s.score >= 7 ? '#3b82f6' : s.score >= 5 ? '#f59e0b' : '#ef4444';
+                return `<div class="bar-wrap"><div class="bar-score">${s.score}</div><div class="bar" style="height:${pct}%;background:${color};"></div><div class="bar-label">L${i+1}</div></div>`;
+            }).join('');
+            const scores = attempts.map(s => s.score);
+            const avg = (scores.reduce((a,b) => a+b,0) / scores.length).toFixed(1);
+            const best = Math.max(...scores).toFixed(1);
+            const latest = scores[scores.length-1].toFixed(1);
+            statsDiv.innerHTML = `
+                <div class="bg-blue-50 rounded-xl p-3 border border-blue-100"><div class="font-black text-blue-700 text-lg">${avg}</div><div class="text-slate-500 text-xs">Điểm TB</div></div>
+                <div class="bg-green-50 rounded-xl p-3 border border-green-100"><div class="font-black text-green-700 text-lg">${best}</div><div class="text-slate-500 text-xs">Cao nhất</div></div>
+                <div class="bg-orange-50 rounded-xl p-3 border border-orange-100"><div class="font-black text-orange-700 text-lg">${latest}</div><div class="text-slate-500 text-xs">Lần này</div></div>`;
+            if (scores.length >= 2) {
+                const diff = scores[scores.length-1] - scores[scores.length-2];
+                trendDiv.innerHTML = diff > 0
+                    ? `<span class="trend-badge trend-up">📈 Tăng +${diff.toFixed(1)} điểm</span>`
+                    : diff < 0
+                    ? `<span class="trend-badge trend-down">📉 Giảm ${diff.toFixed(1)} điểm</span>`
+                    : `<span class="trend-badge trend-same">➡️ Giữ nguyên</span>`;
+            } else {
+                trendDiv.innerHTML = `<span class="trend-badge trend-same">🆕 Lần đầu làm bài</span>`;
+            }
+        }
+    </script>
+    <!-- ===================== KẾT THÚC BỔ SUNG STATS ===================== -->
+
+    <!-- FIREBASE GLOBAL VIEW COUNTER -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            var FIREBASE_URL = 'https://toan7-tieu-son-default-rtdb.firebaseio.com';
+            var PAGE_KEY = 'bai-30';
+            var VISITED_KEY = 'toan7_firebase_visited_bai30';
+            var badge = document.getElementById('global-view-badge');
+
+            async function getCount(key) {
+                try {
+                    var res = await fetch(FIREBASE_URL + '/views/' + key + '.json');
+                    var data = await res.json();
+                    return data || 0;
+                } catch(e) { return 0; }
+            }
+
+            async function incrementCount(key) {
+                const url = FIREBASE_URL + '/views/' + key + '.json';
+                const MAX_RETRY = 5;
+                for (var i = 0; i < MAX_RETRY; i++) {
+                    try {
+                        var readRes = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' } });
+                        var etag = readRes.headers.get('ETag');
+                        var current = await readRes.json();
+                        var newVal = (typeof current === 'number' ? current : 0) + 1;
+                        var writeRes = await fetch(url, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'if-match': etag },
+                            body: JSON.stringify(newVal)
+                        });
+                        if (writeRes.ok) return newVal;
+                    } catch(e) { return await getCount(key); }
+                }
+                return await getCount(key);
+            }
+
+            var count;
+            if (!localStorage.getItem(VISITED_KEY)) {
+                localStorage.setItem(VISITED_KEY, '1');
+                count = await incrementCount(PAGE_KEY);
+            } else {
+                count = await getCount(PAGE_KEY);
+            }
+
+            if (badge) badge.textContent = '👥 ' + count.toLocaleString('vi-VN') + ' người đã truy cập bài này';
+        });
+    </script>
+    <!-- END FIREBASE GLOBAL VIEW COUNTER -->
+</body>
+</html>
