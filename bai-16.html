@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 16: Tam Giác Cân. Đường Trung Trực của Đoạn Thẳng</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: { 
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: {
+                scale: 1,
+                matchFontHeight: false,
+                fontCache: 'local'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        body { font-family: 'Comfortaa', cursive; scroll-behavior: smooth; line-height: 1.8; }
+
+        /* Áp dụng Comfortaa cho toàn trang trừ MathJax */
+        body, p, span, div, h1, h2, h3, h4, h5, h6,
+        a, li, ul, ol, td, th, table, input, button,
+        textarea, select, label, nav, header, footer,
+        section, article, aside, main {
+            font-family: 'Comfortaa', cursive;
+        }
+
+        /* MathJax SVG: scale nhỏ lại cho cân với text Comfortaa */
+        mjx-container {
+            display: inline-block !important;
+            vertical-align: -0.2em !important;
+            margin: 0 0.1em !important;
+            transform: scale(0.95);
+            transform-origin: center baseline;
+        }
+        
+        nav {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .section-dashed {
+            border: 3px dashed #cbd5e1;
+            border-radius: 24px;
+            transition: border-color 0.3s;
+        }
+        .section-dashed:hover { border-color: #3b82f6; }
+
+        .check-btn { transition: all 0.2s; cursor: pointer; border: 2px solid #e2e8f0; }
+        .selected-true { background-color: #22c55e !important; color: white !important; border-color: #16a34a !important; }
+        .selected-false { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+        .correct-highlight { border: 3px solid #22c55e !important; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+        
+        .mcq-option { border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s; border-radius: 16px; }
+        .mcq-option.selected { border-color: #3b82f6; background-color: #eff6ff; }
+        .mcq-option.correct { border-color: #22c55e; background-color: #dcfce7; color: #166534; }
+        .mcq-option.wrong { border-color: #ef4444; background-color: #fee2e2; color: #991b1b; }
+        
+        .fill-input { border-bottom: 2px dashed #3b82f6; outline: none; text-align: center; width: 120px; font-weight: bold; color: #2563eb; background: transparent; }
+        .fill-correct { background-color: #dcfce7; border-color: #22c55e; border-style: solid; }
+        .fill-wrong { background-color: #fee2e2; border-color: #ef4444; border-style: solid; }
+        
+        .feedback-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border-left: 4px solid #ef4444; background-color: #fffafb; font-size: 0.85rem; }
+
+        .hint-box { 
+            display: none; 
+            margin-top: 0.5rem; 
+            padding: 0.75rem; 
+            border-radius: 0.75rem; 
+            border: 1px dashed #eab308; 
+            background-color: #fefce8; 
+            color: #854d0e; 
+            font-size: 0.85rem;
+        }
+
+        .btn-download { background-color: #4f46e5; color: white; padding: 6px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px; transition: opacity 0.2s; }
+        .btn-download:hover { opacity: 0.9; }
+
+        #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .loader { border: 6px solid #f3f3f3; border-top: 6px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .hint-btn { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 4px; 
+            background: #fef3c7; 
+            border: 2px solid #f59e0b; 
+            padding: 6px 12px; 
+            border-radius: 12px; 
+            color: #92400e; 
+            font-size: 0.75rem; 
+            font-weight: bold; 
+            transition: all 0.2s;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        .hint-btn:hover {
+            background: #fde68a;
+            transform: translateY(-1px);
+        }
+
+        @keyframes bounce-in {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-bounce-in {
+            animation: bounce-in 0.5s ease-out;
+        }
+
+        .level-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .level-nhan-biet { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .level-thong-hieu { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .level-van-dung { background: #fecaca; color: #991b1b; border: 1px solid #ef4444; }
+
+        .score-excellent { background: linear-gradient(135deg, #10b981, #059669); color: white; animation: pulse-scale 1s ease-in-out infinite; }
+        .score-good { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+        .score-average { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .score-low { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+
+        @keyframes pulse-scale {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white; padding: 10px 20px; border-radius: 16px; font-weight: bold;
+            display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;
+            border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); font-size: 0.875rem;
+        }
+        .download-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4); }
+        .download-btn:active { transform: translateY(0); }
+
+        /* CHATBOT STYLES */
+        #chatbot-container { position: fixed; top: 50%; right: 20px; transform: translateY(-50%); z-index: 1000; }
+        #chatbot-toggle {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%);
+            border: none; cursor: pointer; box-shadow: 0 8px 24px rgba(0, 106, 255, 0.4);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 32px; transition: all 0.3s; position: relative;
+        }
+        #chatbot-toggle:hover { transform: scale(1.1); box-shadow: 0 12px 32px rgba(0, 106, 255, 0.6); }
+        .chatbot-label {
+            position: absolute; bottom: -28px;
+            background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%);
+            color: white; padding: 4px 12px; border-radius: 12px; font-size: 10px; font-weight: bold;
+            white-space: nowrap; box-shadow: 0 4px 12px rgba(0, 106, 255, 0.3);
+        }
+        #chatbot-window {
+            display: none; position: fixed; top: 50%; right: 100px; transform: translateY(-50%);
+            width: 340px; height: 480px; background: white; border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); flex-direction: column; overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        #chatbot-header { background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+        #chatbot-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s; }
+        #chatbot-close:hover { background: rgba(255, 255, 255, 0.2); }
+        #chatbot-messages { flex: 1; overflow-y: auto; padding: 16px; background: #f8fafc; }
+        .chat-message { margin-bottom: 12px; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-message.bot { display: flex; gap: 8px; }
+        .chat-message.user { display: flex; justify-content: flex-end; }
+        .message-content { padding: 10px 14px; border-radius: 16px; max-width: 75%; font-size: 0.9rem; line-height: 1.4; }
+        .chat-message.bot .message-content { background: white; color: #1e293b; border: 1px solid #e2e8f0; }
+        .chat-message.user .message-content { background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%); color: white; }
+        .bot-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        #chatbot-input-area { padding: 12px; border-top: 1px solid #e2e8f0; background: white; display: flex; gap: 8px; }
+        #chatbot-input { flex: 1; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 20px; outline: none; font-size: 0.9rem; transition: border-color 0.2s; }
+        #chatbot-input:focus { border-color: #00B2FF; }
+        #chatbot-send { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; }
+        #chatbot-send:hover { transform: scale(1.05); }
+        .quick-questions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .quick-question-btn { padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; color: #1e40af; }
+        .quick-question-btn:hover { background: #dbeafe; transform: translateY(-1px); }
+
+        /* GAME: GHÉP CẶP */
+        .match-card {
+            border: 3px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-weight: bold;
+            font-size: 0.9rem;
+            background: white;
+            text-align: center;
+            user-select: none;
+            min-height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .match-card:hover:not(.matched):not(.locked) { border-color: #6366f1; background: #eef2ff; transform: scale(1.03); }
+        .match-card.selected { border-color: #6366f1; background: #eef2ff; box-shadow: 0 0 0 3px rgba(99,102,241,0.3); transform: scale(1.04); }
+        .match-card.matched { border-color: #22c55e; background: #dcfce7; color: #166534; animation: pop 0.35s ease; cursor: default; }
+        .match-card.wrong-flash { border-color: #ef4444; background: #fee2e2; animation: shake 0.4s ease; }
+        .match-card.locked { cursor: default; opacity: 0.6; }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
+        .match-progress-bar {
+            height: 10px; background: #e2e8f0; border-radius: 99px; overflow: hidden;
+        }
+        .match-progress-inner {
+            height: 100%; border-radius: 99px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            transition: width 0.4s ease;
+        }
+
+        .match-score-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white; padding: 4px 14px; border-radius: 99px;
+            font-weight: bold; font-size: 0.85rem;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.35);
+        }
+
+        @media (max-width: 640px) {
+            #chatbot-window { width: calc(100vw - 40px); height: 60vh; top: 50%; right: 20px; transform: translateY(-50%); }
+        }
+
+        /* SVG geometric figures */
+        .geo-figure { display: block; margin: 0 auto; }
+
+        /* STATS BAR */
+        #stats-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .stat-item { display: flex; align-items: center; gap: 4px; background: #eff6ff; border: 1px solid #bfdbfe; padding: 4px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: bold; color: #1e40af; }
+        .stat-item span.val { font-size: 0.85rem; font-weight: 900; color: #1d4ed8; }
+        /* LIKE BUTTON */
+        #like-btn { background: #fff0f0; border: 1px solid #fca5a5; color: #dc2626; border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: bold; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
+        #like-btn:hover { background: #fee2e2; }
+        #like-btn.liked { background: #ef4444; border-color: #ef4444; color: white; animation: likeAnim 0.4s ease; }
+        @keyframes likeAnim { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+        /* PROGRESS CHART */
+        #progress-panel { background: white; border-radius: 20px; padding: 20px; border: 2px dashed #3b82f6; margin-bottom: 0; }
+        #progress-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; padding: 8px 0; }
+        .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; gap: 4px; }
+        .bar { width: 100%; min-height: 4px; border-radius: 6px 6px 0 0; transition: height 0.5s ease; }
+        .bar-label { font-size: 0.65rem; color: #64748b; text-align: center; }
+        .bar-score { font-size: 0.7rem; font-weight: bold; color: #1e40af; }
+        .trend-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .trend-up { background: #dcfce7; color: #166534; }
+        .trend-down { background: #fee2e2; color: #991b1b; }
+        .trend-same { background: #f1f5f9; color: #475569; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 text-slate-800">
+
+    <nav class="p-3 shadow-sm mb-0">
+        <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <a href="index.html" class="flex items-center gap-2 text-orange-600 font-bold hover:opacity-80 transition-opacity shrink-0">
+                <span class="text-xl">🏠</span>
+                <span class="hidden sm:inline">Trang chủ</span>
+            </a>
+            <!-- STATS BAR INLINE -->
+            <div id="stats-bar" class="flex items-center gap-2 flex-wrap">
+                <div class="stat-item">👁️ <span class="val" id="visit-count">0</span></div>
+                <div class="stat-item">📝 <span class="val" id="attempt-count">0</span> lần</div>
+                <div class="stat-item">⭐ <span class="val" id="best-score">--</span></div>
+                <button id="like-btn" onclick="toggleLike()">❤️ <span id="like-count">0</span></button>
+            </div>
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest hidden md:block">Toán 7 - Bài 16 ✨</div>
+        </div>
+    </nav>
+
+    <div id="loading-overlay">
+        <div class="loader mb-4"></div>
+        <p class="font-bold text-blue-600 animate-pulse">Đang tạo đề mới...</p>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-3 md:px-6 space-y-12 mt-6">
+        
+        <div class="text-center py-6">
+            <h1 class="text-3xl md:text-4xl font-black text-blue-600 uppercase tracking-tighter flex items-center justify-center gap-3 flex-wrap">
+                <span>📐</span> Bài 16: Tam Giác Cân. Đường Trung Trực <span>✏️</span>
+            </h1>
+            <p class="text-slate-500 font-bold mt-2">Kết nối tri thức - Toán 7</p>
+            <!-- COUNTAPI GLOBAL VIEW COUNTER -->
+            <p id="global-view-badge" class="text-slate-400 text-sm font-bold mt-1">👁 Đang tải...</p>
+        </div>
+
+        <!-- TIẾN BỘ HỌC TẬP -->
+        <div id="progress-panel" class="hidden">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h2 class="text-lg font-bold text-blue-800">📈 Tiến Bộ Học Tập</h2>
+                <div id="trend-display"></div>
+            </div>
+            <div id="progress-chart"></div>
+            <div id="progress-stats" class="mt-3 grid grid-cols-3 gap-3 text-center text-sm"></div>
+        </div>
+
+        <!-- KIẾN THỨC -->
+        <div id="capture-knowledge" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-blue-800">📖 Kiến Thức Trọng Tâm</h2>
+                <button onclick="downloadKnowledgePDF()" class="download-btn">
+                    <span>📥</span> Tải Offline
+                </button>
+            </div>
+            
+            <!-- VIDEO BÀI HỌC -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🎬</span>
+                    <h3 class="font-bold text-blue-700 text-base">Video Bài Học</h3>
+                    <span class="text-xs bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">YouTube</span>
+                </div>
+                <div class="relative w-full rounded-2xl overflow-hidden border-2 border-blue-100 shadow-md bg-black" style="aspect-ratio: 16/9;">
+                    <iframe 
+                        id="lesson-video"
+                        src="https://www.youtube.com/embed/LfsV1C0kgRk?rel=0&modestbranding=1"
+                        title="Video Bài Học - Tam giác cân và đường trung trực"
+                        class="w-full h-full"
+                        style="width:100%; height:100%; position:absolute; top:0; left:0;"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 text-center">💡 Xem video trước khi làm bài tập bên dưới</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <!-- Hình 1: Tam giác cân định nghĩa -->
+                <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 space-y-3">
+                    <h3 class="font-bold text-blue-700">1. Tam giác cân — Định nghĩa</h3>
+                    <canvas id="fig1" width="200" height="170" class="geo-figure"></canvas>
+                    <ul class="space-y-1 text-slate-600">
+                        <li>• Tam giác cân là tam giác có <strong>hai cạnh bằng nhau</strong></li>
+                        <li>• △ABC cân tại A: $AB = AC$ (cạnh bên), $BC$ là đáy</li>
+                        <li>• Góc ở đáy: $\hat{B} = \hat{C}$</li>
+                        <li>• <em>Đường cao AH</em> đồng thời là đường trung tuyến và phân giác</li>
+                    </ul>
+                </div>
+                <!-- Hình 2: Tính chất tam giác cân -->
+                <div class="bg-green-50/50 p-5 rounded-2xl border border-green-100 space-y-3">
+                    <h3 class="font-bold text-green-700">2. Tính chất tam giác cân</h3>
+                    <canvas id="fig2" width="200" height="170" class="geo-figure"></canvas>
+                    <ul class="space-y-1 text-slate-600">
+                        <li>• <strong>Định lý 1:</strong> △cân tại A $\Rightarrow \hat{B} = \hat{C}$</li>
+                        <li>• <strong>Định lý 2 (đảo):</strong> $\hat{B} = \hat{C} \Rightarrow$ △ cân tại A</li>
+                        <li>• Tam giác đều: ba cạnh bằng nhau, ba góc $= 60°$</li>
+                        <li>• Tam giác đều là tam giác cân (đặc biệt)</li>
+                    </ul>
+                </div>
+                <!-- Hình 3: Đường trung trực -->
+                <div class="bg-purple-50/50 p-5 rounded-2xl border border-purple-100 space-y-3">
+                    <h3 class="font-bold text-purple-700">3. Đường trung trực của đoạn thẳng</h3>
+                    <canvas id="fig3" width="200" height="160" class="geo-figure"></canvas>
+                    <ul class="space-y-1 text-slate-600">
+                        <li>• Đường trung trực của đoạn thẳng là đường <strong>vuông góc với đoạn thẳng tại trung điểm</strong> của nó</li>
+                        <li>• $MA = MB$ (M là trung điểm $AB$)</li>
+                        <li>• <em>VD:</em> Trung điểm $AB$ là $M$, đường trung trực $\perp AB$ tại $M$</li>
+                    </ul>
+                </div>
+                <!-- Hình 4: Tính chất đường trung trực -->
+                <div class="bg-orange-50/50 p-5 rounded-2xl border border-orange-100 space-y-3">
+                    <h3 class="font-bold text-orange-700">4. Tính chất đường trung trực</h3>
+                    <canvas id="fig4" width="200" height="160" class="geo-figure"></canvas>
+                    <ul class="space-y-1 text-slate-600">
+                        <li>• <strong>Định lý:</strong> Điểm $P$ thuộc đường trung trực $\Leftrightarrow PA = PB$</li>
+                        <li>• Mọi điểm trên đường trung trực <strong>cách đều</strong> hai đầu mút</li>
+                        <li>• <strong>Ứng dụng:</strong> Đường trung trực của mỗi cạnh tam giác đi qua tâm đường tròn ngoại tiếp</li>
+                    </ul>
+                </div>
+            </div>
+
+            <script>
+            // ---- Tiện ích vẽ hình hình học chuẩn SGK ----
+            function drawLabel(ctx, text, x, y, color, size, bold) {
+                ctx.save();
+                ctx.font = (bold ? 'bold ' : '') + (size||14) + 'px serif';
+                ctx.fillStyle = color || '#1e293b';
+                ctx.fillText(text, x, y);
+                ctx.restore();
+            }
+
+            // Vẽ dấu bằng nhau (2 gạch chéo) trên một đoạn thẳng, tại vị trí t (0..1)
+            function drawEqualMark(ctx, x1, y1, x2, y2, t, color, count) {
+                count = count || 2;
+                const mx = x1 + (x2-x1)*t, my = y1 + (y2-y1)*t;
+                const dx = x2-x1, dy = y2-y1;
+                const len = Math.sqrt(dx*dx+dy*dy);
+                const ux = dx/len, uy = dy/len;   // unit vector dọc cạnh
+                const px = -uy, py = ux;           // vuông góc với cạnh
+                const gap = 4, hk = 6;             // khoảng cách gạch, nửa chiều dài
+                ctx.save();
+                ctx.strokeStyle = color || '#2563eb';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < count; i++) {
+                    const off = (i - (count-1)/2) * gap;
+                    const sx = mx + ux*off - px*hk;
+                    const sy = my + uy*off - py*hk;
+                    const ex = mx + ux*off + px*hk;
+                    const ey = my + uy*off + py*hk;
+                    ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+                }
+                ctx.restore();
+            }
+
+            // Vẽ cung góc tại đỉnh V, từ cạnh V->P1 đến cạnh V->P2
+            function drawAngleArc(ctx, vx, vy, p1x, p1y, p2x, p2y, r, color, lineWidth) {
+                const a1 = Math.atan2(p1y - vy, p1x - vx);
+                const a2 = Math.atan2(p2y - vy, p2x - vx);
+                ctx.save();
+                ctx.strokeStyle = color || '#16a34a';
+                ctx.lineWidth = lineWidth || 1.8;
+                ctx.beginPath();
+                // vẽ từ a1 đến a2 theo chiều counterclockwise=false (clockwise)
+                // chọn chiều ngắn hơn
+                ctx.arc(vx, vy, r, a1, a2, false);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Vẽ dấu vuông góc (hình chữ nhật nhỏ) tại điểm (px,py), 
+            // hai cạnh theo hướng (ux,uy) và (-uy,ux)
+            function drawRightAngle(ctx, px, py, ux, uy, s, color) {
+                s = s || 8;
+                ctx.save();
+                ctx.strokeStyle = color || '#ef4444';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(px + ux*s, py + uy*s);
+                ctx.lineTo(px + ux*s - uy*s, py + uy*s + ux*s);
+                ctx.lineTo(px - uy*s, py + ux*s);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // ============================================================
+            // HÌNH 1: Tam giác cân tại A - Định nghĩa + đường cao AH
+            // ============================================================
+            (function drawFig1() {
+                const c = document.getElementById('fig1');
+                if (!c) return;
+                const ctx = c.getContext('2d');
+                // Tọa độ đỉnh: A trên đỉnh, B trái, C phải
+                const A = {x:100, y:18};
+                const B = {x:22,  y:148};
+                const C = {x:178, y:148};
+                const H = {x:100, y:148}; // chân đường cao (trùng trung điểm BC vì cân)
+
+                // Vẽ tam giác fill
+                ctx.beginPath();
+                ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.lineTo(C.x,C.y); ctx.closePath();
+                ctx.fillStyle = '#dbeafe'; ctx.fill();
+                ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2.5; ctx.stroke();
+
+                // Đường cao AH (đứt nét đỏ)
+                ctx.save();
+                ctx.setLineDash([6,4]);
+                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(H.x,H.y); ctx.stroke();
+                ctx.restore();
+
+                // Dấu vuông góc tại H: hướng cạnh đáy (1,0), hướng cao (0,-1)
+                drawRightAngle(ctx, H.x, H.y, 1, 0, 7, '#ef4444');
+
+                // Dấu 2 gạch bằng nhau trên AB và AC (ở giữa mỗi cạnh)
+                drawEqualMark(ctx, A.x,A.y, B.x,B.y, 0.5, '#2563eb', 2);
+                drawEqualMark(ctx, A.x,A.y, C.x,C.y, 0.5, '#2563eb', 2);
+
+                // Nhãn
+                drawLabel(ctx,'A', A.x-8, A.y-6, '#1e40af', 15, true);
+                drawLabel(ctx,'B', B.x-18, B.y+4, '#1e40af', 15, true);
+                drawLabel(ctx,'C', C.x+5, C.y+4, '#1e40af', 15, true);
+                drawLabel(ctx,'H', H.x-4, H.y+16, '#dc2626', 12, false);
+            })();
+
+            // ============================================================
+            // HÌNH 2: Tam giác cân - Tính chất góc ở đáy bằng nhau
+            // ============================================================
+            (function drawFig2() {
+                const c = document.getElementById('fig2');
+                if (!c) return;
+                const ctx = c.getContext('2d');
+                const A = {x:100, y:18};
+                const B = {x:22,  y:148};
+                const C = {x:178, y:148};
+
+                // Fill + viền
+                ctx.beginPath();
+                ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.lineTo(C.x,C.y); ctx.closePath();
+                ctx.fillStyle = '#dcfce7'; ctx.fill();
+                ctx.strokeStyle = '#16a34a'; ctx.lineWidth = 2.5; ctx.stroke();
+
+                // Dấu 2 gạch bằng nhau trên AB và AC
+                drawEqualMark(ctx, A.x,A.y, B.x,B.y, 0.5, '#16a34a', 2);
+                drawEqualMark(ctx, A.x,A.y, C.x,C.y, 0.5, '#16a34a', 2);
+
+                // Cung góc B (tại B, từ cạnh BA đến cạnh BC) - bán kính 22
+                drawAngleArc(ctx, B.x,B.y, A.x,A.y, C.x,C.y, 22, '#16a34a', 1.8);
+                // Cung góc C (tại C, từ cạnh CB đến cạnh CA) - vì C bên phải, cần đảo chiều
+                // Vẽ từ CA -> CB (a1=angle to A, a2=angle to B), counterclockwise=true để ra cùng phía
+                const a1C = Math.atan2(A.y-C.y, A.x-C.x);
+                const a2C = Math.atan2(B.y-C.y, B.x-C.x);
+                ctx.save(); ctx.strokeStyle='#16a34a'; ctx.lineWidth=1.8;
+                ctx.beginPath(); ctx.arc(C.x, C.y, 22, a1C, a2C, true); ctx.stroke();
+                ctx.restore();
+
+                // Cung thứ 2 (kép) để biểu thị góc bằng nhau — r=28
+                drawAngleArc(ctx, B.x,B.y, A.x,A.y, C.x,C.y, 28, '#16a34a', 1.8);
+                ctx.save(); ctx.strokeStyle='#16a34a'; ctx.lineWidth=1.8;
+                ctx.beginPath(); ctx.arc(C.x, C.y, 28, a1C, a2C, true); ctx.stroke();
+                ctx.restore();
+
+                // Nhãn
+                drawLabel(ctx,'A', A.x-8, A.y-6, '#166534', 15, true);
+                drawLabel(ctx,'B', B.x-18, B.y+4, '#166534', 15, true);
+                drawLabel(ctx,'C', C.x+5, C.y+4, '#166534', 15, true);
+            })();
+
+            // ============================================================
+            // HÌNH 3: Đường trung trực của đoạn thẳng AB
+            // ============================================================
+            (function drawFig3() {
+                const c = document.getElementById('fig3');
+                if (!c) return;
+                const ctx = c.getContext('2d');
+                const A = {x:25,  y:110};
+                const B = {x:175, y:110};
+                const M = {x:100, y:110}; // trung điểm
+                const P = {x:100, y:35};  // điểm trên đường trung trực
+
+                // Đường trung trực (đỏ)
+                ctx.save();
+                ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(100,18); ctx.lineTo(100,148); ctx.stroke();
+                ctx.restore();
+
+                // Đoạn thẳng AB (tím)
+                ctx.save();
+                ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 2.5;
+                ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+                ctx.restore();
+
+                // Điểm M (trung điểm)
+                ctx.beginPath(); ctx.arc(M.x,M.y,4,0,Math.PI*2);
+                ctx.fillStyle='#7c3aed'; ctx.fill();
+
+                // Dấu vuông góc tại M: hướng AB=(1,0), hướng trung trực=(0,-1)
+                drawRightAngle(ctx, M.x, M.y, 1, 0, 8, '#dc2626');
+
+                // Dấu bằng nhau MA = MB (1 gạch mỗi cạnh)
+                drawEqualMark(ctx, A.x,A.y, M.x,M.y, 0.5, '#7c3aed', 1);
+                drawEqualMark(ctx, M.x,M.y, B.x,B.y, 0.5, '#7c3aed', 1);
+
+                // Điểm P trên đường trung trực
+                ctx.beginPath(); ctx.arc(P.x,P.y,4,0,Math.PI*2);
+                ctx.fillStyle='#059669'; ctx.fill();
+
+                // PA, PB (đứt nét xanh lá)
+                ctx.save();
+                ctx.setLineDash([5,3]); ctx.strokeStyle='#059669'; ctx.lineWidth=1.5;
+                ctx.beginPath(); ctx.moveTo(P.x,P.y); ctx.lineTo(A.x,A.y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(P.x,P.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+                ctx.restore();
+
+                // Dấu = trên PA và PB
+                drawEqualMark(ctx, P.x,P.y, A.x,A.y, 0.5, '#059669', 1);
+                drawEqualMark(ctx, P.x,P.y, B.x,B.y, 0.5, '#059669', 1);
+
+                // Nhãn
+                drawLabel(ctx,'A', A.x-18, A.y+4, '#6d28d9', 14, true);
+                drawLabel(ctx,'B', B.x+5,  A.y+4, '#6d28d9', 14, true);
+                drawLabel(ctx,'M', M.x-4,  M.y+18, '#7c3aed', 12, false);
+                drawLabel(ctx,'P', P.x+6,  P.y-4, '#059669', 13, true);
+                // Nhãn "d" (đường trung trực)
+                drawLabel(ctx,'d', 106, 26, '#dc2626', 12, false);
+            })();
+
+            // ============================================================
+            // HÌNH 4: Tính chất điểm thuộc đường trung trực
+            // ============================================================
+            (function drawFig4() {
+                const c = document.getElementById('fig4');
+                if (!c) return;
+                const ctx = c.getContext('2d');
+                const A = {x:25,  y:115};
+                const B = {x:175, y:115};
+                const M = {x:100, y:115};
+                const P = {x:100, y:38}; // điểm TRÊN đường trung trực: PA=PB
+
+                // Đường trung trực (cam)
+                ctx.save();
+                ctx.strokeStyle='#ea580c'; ctx.lineWidth=2;
+                ctx.beginPath(); ctx.moveTo(100,18); ctx.lineTo(100,148); ctx.stroke();
+                ctx.restore();
+
+                // Đoạn AB
+                ctx.save();
+                ctx.strokeStyle='#ea580c'; ctx.lineWidth=2.5;
+                ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+                ctx.restore();
+
+                // Trung điểm M
+                ctx.beginPath(); ctx.arc(M.x,M.y,4,0,Math.PI*2);
+                ctx.fillStyle='#ea580c'; ctx.fill();
+
+                // Dấu vuông góc tại M
+                drawRightAngle(ctx, M.x, M.y, 1, 0, 8, '#ea580c');
+
+                // Điểm P (xanh dương)
+                ctx.beginPath(); ctx.arc(P.x,P.y,4,0,Math.PI*2);
+                ctx.fillStyle='#2563eb'; ctx.fill();
+
+                // PA, PB (đứt nét xanh)
+                ctx.save();
+                ctx.setLineDash([5,3]); ctx.strokeStyle='#2563eb'; ctx.lineWidth=1.5;
+                ctx.beginPath(); ctx.moveTo(P.x,P.y); ctx.lineTo(A.x,A.y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(P.x,P.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+                ctx.restore();
+
+                // Dấu = trên PA và PB
+                drawEqualMark(ctx, P.x,P.y, A.x,A.y, 0.5, '#2563eb', 1);
+                drawEqualMark(ctx, P.x,P.y, B.x,B.y, 0.5, '#2563eb', 1);
+
+                // Nhãn
+                drawLabel(ctx,'A', A.x-18, A.y+4,  '#ea580c', 14, true);
+                drawLabel(ctx,'B', B.x+5,  B.y+4,  '#ea580c', 14, true);
+                drawLabel(ctx,'M', M.x-4,  M.y+18, '#ea580c', 12, false);
+                drawLabel(ctx,'P', P.x+6,  P.y-4,  '#2563eb', 13, true);
+                drawLabel(ctx,'d', 106, 26,         '#ea580c', 12, false);
+                drawLabel(ctx,'PA = PB', 108, 78,   '#2563eb', 10, false);
+            })();
+            </script>
+        </div>
+
+        <!-- TRÒ CHƠI: GHÉP CẶP THUẬT NGỮ -->
+        <div class="bg-white p-8 section-dashed shadow-md" id="match-game-section">
+            <h2 class="text-2xl font-black text-indigo-600 flex items-center gap-3 mb-2">
+                <span class="text-3xl">🧩</span> GHÉP CẶP KIẾN THỨC
+            </h2>
+            <p class="text-slate-600 mb-5 font-medium">Nối mỗi <strong>thuật ngữ / hình ảnh</strong> (cột trái) với <strong>định nghĩa / tính chất</strong> (cột phải) tương ứng. Ghép đúng = +10 điểm!</p>
+
+            <!-- Màn hình bắt đầu -->
+            <div id="match-start-screen" class="text-center py-8 space-y-4">
+                <div class="text-6xl mb-4">🔗</div>
+                <p class="text-slate-600 font-medium">Có <strong>6 cặp</strong> cần ghép. Nhấp vào thẻ bên trái, rồi nhấp vào thẻ bên phải để ghép!</p>
+                <p class="text-slate-400 text-sm font-bold">Ghép đúng +10 | Ghép sai -3 | Hoàn thành hết = Thưởng pháo hoa!</p>
+                <button onclick="startMatchGame()" class="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white font-black py-4 px-10 rounded-full shadow-lg transition-all active:scale-95 text-lg tracking-wide">
+                    🚀 BẮT ĐẦU!
+                </button>
+            </div>
+
+            <!-- Màn hình chơi -->
+            <div id="match-play-screen" class="hidden space-y-5">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div class="match-score-badge">⭐ Điểm: <span id="match-score">0</span></div>
+                    <div class="text-sm font-bold text-slate-500">Đã ghép: <span id="match-paired" class="text-indigo-600 font-black">0</span>/6</div>
+                    <div id="match-combo-badge" class="hidden match-score-badge" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">🔥 Combo x<span id="match-combo">0</span></div>
+                </div>
+                <!-- Thanh tiến độ -->
+                <div class="match-progress-bar">
+                    <div id="match-progress-inner" class="match-progress-inner" style="width:0%"></div>
+                </div>
+                <!-- Lưới ghép cặp -->
+                <div class="grid grid-cols-2 gap-3" id="match-grid">
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase text-center mb-2">Khái niệm</p>
+                        <div id="match-left" class="space-y-2"></div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-400 uppercase text-center mb-2">Định nghĩa / Tính chất</p>
+                        <div id="match-right" class="space-y-2"></div>
+                    </div>
+                </div>
+                <!-- Phản hồi -->
+                <div id="match-feedback" class="hidden text-center p-4 rounded-2xl font-bold text-lg animate-bounce-in"></div>
+            </div>
+
+            <!-- Màn hình kết quả -->
+            <div id="match-result-screen" class="hidden text-center space-y-6 py-6 animate-bounce-in">
+                <div class="text-6xl" id="match-result-emoji">🏆</div>
+                <div>
+                    <div class="text-5xl font-black text-indigo-600 mb-1" id="match-final-score">0</div>
+                    <div class="text-slate-500 font-bold" id="match-result-detail">điểm</div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-3">
+                        <div class="text-2xl font-black text-green-600" id="match-correct-count">0</div>
+                        <div class="text-xs text-green-600 font-bold">Ghép đúng</div>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-3">
+                        <div class="text-2xl font-black text-red-600" id="match-wrong-count">0</div>
+                        <div class="text-xs text-red-600 font-bold">Ghép sai</div>
+                    </div>
+                </div>
+                <p id="match-result-msg" class="text-indigo-600 font-bold animate-pulse text-lg"></p>
+                <div class="flex gap-3 justify-center flex-wrap">
+                    <button onclick="resetMatchGame()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-black py-3 px-8 rounded-full shadow-lg transition-all active:scale-95">
+                        🔄 Chơi lại
+                    </button>
+                    <button onclick="shuffleMatchGame()" class="bg-purple-500 hover:bg-purple-600 text-white font-black py-3 px-8 rounded-full shadow-lg transition-all active:scale-95">
+                        🎲 Đề mới
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MCQ -->
+        <div id="capture-mcq" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">📝 PHẦN 1: Trắc nghiệm (15 câu)</h2>
+                <button onclick="downloadMCQImage()" class="download-btn">
+                    <span>📥</span> Tải Đề Offline
+                </button>
+            </div>
+            <div id="mcq-container" class="space-y-8"></div>
+        </div>
+
+        <!-- T/F -->
+        <div id="capture-tf" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">✔️ PHẦN 2: Đúng/Sai (5 câu)</h2>
+                <button onclick="downloadTFImage()" class="download-btn">
+                    <span>📥</span> Tải Đề Offline
+                </button>
+            </div>
+            <div id="tf-container" class="space-y-10"></div>
+        </div>
+
+        <!-- FILL -->
+        <div id="capture-fill" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">🖋️ PHẦN 3: Điền đáp án (5 câu)</h2>
+                <button onclick="downloadFillImage()" class="download-btn">
+                    <span>📥</span> Tải Đề Offline
+                </button>
+            </div>
+            <div id="fill-container" class="space-y-6"></div>
+        </div>
+
+        <!-- NỘP BÀI -->
+        <div class="text-center py-12">
+            <button id="submit-btn" onclick="checkResults()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-16 rounded-full shadow-2xl transition-all active:scale-95 text-xl tracking-widest flex items-center gap-4 mx-auto">
+                <span>📤</span> NỘP BÀI
+            </button>
+            <div id="result-board" class="mt-8 hidden">
+                <div class="bg-white section-dashed p-8 inline-block shadow-xl w-full max-w-2xl">
+                    <div id="score-text" class="text-4xl font-black mb-2 p-6 rounded-2xl"></div>
+                    <div id="score-message" class="text-lg font-bold mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT -->
+    <div id="chatbot-container">
+        <button id="chatbot-toggle" onclick="toggleChatbot()">
+            💬
+            <span class="chatbot-label">Chatbot Hỗ Trợ</span>
+        </button>
+        <div id="chatbot-window">
+            <div id="chatbot-header">
+                <div>
+                    <div style="font-weight: bold; font-size: 1rem;">Trợ lý Toán học</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">Hỗ trợ 24/7</div>
+                </div>
+                <button id="chatbot-close" onclick="toggleChatbot()">×</button>
+            </div>
+            <div id="chatbot-messages">
+                <div class="chat-message bot">
+                    <div class="bot-avatar">💬</div>
+                    <div>
+                        <div class="message-content">
+                            Xin chào! Tôi có thể giúp bạn về <strong>tam giác cân và đường trung trực</strong>. Hãy hỏi tôi bất cứ điều gì!
+                        </div>
+                        <div class="quick-questions">
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Tam giác cân là gì?')">Tam giác cân?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Đường trung trực là gì?')">Trung trực?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Tính chất tam giác cân?')">Tính chất?</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chatbot-input-area">
+                <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button id="chatbot-send" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===================== QUESTION BANKS =====================
+        const QUESTION_BANK = {
+            nb: [
+                {
+                    q: "Tam giác cân là tam giác có:",
+                    opts: ["Hai cạnh bằng nhau", "Ba cạnh bằng nhau", "Một góc vuông", "Hai góc nhọn"],
+                    ans: 0,
+                    exp: "Tam giác cân là tam giác có hai cạnh bằng nhau.",
+                    hint: "Định nghĩa cơ bản nhất"
+                },
+                {
+                    q: "Trong tam giác ABC cân tại A, hai góc ở đáy là:",
+                    opts: ["$\\hat{B} = \\hat{C}$", "$\\hat{A} = \\hat{B}$", "$\\hat{A} = \\hat{C}$", "$\\hat{A} = \\hat{B} = \\hat{C}$"],
+                    ans: 0,
+                    exp: "Trong tam giác cân tại A, hai góc ở đáy $\\hat{B} = \\hat{C}$.",
+                    hint: "Đỉnh A nên góc ở đáy là B và C"
+                },
+                {
+                    q: "Đường trung trực của đoạn thẳng là đường:",
+                    opts: ["Vuông góc với đoạn thẳng tại trung điểm", "Song song với đoạn thẳng", "Đi qua một đầu mút và vuông góc", "Chia đoạn thẳng thành 3 phần bằng nhau"],
+                    ans: 0,
+                    exp: "Đường trung trực vuông góc với đoạn thẳng tại trung điểm của nó.",
+                    hint: "Trung = trung điểm, trực = vuông góc"
+                },
+                {
+                    q: "Điểm thuộc đường trung trực của đoạn thẳng AB thì:",
+                    opts: ["Cách đều A và B", "Cách A gấp đôi B", "Nằm trên AB", "Trùng với trung điểm AB"],
+                    ans: 0,
+                    exp: "Tính chất: điểm thuộc đường trung trực của AB $\\Leftrightarrow$ cách đều hai đầu mút A, B.",
+                    hint: "Tính chất của đường trung trực"
+                },
+                {
+                    q: "Tam giác đều có số đo mỗi góc là:",
+                    opts: ["$60°$", "$45°$", "$90°$", "$120°$"],
+                    ans: 0,
+                    exp: "Tam giác đều: ba góc bằng nhau, mỗi góc $= 180° \\div 3 = 60°$.",
+                    hint: "Tổng ba góc = 180°, ba góc bằng nhau"
+                },
+                {
+                    q: "Tam giác ABC cân tại A có $AB = AC = 5$ cm, $BC = 6$ cm. Cạnh bên của tam giác là:",
+                    opts: ["$AB$ và $AC$", "Chỉ $BC$", "$AB$ và $BC$", "$AC$ và $BC$"],
+                    ans: 0,
+                    exp: "Tam giác cân tại A có hai cạnh bên là AB và AC bằng nhau, cạnh đáy là BC.",
+                    hint: "Cân tại A → hai cạnh từ A là cạnh bên"
+                },
+                {
+                    q: "Trong tam giác cân, đường cao từ đỉnh xuống đáy đồng thời là:",
+                    opts: ["Đường trung tuyến và phân giác của đỉnh đó", "Chỉ là đường cao", "Đường phân giác của góc đáy", "Đường trung trực của cạnh bên"],
+                    ans: 0,
+                    exp: "Trong tam giác cân, đường cao từ đỉnh đồng thời là đường trung tuyến, phân giác góc đỉnh và trung trực của đáy.",
+                    hint: "Ba đường đặc biệt trùng nhau ở đỉnh cân"
+                }
+            ],
+            th: [
+                {
+                    q: "Tam giác ABC cân tại A có $\\hat{A} = 50°$. Góc B bằng:",
+                    opts: ["$65°$", "$50°$", "$130°$", "$45°$"],
+                    ans: 0,
+                    exp: "$\\hat{B} = \\hat{C} = (180° - 50°) \\div 2 = 65°$.",
+                    hint: "Tổng ba góc = 180°, góc B = góc C"
+                },
+                {
+                    q: "Tam giác ABC cân tại A, $\\hat{B} = 70°$. Góc A bằng:",
+                    opts: ["$40°$", "$70°$", "$110°$", "$35°$"],
+                    ans: 0,
+                    exp: "$\\hat{A} = 180° - 2 \\times 70° = 40°$.",
+                    hint: "Góc B = Góc C = 70°, tổng ba góc = 180°"
+                },
+                {
+                    q: "M là trung điểm của AB. Điểm P thỏa mãn $PA = PB$ thì P nằm trên:",
+                    opts: ["Đường trung trực của AB", "Đường thẳng AB", "Đường tròn tâm M", "Đoạn thẳng MA"],
+                    ans: 0,
+                    exp: "Điểm cách đều hai đầu mút A, B nằm trên đường trung trực của AB.",
+                    hint: "Tính chất đảo của đường trung trực"
+                },
+                {
+                    q: "Tam giác ABC cân tại C có $CA = CB$. Khẳng định nào đúng?",
+                    opts: ["$\\hat{A} = \\hat{B}$", "$\\hat{A} = \\hat{C}$", "$\\hat{B} = \\hat{C}$", "$CA = AB$"],
+                    ans: 0,
+                    exp: "Tam giác cân tại C có hai góc ở đáy AB bằng nhau, tức $\\hat{A} = \\hat{B}$.",
+                    hint: "Đỉnh C → góc ở đáy là A và B"
+                },
+                {
+                    q: "Đoạn thẳng AB có trung điểm M. Đường trung trực của AB tạo với AB một góc:",
+                    opts: ["$90°$", "$60°$", "$45°$", "$180°$"],
+                    ans: 0,
+                    exp: "Đường trung trực vuông góc ($90°$) với đoạn thẳng tại trung điểm.",
+                    hint: "Trực = vuông góc"
+                }
+            ],
+            vd: [
+                {
+                    q: "Tam giác ABC cân tại A có $\\hat{A} = 2\\hat{B}$. Góc A bằng:",
+                    opts: ["$90°$", "$60°$", "$72°$", "$36°$"],
+                    ans: 0,
+                    exp: "Đặt $\\hat{B} = x$, vì cân tại A: $\\hat{C} = x$. Tổng góc: $2x + x + x = 180° \\Rightarrow 4x = 180° \\Rightarrow x = 45°$. Sai, thử lại: $\\hat{A} = 2\\hat{B}$ và $\\hat{B} = \\hat{C}$: $2x + 2x = 180°\\Rightarrow x=45°$, A = 90°.",
+                    hint: "Đặt góc B = x, lập phương trình"
+                },
+                {
+                    q: "Điểm P cách đều ba đỉnh của một tam giác. P là:",
+                    opts: ["Tâm đường tròn ngoại tiếp", "Trọng tâm", "Trực tâm", "Tâm đường tròn nội tiếp"],
+                    ans: 0,
+                    exp: "Điểm cách đều ba đỉnh là tâm đường tròn ngoại tiếp — giao của ba đường trung trực.",
+                    hint: "Đường trung trực liên quan đến điểm cách đều hai đầu mút"
+                },
+                {
+                    q: "Tam giác ABC cân tại A, đường cao AH có $AH = 8$ cm, $BH = 6$ cm. Cạnh AB bằng:",
+                    opts: ["$10$ cm", "$14$ cm", "$\\sqrt{28}$ cm", "$8$ cm"],
+                    ans: 0,
+                    exp: "$AB = \\sqrt{AH^2 + BH^2} = \\sqrt{64 + 36} = \\sqrt{100} = 10$ cm (định lý Pythagore).",
+                    hint: "AHB là tam giác vuông tại H"
+                }
+            ]
+        };
+
+        const TF_BANK = [
+            {
+                q: "Tam giác cân — Định nghĩa",
+                items: [
+                    {t: "a) Tam giác cân là tam giác có hai cạnh bằng nhau", a: true, exp: "Đúng! Đây là định nghĩa của tam giác cân.", h: "Cân = hai cạnh bằng"},
+                    {t: "b) Tam giác ABC cân tại A thì $\\hat{A} = \\hat{B}$", a: false, exp: "Sai! Tam giác cân tại A có hai góc ở đáy bằng nhau: $\\hat{B} = \\hat{C}$.", h: "Cân tại A → đáy là BC → góc B = góc C"},
+                    {t: "c) Tam giác đều là một trường hợp đặc biệt của tam giác cân", a: true, exp: "Đúng! Tam giác đều có ba cạnh bằng nhau, nên cũng là tam giác cân.", h: "3 cạnh bằng → chọn bất kỳ 2 cạnh cũng bằng nhau"},
+                    {t: "d) Nếu tam giác ABC có $\\hat{B} = \\hat{C}$ thì tam giác đó cân tại A", a: true, exp: "Đúng! Đây là định lý đảo: hai góc bằng nhau → tam giác cân tại đỉnh còn lại.", h: "Định lý đảo: góc B = góc C → cân tại A"}
+                ]
+            },
+            {
+                q: "Tính chất tam giác cân",
+                items: [
+                    {t: "a) Trong tam giác cân, đường cao từ đỉnh là đường trung tuyến", a: true, exp: "Đúng! Trong tam giác cân, đường cao từ đỉnh đồng thời là trung tuyến và phân giác.", h: "Ba đường đặc biệt từ đỉnh trùng nhau"},
+                    {t: "b) Tam giác cân có $\\hat{A} = 80°$, khi đó $\\hat{B} = 80°$", a: false, exp: "Sai! Nếu cân tại A: $\\hat{B} = \\hat{C} = (180° - 80°)/2 = 50°$.", h: "Cần biết cân tại đỉnh nào"},
+                    {t: "c) Tam giác cân tại A thì AB = AC", a: true, exp: "Đúng! Tam giác cân tại A có hai cạnh bên AB = AC.", h: "Cân tại A → hai cạnh từ A bằng nhau"},
+                    {t: "d) Mọi tam giác cân đều có một góc tù", a: false, exp: "Sai! Tam giác cân có thể có ba góc nhọn (VD: tam giác đều) hoặc một góc tù.", h: "Không nhất thiết phải có góc tù"}
+                ]
+            },
+            {
+                q: "Đường trung trực của đoạn thẳng",
+                items: [
+                    {t: "a) Đường trung trực của AB đi qua trung điểm M của AB và vuông góc với AB", a: true, exp: "Đúng! Đó chính là định nghĩa đường trung trực.", h: "Trung = trung điểm, trực = vuông góc"},
+                    {t: "b) Trung điểm M của AB nằm trên đường trung trực của AB", a: true, exp: "Đúng! Đường trung trực đi qua trung điểm M.", h: "Đường trung trực đi qua trung điểm"},
+                    {t: "c) Chỉ có một điểm duy nhất cách đều A và B", a: false, exp: "Sai! Tất cả các điểm trên đường trung trực đều cách đều A và B.", h: "Có vô số điểm trên đường trung trực"},
+                    {t: "d) Đường trung trực của AB vuông góc với AB tại trung điểm", a: true, exp: "Đúng! Đây là tính chất cơ bản của đường trung trực.", h: "Định nghĩa trực tiếp"}
+                ]
+            },
+            {
+                q: "Tính chất điểm trên đường trung trực",
+                items: [
+                    {t: "a) Nếu $PA = PB$ thì P nằm trên đường trung trực của AB", a: true, exp: "Đúng! Đây là định lý đảo: $PA = PB \\Rightarrow$ P thuộc đường trung trực.", h: "Định lý đảo"},
+                    {t: "b) Điểm P cách đều A và B thì P là trung điểm của AB", a: false, exp: "Sai! P có thể nằm bất kỳ đâu trên đường trung trực, không chỉ là trung điểm.", h: "Trung điểm chỉ là một điểm đặc biệt"},
+                    {t: "c) Tâm đường tròn ngoại tiếp tam giác là giao của ba đường trung trực", a: true, exp: "Đúng! Tâm ngoại tiếp là điểm cách đều ba đỉnh, nên thuộc cả ba đường trung trực.", h: "Giao ba đường trung trực = tâm ngoại tiếp"},
+                    {t: "d) Đường trung trực của đoạn thẳng là duy nhất", a: true, exp: "Đúng! Mỗi đoạn thẳng có đúng một đường trung trực.", h: "Qua một điểm chỉ có một đường vuông góc với một đường thẳng"}
+                ]
+            },
+            {
+                q: "Vận dụng tổng hợp",
+                items: [
+                    {t: "a) Nếu tam giác ABC cân tại A có $\\hat{B} = 55°$ thì $\\hat{A} = 70°$", a: true, exp: "Đúng! $\\hat{A} = 180° - 2 \\times 55° = 70°$.", h: "Góc A = 180° - 2 × góc B"},
+                    {t: "b) Tam giác vuông cân có hai góc nhọn đều bằng $45°$", a: true, exp: "Đúng! Vuông cân: $90° + 45° + 45° = 180°$.", h: "Vuông: một góc 90°; cân: hai góc còn lại bằng nhau"},
+                    {t: "c) Điểm I là giao của ba đường trung trực tam giác thì $IA = IB = IC$", a: true, exp: "Đúng! I thuộc trung trực BC nên $IB = IC$; thuộc trung trực AC nên $IA = IC$. Suy ra $IA = IB = IC$.", h: "I thuộc cả ba đường trung trực"},
+                    {t: "d) Đường cao của tam giác cân từ đỉnh cân và đường phân giác từ đỉnh đó là hai đường khác nhau", a: false, exp: "Sai! Trong tam giác cân, đường cao từ đỉnh cân chính là đường phân giác đó.", h: "Ba đường đặc biệt từ đỉnh cân trùng nhau"}
+                ]
+            }
+        ];
+
+        const FILL_BANK = [
+            {q: "Tam giác ABC cân tại A có $\\hat{A} = 40°$. Góc B =", a: "70", exp: "$\\hat{B} = (180° - 40°) \\div 2 = 70°$", hint: "Góc B = Góc C, tổng ba góc = 180°"},
+            {q: "Tam giác ABC cân tại A, $\\hat{B} = 65°$. Góc A =", a: "50", exp: "$\\hat{A} = 180° - 65° - 65° = 50°$", hint: "Góc B = Góc C = 65°"},
+            {q: "Tam giác đều có số đo mỗi góc =", a: "60", exp: "$180° \\div 3 = 60°$", hint: "Ba góc bằng nhau, tổng = 180°"},
+            {q: "Đường trung trực của AB tạo với AB một góc có số đo =", a: "90", exp: "Đường trung trực vuông góc ($90°$) với đoạn thẳng.", hint: "Trực = vuông góc"},
+            {q: "Điểm P thuộc đường trung trực của AB. Biết $PA = 10$ cm thì $PB$ =", a: "10", exp: "Điểm trên đường trung trực cách đều hai đầu mút: $PA = PB = 10$ cm.", hint: "PA = PB (tính chất đường trung trực)"},
+            {q: "Tam giác ABC cân tại A, đường cao AH với $AH = 6$, $BC = 16$. Khi đó $BH$ =", a: "8", exp: "AH là trung tuyến nên $BH = BC \\div 2 = 8$ cm.", hint: "Đường cao từ đỉnh cân cũng là trung tuyến"},
+            {q: "Tam giác ABC cân tại A, $AB = 5$ cm, $AH = 4$ cm (H là chân đường cao). Khi đó $BH$ =", a: "3", exp: "$BH = \\sqrt{AB^2 - AH^2} = \\sqrt{25 - 16} = 3$ cm.", hint: "Định lý Pythagore trong tam giác AHB vuông tại H"},
+            {q: "Tam giác cân tại A có $\\hat{A} = \\hat{B}$. Khi đó $\\hat{A}$ =", a: "60", exp: "Nếu $\\hat{A} = \\hat{B}$ và $\\hat{B} = \\hat{C}$ thì ba góc bằng nhau: mỗi góc $= 60°$.", hint: "A = B và B = C → tam giác đều"},
+            {q: "Tam giác ABC cân tại C có $\\hat{C} = 120°$. Góc A =", a: "30", exp: "$\\hat{A} = \\hat{B} = (180° - 120°) \\div 2 = 30°$.", hint: "Cân tại C → góc A = góc B"},
+            {q: "Đoạn thẳng AB dài 12 cm. Đường trung trực đi qua trung điểm M, $AM$ =", a: "6", exp: "$AM = AB \\div 2 = 6$ cm (M là trung điểm).", hint: "M là trung điểm AB"},
+            {q: "Tam giác ABC cân tại A có chu vi 26 cm, $BC = 8$ cm. Cạnh AB =", a: "9", exp: "$AB = AC = (26 - 8) \\div 2 = 9$ cm.", hint: "AB = AC, AB + AC + BC = 26"},
+            {q: "Điểm I là giao ba đường trung trực tam giác ABC, $IA = 5$ cm thì $IB$ =", a: "5", exp: "$IA = IB = IC$ (tâm đường tròn ngoại tiếp).", hint: "I là tâm ngoại tiếp: cách đều ba đỉnh"}
+        ];
+
+        // ===================== MATCH GAME DATA =====================
+        const MATCH_BANK = [
+            [
+                { left: "Tam giác cân", right: "Có hai cạnh bằng nhau" },
+                { left: "Tam giác đều", right: "Có ba cạnh bằng nhau, mỗi góc = 60°" },
+                { left: "Góc ở đáy tam giác cân", right: "Hai góc bằng nhau (ở đáy)" },
+                { left: "Đường trung trực của AB", right: "Vuông góc với AB tại trung điểm AB" },
+                { left: "Điểm thuộc đường trung trực", right: "Cách đều hai đầu mút A và B" },
+                { left: "Tâm đường tròn ngoại tiếp", right: "Giao ba đường trung trực tam giác" },
+            ],
+            [
+                { left: "Tam giác cân tại A", right: "$\\hat{B} = \\hat{C}$ (góc ở đáy)" },
+                { left: "$\\hat{B} = \\hat{C}$ trong △ABC", right: "△ABC cân tại A (định lý đảo)" },
+                { left: "Đường cao từ đỉnh tam giác cân", right: "Đồng thời là trung tuyến và phân giác" },
+                { left: "Tam giác vuông cân", right: "Một góc 90°, hai góc còn lại đều 45°" },
+                { left: "Trung điểm đoạn thẳng AB", right: "Điểm M sao cho MA = MB" },
+                { left: "$PA = PB$", right: "P nằm trên đường trung trực của AB" },
+            ],
+            [
+                { left: "Đường cao AH trong △ABC cân tại A", right: "Là đường trung trực của cạnh đáy BC" },
+                { left: "Tổng ba góc tam giác cân", right: "$180°$" },
+                { left: "Tam giác cân có $\\hat{A} = 100°$", right: "Hai góc đáy mỗi cái $40°$" },
+                { left: "Tâm ngoại tiếp △ và ba đỉnh", right: "Cách đều nhau (bán kính ngoại tiếp)" },
+                { left: "Đường trung trực tạo với đoạn thẳng", right: "Góc vuông 90°" },
+                { left: "Số đường trung trực của mỗi đoạn thẳng", right: "Đúng một đường" },
+            ]
+        ];
+
+        let matchState = { score: 0, correct: 0, wrong: 0, combo: 0, bestCombo: 0, paired: 0, total: 6, selectedLeft: null, selectedRight: null, matched: new Set(), pairs: [], setIndex: 0 };
+
+        function shuffleArray(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function startMatchGame() {
+            matchState.setIndex = Math.floor(Math.random() * MATCH_BANK.length);
+            resetMatchState();
+            document.getElementById('match-start-screen').classList.add('hidden');
+            document.getElementById('match-result-screen').classList.add('hidden');
+            document.getElementById('match-play-screen').classList.remove('hidden');
+            renderMatchGame();
+        }
+
+        function shuffleMatchGame() {
+            matchState.setIndex = (matchState.setIndex + 1) % MATCH_BANK.length;
+            resetMatchState();
+            document.getElementById('match-result-screen').classList.add('hidden');
+            document.getElementById('match-play-screen').classList.remove('hidden');
+            renderMatchGame();
+        }
+
+        function resetMatchState() {
+            matchState.score = 0;
+            matchState.correct = 0;
+            matchState.wrong = 0;
+            matchState.combo = 0;
+            matchState.bestCombo = 0;
+            matchState.paired = 0;
+            matchState.selectedLeft = null;
+            matchState.selectedRight = null;
+            matchState.matched = new Set();
+            matchState.pairs = MATCH_BANK[matchState.setIndex];
+            document.getElementById('match-score').textContent = '0';
+            document.getElementById('match-paired').textContent = '0';
+            document.getElementById('match-progress-inner').style.width = '0%';
+            document.getElementById('match-feedback').classList.add('hidden');
+            document.getElementById('match-combo-badge').classList.add('hidden');
+        }
+
+        function renderMatchGame() {
+            const pairs = matchState.pairs;
+            const leftItems = shuffleArray(pairs.map((p, i) => ({ text: p.left, idx: i })));
+            const rightItems = shuffleArray(pairs.map((p, i) => ({ text: p.right, idx: i })));
+
+            const leftDiv = document.getElementById('match-left');
+            const rightDiv = document.getElementById('match-right');
+            leftDiv.innerHTML = '';
+            rightDiv.innerHTML = '';
+
+            leftItems.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'match-card w-full';
+                btn.innerHTML = item.text;
+                btn.dataset.idx = item.idx;
+                btn.dataset.side = 'left';
+                btn.id = `match-left-${item.idx}`;
+                btn.onclick = () => selectMatchCard(item.idx, 'left');
+                leftDiv.appendChild(btn);
+            });
+
+            rightItems.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'match-card w-full';
+                btn.innerHTML = item.text;
+                btn.dataset.idx = item.idx;
+                btn.dataset.side = 'right';
+                btn.id = `match-right-${item.idx}`;
+                btn.onclick = () => selectMatchCard(item.idx, 'right');
+                rightDiv.appendChild(btn);
+            });
+
+            if (window.MathJax) MathJax.typeset();
+        }
+
+        function selectMatchCard(idx, side) {
+            if (matchState.matched.has(idx)) return;
+            const cardId = `match-${side}-${idx}`;
+            const card = document.getElementById(cardId);
+
+            if (side === 'left') {
+                // Deselect previous left
+                if (matchState.selectedLeft !== null && matchState.selectedLeft !== idx) {
+                    document.getElementById(`match-left-${matchState.selectedLeft}`).classList.remove('selected');
+                }
+                if (matchState.selectedLeft === idx) {
+                    card.classList.remove('selected');
+                    matchState.selectedLeft = null;
+                    return;
+                }
+                matchState.selectedLeft = idx;
+                card.classList.add('selected');
+            } else {
+                // Deselect previous right
+                if (matchState.selectedRight !== null && matchState.selectedRight !== idx) {
+                    document.getElementById(`match-right-${matchState.selectedRight}`).classList.remove('selected');
+                }
+                if (matchState.selectedRight === idx) {
+                    card.classList.remove('selected');
+                    matchState.selectedRight = null;
+                    return;
+                }
+                matchState.selectedRight = idx;
+                card.classList.add('selected');
+            }
+
+            // If both selected
+            if (matchState.selectedLeft !== null && matchState.selectedRight !== null) {
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const lIdx = matchState.selectedLeft;
+            const rIdx = matchState.selectedRight;
+            const lCard = document.getElementById(`match-left-${lIdx}`);
+            const rCard = document.getElementById(`match-right-${rIdx}`);
+            const fb = document.getElementById('match-feedback');
+
+            if (lIdx === rIdx) {
+                // CORRECT
+                matchState.score += 10;
+                matchState.correct++;
+                matchState.paired++;
+                matchState.combo++;
+                if (matchState.combo > matchState.bestCombo) matchState.bestCombo = matchState.combo;
+                matchState.matched.add(lIdx);
+
+                lCard.classList.remove('selected');
+                rCard.classList.remove('selected');
+                lCard.classList.add('matched');
+                rCard.classList.add('matched');
+
+                document.getElementById('match-score').textContent = matchState.score;
+                document.getElementById('match-paired').textContent = matchState.paired;
+                document.getElementById('match-progress-inner').style.width = `${(matchState.paired / 6) * 100}%`;
+
+                if (matchState.combo >= 2) {
+                    document.getElementById('match-combo-badge').classList.remove('hidden');
+                    document.getElementById('match-combo').textContent = matchState.combo;
+                    fb.innerHTML = `🔥 ĐÚNG! +10 điểm — Combo x${matchState.combo}!`;
+                    fb.className = 'text-center p-4 rounded-2xl font-bold text-lg animate-bounce-in bg-green-100 text-green-700 border-2 border-green-300';
+                    if (matchState.combo >= 3) confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 }, colors: ['#6366f1','#8b5cf6','#22c55e'] });
+                } else {
+                    fb.innerHTML = '✅ ĐÚNG! +10 điểm';
+                    fb.className = 'text-center p-4 rounded-2xl font-bold text-lg animate-bounce-in bg-green-100 text-green-700 border-2 border-green-300';
+                }
+                fb.classList.remove('hidden');
+
+                if (matchState.paired === 6) {
+                    setTimeout(() => endMatchGame(), 800);
+                }
+            } else {
+                // WRONG
+                matchState.score = Math.max(0, matchState.score - 3);
+                matchState.wrong++;
+                matchState.combo = 0;
+                document.getElementById('match-combo-badge').classList.add('hidden');
+
+                lCard.classList.remove('selected');
+                rCard.classList.remove('selected');
+                lCard.classList.add('wrong-flash');
+                rCard.classList.add('wrong-flash');
+
+                fb.innerHTML = '❌ CHƯA ĐÚNG! -3 điểm. Thử lại nhé!';
+                fb.className = 'text-center p-4 rounded-2xl font-bold text-lg animate-bounce-in bg-red-100 text-red-700 border-2 border-red-300';
+                fb.classList.remove('hidden');
+
+                document.getElementById('match-score').textContent = matchState.score;
+
+                setTimeout(() => {
+                    lCard.classList.remove('wrong-flash');
+                    rCard.classList.remove('wrong-flash');
+                }, 600);
+            }
+
+            matchState.selectedLeft = null;
+            matchState.selectedRight = null;
+        }
+
+        function endMatchGame() {
+            document.getElementById('match-play-screen').classList.add('hidden');
+            const rs = document.getElementById('match-result-screen');
+            rs.classList.remove('hidden');
+            document.getElementById('match-final-score').textContent = matchState.score;
+            document.getElementById('match-result-detail').textContent = `(${matchState.correct} đúng / ${matchState.wrong} sai)`;
+            document.getElementById('match-correct-count').textContent = matchState.correct;
+            document.getElementById('match-wrong-count').textContent = matchState.wrong;
+
+            const s = matchState.score;
+            let emoji = '🎯', msg = 'Luyện tập thêm nhé!';
+            if (s >= 55) { emoji = '🏆'; msg = '🌟 XUẤT SẮC! Bạn nắm chắc kiến thức rồi!'; confetti({ particleCount: 250, spread: 200 }); }
+            else if (s >= 40) { emoji = '🥇'; msg = '👏 RẤT TỐT! Còn một vài lỗi nhỏ thôi!'; confetti({ particleCount: 120, spread: 120 }); }
+            else if (s >= 25) { emoji = '🎯'; msg = '💪 KHÁ ĐẤY! Đọc lại lý thuyết rồi thử lại!'; }
+            document.getElementById('match-result-emoji').textContent = emoji;
+            document.getElementById('match-result-msg').textContent = msg;
+        }
+
+        function resetMatchGame() {
+            resetMatchState();
+            document.getElementById('match-result-screen').classList.add('hidden');
+            document.getElementById('match-play-screen').classList.remove('hidden');
+            renderMatchGame();
+        }
+
+        // ===================== MAIN QUIZ =====================
+        let MCQ = [], TF = [], FILL = [];
+        let userMcq = Array(15).fill(null);
+        let userTf = Array(5).fill(null).map(() => Array(4).fill(null));
+        let submitted = false;
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        function generateQuestions() {
+            MCQ = [];
+            const nb = [...QUESTION_BANK.nb]; shuffle(nb);
+            for (let i = 0; i < 7; i++) {
+                const q = nb[i % nb.length];
+                MCQ.push(q.gen ? {...q.gen(), l: "nb"} : {...q, l: "nb"});
+            }
+            const th = [...QUESTION_BANK.th]; shuffle(th);
+            for (let i = 0; i < 5; i++) {
+                const q = th[i % th.length];
+                MCQ.push(q.gen ? {...q.gen(), l: "th"} : {...q, l: "th"});
+            }
+            const vd = [...QUESTION_BANK.vd]; shuffle(vd);
+            for (let i = 0; i < 3; i++) {
+                const q = vd[i % vd.length];
+                MCQ.push(q.gen ? {...q.gen(), l: "vd"} : {...q, l: "vd"});
+            }
+            const tfPool = [...TF_BANK]; shuffle(tfPool); TF = tfPool.slice(0, 5);
+            const fillPool = [...FILL_BANK]; shuffle(fillPool); FILL = fillPool.slice(0, 5);
+        }
+
+        function init() { generateQuestions(); renderAll(); initStats(); }
+
+        function toggleHint(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function renderAll() {
+            const mcqBox = document.getElementById('mcq-container');
+            mcqBox.innerHTML = "";
+            MCQ.forEach((d, i) => {
+                if (!d || !d.q) return;
+                let badge = '';
+                if (d.l === 'nb') badge = '<span class="level-badge level-nhan-biet">NHẬN BIẾT</span>';
+                else if (d.l === 'th') badge = '<span class="level-badge level-thong-hieu">THÔNG HIỂU</span>';
+                else if (d.l === 'vd') badge = '<span class="level-badge level-van-dung">VẬN DỤNG</span>';
+                const opts = (d.opts || []).map((o, j) =>
+                    `<div onclick="setMcq(${i},${j})" id="mcq-${i}-${j}" class="mcq-option p-3 bg-white shadow-sm flex items-center gap-3 mb-2" style="min-height:48px">
+                        <span class="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 font-bold text-xs">${String.fromCharCode(65+j)}</span>
+                        <span style="line-height:1.5">${o}</span>
+                    </div>`
+                ).join('');
+                mcqBox.innerHTML += `
+                    <div class="p-5 border-b" id="mcq-card-${i}">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="font-bold text-blue-600">CÂU ${i+1} ${badge}</span>
+                            <button onclick="toggleHint('mcq-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                        </div>
+                        <div class="mb-4 text-slate-700 font-medium" style="line-height:1.8">${d.q}</div>
+                        <div id="mcq-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">${opts}</div>
+                        <div id="mcq-fb-${i}" class="feedback-box"></div>
+                    </div>`;
+            });
+
+            const tfBox = document.getElementById('tf-container');
+            tfBox.innerHTML = "";
+            TF.forEach((d, i) => {
+                const rows = d.items.map((it, j) => `
+                    <tr class="border-b">
+                        <td class="py-4 px-4 text-sm font-medium" style="line-height:1.8">
+                            ${it.t}
+                            <button onclick="toggleHint('tf-hint-${i}-${j}')" class="hint-btn">💡 Gợi ý</button>
+                            <div id="tf-hint-${i}-${j}" class="hint-box">💡 ${it.h}</div>
+                            <div id="tf-fb-${i}-${j}" class="feedback-box"></div>
+                        </td>
+                        <td class="p-2 text-center">
+                            <button onclick="setTf(${i},${j},true)" id="tf-btn-${i}-${j}-t" class="check-btn w-10 h-10 rounded-xl">Đ</button>
+                        </td>
+                        <td class="p-2 text-center">
+                            <button onclick="setTf(${i},${j},false)" id="tf-btn-${i}-${j}-s" class="check-btn w-10 h-10 rounded-xl">S</button>
+                        </td>
+                    </tr>`).join('');
+                tfBox.innerHTML += `
+                    <div class="bg-slate-50 rounded-2xl border overflow-hidden">
+                        <div class="bg-white p-4 font-bold text-blue-800 border-b">Câu ${i+1}: ${d.q}</div>
+                        <table class="w-full"><tbody>${rows}</tbody></table>
+                    </div>`;
+            });
+
+            const fillBox = document.getElementById('fill-container');
+            fillBox.innerHTML = "";
+            FILL.forEach((d, i) => {
+                fillBox.innerHTML += `
+                    <div class="bg-slate-50 p-5 rounded-2xl border space-y-2">
+                        <div class="flex items-start justify-between">
+                            <span style="line-height:1.8"><strong>Câu ${i+1}.</strong> ${d.q}</span>
+                            <button onclick="toggleHint('fill-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                        </div>
+                        <div id="fill-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                        <div class="flex items-center gap-4 mt-2">
+                            <input type="text" id="fill-${i}" class="fill-input">
+                        </div>
+                        <div id="fill-fb-${i}" class="feedback-box"></div>
+                    </div>`;
+            });
+            if (window.MathJax) MathJax.typeset();
+        }
+
+        function setMcq(q, o) {
+            if (submitted) return;
+            userMcq[q] = o;
+            document.getElementById(`mcq-card-${q}`).querySelectorAll('.mcq-option').forEach(opt => opt.classList.remove('selected'));
+            document.getElementById(`mcq-${q}-${o}`).classList.add('selected');
+        }
+
+        function setTf(q, i, v) {
+            if (submitted) return;
+            userTf[q][i] = v;
+            document.getElementById(`tf-btn-${q}-${i}-t`).classList.remove('selected-true');
+            document.getElementById(`tf-btn-${q}-${i}-s`).classList.remove('selected-false');
+            if (v) document.getElementById(`tf-btn-${q}-${i}-t`).classList.add('selected-true');
+            else document.getElementById(`tf-btn-${q}-${i}-s`).classList.add('selected-false');
+        }
+
+        function celebrate(score) {
+            const pct = (score / 10) * 100;
+            if (pct >= 90) {
+                const end = Date.now() + 3000;
+                const interval = setInterval(() => {
+                    if (Date.now() > end) { clearInterval(interval); return; }
+                    confetti({ particleCount: 100, spread: 160, origin: { y: 0.6 } });
+                }, 250);
+            } else if (pct >= 70) {
+                confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+                setTimeout(() => confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } }), 500);
+            } else if (pct >= 50) {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            } else {
+                confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
+            }
+        }
+
+        function checkResults() {
+            submitted = true;
+            let correct = 0;
+            let total = MCQ.length + TF.length * 4 + FILL.length;
+
+            MCQ.forEach((d, i) => {
+                const fb = document.getElementById(`mcq-fb-${i}`);
+                const opts = document.getElementById(`mcq-card-${i}`).querySelectorAll('.mcq-option');
+                const correctIdx = d.ans;
+                opts[correctIdx].classList.add('correct');
+                if (userMcq[i] === correctIdx) {
+                    correct++;
+                    fb.innerHTML = "✔️ <strong>Đúng!</strong> " + d.exp;
+                    fb.className = "feedback-box block text-green-700 bg-green-50 border-green-300";
+                    fb.style.display = 'block';
+                } else {
+                    if (userMcq[i] !== null) opts[userMcq[i]].classList.add('wrong');
+                    fb.innerHTML = "❌ <strong>Sai!</strong> " + d.exp;
+                    fb.className = "feedback-box block text-red-700 bg-red-50 border-red-300";
+                    fb.style.display = 'block';
+                }
+            });
+
+            TF.forEach((d, i) => {
+                d.items.forEach((it, j) => {
+                    const fb = document.getElementById(`tf-fb-${i}-${j}`);
+                    if (userTf[i][j] === it.a) {
+                        correct++;
+                        fb.innerHTML = "✔️ " + it.exp;
+                        fb.className = "feedback-box block text-green-700 bg-green-50 border-green-300";
+                    } else {
+                        fb.innerHTML = "❌ " + it.exp;
+                        fb.className = "feedback-box block text-red-700 bg-red-50 border-red-300";
+                    }
+                    fb.style.display = 'block';
+                    if (it.a) document.getElementById(`tf-btn-${i}-${j}-t`).classList.add('correct-highlight');
+                    else document.getElementById(`tf-btn-${i}-${j}-s`).classList.add('correct-highlight');
+                });
+            });
+
+            FILL.forEach((d, i) => {
+                const input = document.getElementById(`fill-${i}`);
+                const fb = document.getElementById(`fill-fb-${i}`);
+                const user = input.value.trim().toLowerCase().replace(/\s+/g, '').replace(/,/g, '.');
+                const ans = d.a.toLowerCase().replace(/\s+/g, '').replace(/,/g, '.');
+                function evalFrac(s) {
+                    const m = s.match(/^(-?\d+)\/(\d+)$/);
+                    if (m) return parseInt(m[1]) / parseInt(m[2]);
+                    const n = parseFloat(s);
+                    return isNaN(n) ? null : n;
+                }
+                const uVal = evalFrac(user);
+                const aVal = evalFrac(ans);
+                const isCorrect = user === ans || (uVal !== null && aVal !== null && Math.abs(uVal - aVal) < 0.001);
+                if (isCorrect) {
+                    correct++;
+                    input.classList.add('fill-correct');
+                    fb.innerHTML = "✔️ " + d.exp;
+                    fb.className = "feedback-box block text-green-700 bg-green-50 border-green-300";
+                } else {
+                    input.classList.add('fill-wrong');
+                    fb.innerHTML = "❌ Đáp án: <strong>" + d.a + "</strong>. " + d.exp;
+                    fb.className = "feedback-box block text-red-700 bg-red-50 border-red-300";
+                }
+                fb.style.display = 'block';
+            });
+
+            const score = (correct / total) * 10;
+            const pct = (correct / total) * 100;
+            // Lưu điểm vào localStorage và cập nhật thống kê
+            if (typeof saveScore === 'function') saveScore(score);
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('result-board').classList.remove('hidden');
+            const scoreText = document.getElementById('score-text');
+            scoreText.innerHTML = `<div class="text-center"><div class="text-5xl font-black mb-2">${score.toFixed(1)}/10</div><div class="text-lg">Đúng ${correct}/${total} câu (${pct.toFixed(0)}%)</div></div>`;
+            if (pct >= 90) { scoreText.classList.add('score-excellent'); document.getElementById('score-message').innerHTML = '🎉 <span class="text-green-600">XUẤT SẮC!</span>'; }
+            else if (pct >= 70) { scoreText.classList.add('score-good'); document.getElementById('score-message').innerHTML = '👏 <span class="text-blue-600">KHÁ TỐT!</span>'; }
+            else if (pct >= 50) { scoreText.classList.add('score-average'); document.getElementById('score-message').innerHTML = '💪 <span class="text-orange-600">TRUNG BÌNH</span>'; }
+            else { scoreText.classList.add('score-low'); document.getElementById('score-message').innerHTML = '📚 <span class="text-red-600">CẦN CỐ GẮNG</span>'; }
+            celebrate(score);
+            showOptions();
+            if (window.MathJax) MathJax.typeset();
+            document.getElementById('result-board').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function showOptions() {
+            const old = document.getElementById('post-options');
+            if (old) old.remove();
+            const container = document.getElementById('result-board');
+            const div = document.createElement('div');
+            div.id = 'post-options';
+            div.className = 'mt-8 p-6 bg-white rounded-2xl shadow-xl border-2 border-blue-400 animate-bounce-in';
+            div.innerHTML = `
+                <h3 class="text-xl font-bold text-blue-800 mb-4 text-center">🌟 Tiếp tục?</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="regenerate('retry')" class="p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all border-b-4 border-gray-300 active:border-b-0 font-bold text-gray-700">🔄 Làm lại</button>
+                    <button onclick="regenerate('equivalent')" class="p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-all border-b-4 border-blue-300 active:border-b-0 font-bold text-blue-700">📚 Đề mới tương đương</button>
+                    <button onclick="regenerate('harder')" class="p-4 bg-orange-100 hover:bg-orange-200 rounded-xl transition-all border-b-4 border-orange-300 active:border-b-0 font-bold text-orange-700">🚀 Đề nâng cao</button>
+                </div>`;
+            container.appendChild(div);
+        }
+
+        async function regenerate(mode) {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            await new Promise(r => setTimeout(r, 800));
+            submitted = false;
+            userMcq = Array(15).fill(null);
+            userTf = Array(5).fill(null).map(() => Array(4).fill(null));
+            const opts = document.getElementById('post-options');
+            if (opts) opts.remove();
+            document.getElementById('result-board').classList.add('hidden');
+            document.getElementById('submit-btn').classList.remove('hidden');
+            if (mode !== 'retry') generateQuestions();
+            renderAll();
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('capture-mcq').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ===================== DOWNLOAD FUNCTIONS =====================
+
+        // Chờ MathJax render xong hoàn toàn trước khi chụp
+        async function waitForMathJax() {
+            if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                await window.MathJax.startup.promise;
+            }
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                await window.MathJax.typesetPromise();
+            }
+            // Thêm delay nhỏ để đảm bảo SVG đã paint xong (quan trọng trên mobile)
+            await new Promise(r => setTimeout(r, 300));
+        }
+
+        async function downloadKnowledgePDF() {
+            await captureWithMathJax('capture-knowledge', 'Kien-thuc-Tam-giac-can-Duong-trung-truc.png');
+        }
+
+        // Serialize một SVG (fontCache:local → tự chứa đủ) thành data URL PNG
+        function serializeSvgToDataUrl(svgEl, dpr) {
+            return new Promise((resolve) => {
+                const clone = svgEl.cloneNode(true);
+                // Đảm bảo có namespace
+                clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+
+                const bRect = svgEl.getBoundingClientRect();
+                const w = bRect.width || parseFloat(svgEl.getAttribute('width')) || 50;
+                const h = bRect.height || parseFloat(svgEl.getAttribute('height')) || 20;
+                clone.setAttribute('width', w);
+                clone.setAttribute('height', h);
+
+                const svgStr = new XMLSerializer().serializeToString(clone);
+                const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+
+                const img = new Image();
+                img.onload = () => {
+                    const c = document.createElement('canvas');
+                    c.width  = w * dpr;
+                    c.height = h * dpr;
+                    const ctx = c.getContext('2d');
+                    ctx.clearRect(0, 0, c.width, c.height);
+                    ctx.drawImage(img, 0, 0, c.width, c.height);
+                    URL.revokeObjectURL(url);
+                    resolve({ dataUrl: c.toDataURL('image/png'), w, h });
+                };
+                img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+                img.src = url;
+            });
+        }
+
+        // Hàm chụp ảnh phần đề — thay mọi mjx-container bằng <img> PNG rồi dùng html2canvas
+        async function captureWithMathJax(elementId, filename) {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.style.display = 'flex';
+            loadingOverlay.querySelector('p').textContent = 'Đang chờ công thức toán render...';
+
+            // Chờ MathJax render xong trước khi chụp
+            await waitForMathJax();
+
+            loadingOverlay.querySelector('p').textContent = 'Đang tạo ảnh...';
+
+            try {
+                const element = document.getElementById(elementId);
+
+                // 1. Clone element vào DOM (ẩn) để giữ layout
+                const clone = element.cloneNode(true);
+                clone.style.cssText = `
+                    position: fixed; top: 0; left: 0; z-index: -9999;
+                    width: ${element.offsetWidth}px;
+                    background: #ffffff; pointer-events: none;
+                `;
+                document.body.appendChild(clone);
+
+                // 2. Với mỗi mjx-container trong clone:
+                //    lấy SVG từ element GỐC (đã rendered) → serialize → thay bằng <img>
+                const origContainers = Array.from(element.querySelectorAll('mjx-container'));
+                const cloneContainers = Array.from(clone.querySelectorAll('mjx-container'));
+                const DPR = 3;
+
+                await Promise.all(origContainers.map(async (orig, i) => {
+                    const svg = orig.querySelector('svg');
+                    const cloneItem = cloneContainers[i];
+                    if (!svg || !cloneItem) return;
+
+                    const result = await serializeSvgToDataUrl(svg, DPR);
+                    if (!result) return;
+
+                    const origRect = orig.getBoundingClientRect();
+                    const imgEl = document.createElement('img');
+                    imgEl.src = result.dataUrl;
+                    imgEl.style.cssText = `
+                        display: inline-block;
+                        width: ${result.w}px;
+                        height: ${result.h}px;
+                        vertical-align: ${orig.style.verticalAlign || 'middle'};
+                        margin: 0 1px;
+                    `;
+                    cloneItem.replaceWith(imgEl);
+                }));
+
+                // 3. Chờ tất cả img trong clone load xong
+                await Promise.all(
+                    Array.from(clone.querySelectorAll('img')).map(img =>
+                        img.complete ? Promise.resolve() :
+                        new Promise(r => { img.onload = r; img.onerror = r; })
+                    )
+                );
+
+                // 4. Chụp clone bằng html2canvas
+                const canvas = await html2canvas(clone, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    imageTimeout: 5000,
+                    width: element.offsetWidth,
+                    height: clone.scrollHeight
+                });
+
+                document.body.removeChild(clone);
+
+                const ua = navigator.userAgent;
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+                const isWebView = /FBAN|FBAV|FB_IAB|ZaloApp|zalo|Instagram|Line\/|MicroMessenger|WebView|(iPhone|iPod|iPad)(?!.*Safari)/i.test(ua);
+                const dataUrl = canvas.toDataURL('image/png');
+
+                if (!isMobile) {
+                    // ── MÁY TÍNH: download thẳng ──────────────────────────
+                    const link = document.createElement('a');
+                    link.download = filename;
+                    link.href = dataUrl;
+                    link.click();
+                    loadingOverlay.style.display = 'none';
+                } else if (isWebView) {
+                    // ── WEBVIEW (Zalo, FB...): mở tab mới để lưu tay ──────
+                    loadingOverlay.style.display = 'none';
+                    const newTab = window.open();
+                    if (newTab) {
+                        newTab.document.write(`
+                            <html><body style="margin:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;">
+                            <p style="color:white;font-family:sans-serif;font-size:14px;text-align:center;margin:12px;">
+                                📥 Nhấn giữ ảnh → <strong>Lưu ảnh</strong> để tải về
+                            </p>
+                            <img src="${dataUrl}" style="max-width:100%;border-radius:8px;" />
+                            </body></html>
+                        `);
+                        newTab.document.close();
+                    } else {
+                        alert('Vui lòng cho phép mở tab mới để xem ảnh!');
+                    }
+                } else {
+                    // ── TRÌNH DUYỆT MOBILE (Chrome, Safari...): mở tab mới ─
+                    loadingOverlay.style.display = 'none';
+                    const newTab = window.open();
+                    if (newTab) {
+                        newTab.document.write(`
+                            <html><body style="margin:0;background:#f8fafc;display:flex;flex-direction:column;align-items:center;padding:16px;">
+                            <p style="font-family:sans-serif;font-size:14px;text-align:center;color:#475569;margin-bottom:12px;">
+                                📥 Nhấn giữ ảnh → <strong>Lưu ảnh</strong> để tải về
+                            </p>
+                            <img src="${dataUrl}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);" />
+                            </body></html>
+                        `);
+                        newTab.document.close();
+                    } else {
+                        const link = document.createElement('a');
+                        link.download = filename;
+                        link.href = dataUrl;
+                        link.click();
+                    }
+                }
+            } catch (error) {
+                console.error('captureWithMathJax error:', error);
+                const strayClone = document.querySelector('[style*="z-index: -9999"]');
+                if (strayClone && document.body.contains(strayClone)) document.body.removeChild(strayClone);
+                loadingOverlay.style.display = 'none';
+                alert('Đã xảy ra lỗi khi tải ảnh: ' + error.message);
+            }
+        }
+
+        async function downloadMCQImage() {
+            await captureWithMathJax('capture-mcq', 'De-Trac-Nghiem-Bai16.png');
+        }
+        async function downloadTFImage() {
+            await captureWithMathJax('capture-tf', 'De-Dung-Sai-Bai16.png');
+        }
+        async function downloadFillImage() {
+            await captureWithMathJax('capture-fill', 'De-Tra-Loi-Ngan-Bai16.png');
+        }
+
+        // ===================== CHATBOT =====================
+        const CHATBOT_KNOWLEDGE = {
+            'tam giác cân': 'Tam giác cân:<br>• Là tam giác có <strong>hai cạnh bằng nhau</strong><br>• △ABC cân tại A: $AB = AC$, đáy là $BC$<br>• Hai góc ở đáy bằng nhau: $\\hat{B} = \\hat{C}$',
+            'tam giác đều': 'Tam giác đều:<br>• Ba cạnh bằng nhau<br>• Ba góc bằng nhau, mỗi góc $= 60°$<br>• Là trường hợp đặc biệt của tam giác cân',
+            'trung trực': 'Đường trung trực:<br>• Là đường <strong>vuông góc</strong> với đoạn thẳng <strong>tại trung điểm</strong><br>• Điểm P thuộc trung trực $\\Leftrightarrow PA = PB$<br>• Giao ba đường trung trực = tâm ngoại tiếp',
+            'tính chất': 'Tính chất tam giác cân (tại A):<br>• $\\hat{B} = \\hat{C}$ (góc ở đáy bằng nhau)<br>• Đường cao từ A = trung tuyến = phân giác<br>• <em>Đảo:</em> $\\hat{B} = \\hat{C} \\Rightarrow$ tam giác cân tại A',
+            'ngoại tiếp': 'Tâm đường tròn ngoại tiếp:<br>• Là giao của ba đường trung trực<br>• Cách đều ba đỉnh tam giác<br>• $OA = OB = OC = R$ (bán kính ngoại tiếp)',
+            'góc': 'Tính góc tam giác cân:<br>• Gọi $\\hat{B} = \\hat{C} = x$<br>• $\\hat{A} + 2x = 180°$<br>• VD: $\\hat{A} = 80° \\Rightarrow x = 50°$',
+            'đỉnh': 'Trong tam giác cân tại A:<br>• A là đỉnh cân<br>• AB, AC là hai cạnh bên (bằng nhau)<br>• BC là cạnh đáy',
+        };
+
+        function toggleChatbot() {
+            const win = document.getElementById('chatbot-window');
+            const toggle = document.getElementById('chatbot-toggle');
+            if (win.style.display === 'flex') {
+                win.style.display = 'none';
+                toggle.innerHTML = '💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>';
+            } else {
+                win.style.display = 'flex';
+                toggle.innerHTML = '✖<span class="chatbot-label">Đóng</span>';
+            }
+        }
+
+        function addBotMessage(text) {
+            const container = document.getElementById('chatbot-messages');
+            const div = document.createElement('div');
+            div.className = 'chat-message bot';
+            div.innerHTML = `<div class="bot-avatar">💬</div><div class="message-content">${text}</div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            if (window.MathJax) MathJax.typeset();
+        }
+
+        function addUserMessage(text) {
+            const container = document.getElementById('chatbot-messages');
+            const div = document.createElement('div');
+            div.className = 'chat-message user';
+            div.innerHTML = `<div class="message-content">${text}</div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function getBotResponse(question) {
+            const q = question.toLowerCase().trim();
+            for (const [keyword, answer] of Object.entries(CHATBOT_KNOWLEDGE)) {
+                if (q.includes(keyword)) return answer;
+            }
+            if (q.includes('ví dụ')) return '📌 Ví dụ:<br>• △ABC cân tại A, $\\hat{A}=60°$: $\\hat{B}=\\hat{C}=60°$ → tam giác đều!<br>• P cách đều A, B → P thuộc đường trung trực AB';
+            if (q.includes('bài tập') || q.includes('làm')) return '💡 Mẹo làm bài:<br>• Xác định tam giác cân tại đỉnh nào<br>• Dùng tổng góc = 180°<br>• Nhớ: điểm trên trung trực → cách đều hai đầu mút';
+            return '🤔 Chưa hiểu câu hỏi.<br>Bạn có thể hỏi:<br>• <em>"Tam giác cân là gì?"</em><br>• <em>"Đường trung trực là gì?"</em><br>• <em>"Tính chất tam giác cân?"</em>';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatbot-input');
+            const question = input.value.trim();
+            if (!question) return;
+            addUserMessage(question);
+            input.value = '';
+            setTimeout(() => addBotMessage(getBotResponse(question)), 500);
+        }
+
+        function sendQuickQuestion(question) {
+            addUserMessage(question);
+            setTimeout(() => addBotMessage(getBotResponse(question)), 500);
+        }
+
+        window.onload = function() { init(); };
+    </script>
+
+    <!-- ===================== STATS & LIKE & PROGRESS ===================== -->
+    <script>
+        const STORAGE_KEY = 'bai16_tam_giac_can';
+
+        function loadStorage() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+            catch(e) { return {}; }
+        }
+        function saveStorage(data) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+        }
+
+        function initStats() {
+            const data = loadStorage();
+
+            // Lượt truy cập cục bộ
+            data.visits = (data.visits || 0) + 1;
+            saveStorage(data);
+            document.getElementById('visit-count').textContent = data.visits;
+
+            // Lần làm bài & điểm cao nhất
+            const attempts = data.scores || [];
+            document.getElementById('attempt-count').textContent = attempts.length;
+            if (attempts.length > 0) {
+                const best = Math.max(...attempts.map(s => s.score));
+                document.getElementById('best-score').textContent = best.toFixed(1);
+            }
+
+            // Like (khởi tạo trạng thái nút)
+            if (data.liked) {
+                document.getElementById('like-btn').classList.add('liked');
+            }
+
+            // Biểu đồ tiến bộ
+            renderProgress(attempts);
+
+            // Tải like count toàn cầu từ Firebase
+            loadGlobalLikes();
+        }
+
+        // ── Like toàn cầu (Firebase) ──────────────────────────────────
+        const FIREBASE_LIKE_URL = 'https://toan7-tieu-son-default-rtdb.firebaseio.com/likes/bai-16.json';
+
+        async function loadGlobalLikes() {
+            try {
+                const res = await fetch(FIREBASE_LIKE_URL);
+                const val = await res.json();
+                document.getElementById('like-count').textContent = (typeof val === 'number' ? val : 0).toLocaleString('vi-VN');
+            } catch(e) {}
+        }
+
+        // Atomic increment / decrement like qua ETag (tránh race condition)
+        async function changeGlobalLike(delta) {
+            const MAX_RETRY = 5;
+            for (let i = 0; i < MAX_RETRY; i++) {
+                try {
+                    const readRes = await fetch(FIREBASE_LIKE_URL, { headers: { 'X-Firebase-ETag': 'true' } });
+                    const etag = readRes.headers.get('ETag');
+                    const current = await readRes.json();
+                    const newVal = Math.max(0, (typeof current === 'number' ? current : 0) + delta);
+                    const writeRes = await fetch(FIREBASE_LIKE_URL, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'if-match': etag },
+                        body: JSON.stringify(newVal)
+                    });
+                    if (writeRes.ok) {
+                        document.getElementById('like-count').textContent = newVal.toLocaleString('vi-VN');
+                        return;
+                    }
+                    // HTTP 412 → ETag cũ, retry
+                } catch(e) { return; }
+            }
+        }
+
+        async function toggleLike() {
+            const data = loadStorage();
+            const btn = document.getElementById('like-btn');
+            if (data.liked) {
+                // Bỏ like
+                data.liked = false;
+                btn.classList.remove('liked');
+                saveStorage(data);
+                await changeGlobalLike(-1);
+            } else {
+                // Thêm like
+                data.liked = true;
+                btn.classList.add('liked');
+                saveStorage(data);
+                confetti({ particleCount: 60, spread: 60, origin: { y: 0.2 } });
+                await changeGlobalLike(+1);
+            }
+        }
+        // ── Kết thúc Like toàn cầu ───────────────────────────────────
+
+        function saveScore(score) {
+            const data = loadStorage();
+            if (!data.scores) data.scores = [];
+            data.scores.push({ score: parseFloat(score.toFixed(1)), time: new Date().toLocaleDateString('vi-VN') });
+            if (data.scores.length > 10) data.scores = data.scores.slice(-10); // Giữ tối đa 10 lần
+            const attempts = data.scores.length;
+            const best = Math.max(...data.scores.map(s => s.score));
+            document.getElementById('attempt-count').textContent = attempts;
+            document.getElementById('best-score').textContent = best.toFixed(1);
+            saveStorage(data);
+            renderProgress(data.scores);
+        }
+
+        function renderProgress(attempts) {
+            const panel = document.getElementById('progress-panel');
+            const chart = document.getElementById('progress-chart');
+            const statsDiv = document.getElementById('progress-stats');
+            const trendDiv = document.getElementById('trend-display');
+
+            if (!attempts || attempts.length === 0) {
+                panel.classList.add('hidden');
+                return;
+            }
+            panel.classList.remove('hidden');
+
+            // Bars
+            const maxScore = 10;
+            chart.innerHTML = attempts.map((s, i) => {
+                const pct = Math.max(4, (s.score / maxScore) * 100);
+                let color = '#ef4444';
+                if (s.score >= 9) color = '#10b981';
+                else if (s.score >= 7) color = '#3b82f6';
+                else if (s.score >= 5) color = '#f59e0b';
+                return `
+                    <div class="bar-wrap">
+                        <div class="bar-score">${s.score}</div>
+                        <div class="bar" style="height:${pct}%;background:${color};"></div>
+                        <div class="bar-label">L${i+1}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Stats
+            const scores = attempts.map(s => s.score);
+            const avg = (scores.reduce((a,b) => a+b,0) / scores.length).toFixed(1);
+            const best = Math.max(...scores).toFixed(1);
+            const latest = scores[scores.length-1].toFixed(1);
+            statsDiv.innerHTML = `
+                <div class="bg-blue-50 rounded-xl p-3 border border-blue-100"><div class="font-black text-blue-700 text-lg">${avg}</div><div class="text-slate-500 text-xs">Điểm TB</div></div>
+                <div class="bg-green-50 rounded-xl p-3 border border-green-100"><div class="font-black text-green-700 text-lg">${best}</div><div class="text-slate-500 text-xs">Cao nhất</div></div>
+                <div class="bg-orange-50 rounded-xl p-3 border border-orange-100"><div class="font-black text-orange-700 text-lg">${latest}</div><div class="text-slate-500 text-xs">Lần này</div></div>
+            `;
+
+            // Trend
+            if (scores.length >= 2) {
+                const diff = scores[scores.length-1] - scores[scores.length-2];
+                if (diff > 0) trendDiv.innerHTML = `<span class="trend-badge trend-up">📈 Tăng +${diff.toFixed(1)} điểm</span>`;
+                else if (diff < 0) trendDiv.innerHTML = `<span class="trend-badge trend-down">📉 Giảm ${diff.toFixed(1)} điểm</span>`;
+                else trendDiv.innerHTML = `<span class="trend-badge trend-same">➡️ Giữ nguyên</span>`;
+            } else {
+                trendDiv.innerHTML = `<span class="trend-badge trend-same">🆕 Lần đầu làm bài</span>`;
+            }
+        }
+    </script>
+    <!-- ===================== END STATS ===================== -->
+
+    <!-- FIREBASE GLOBAL VIEW COUNTER -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            var FIREBASE_URL = 'https://toan7-tieu-son-default-rtdb.firebaseio.com';
+            var PAGE_KEY = 'bai-16';
+            var VISITED_KEY = 'toan7_firebase_visited_bai16';
+            var badge = document.getElementById('global-view-badge');
+
+            async function getCount(key) {
+                try {
+                    var res = await fetch(FIREBASE_URL + '/views/' + key + '.json');
+                    var data = await res.json();
+                    return data || 0;
+                } catch(e) { return 0; }
+            }
+
+            // Atomic increment qua ETag — tránh race condition
+            async function incrementCount(key) {
+                const url = FIREBASE_URL + '/views/' + key + '.json';
+                const MAX_RETRY = 5;
+                for (var i = 0; i < MAX_RETRY; i++) {
+                    try {
+                        var readRes = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' } });
+                        var etag = readRes.headers.get('ETag');
+                        var current = await readRes.json();
+                        var newVal = (typeof current === 'number' ? current : 0) + 1;
+
+                        var writeRes = await fetch(url, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'if-match': etag },
+                            body: JSON.stringify(newVal)
+                        });
+
+                        if (writeRes.ok) return newVal; // Thành công
+                        // HTTP 412: ETag lỗi thời → retry
+                    } catch(e) { return await getCount(key); }
+                }
+                return await getCount(key);
+            }
+
+            var count;
+            if (!localStorage.getItem(VISITED_KEY)) {
+                localStorage.setItem(VISITED_KEY, '1');
+                count = await incrementCount(PAGE_KEY);
+            } else {
+                count = await getCount(PAGE_KEY);
+            }
+
+            if (badge) badge.textContent = '👥 ' + count.toLocaleString('vi-VN') + ' người đã truy cập bài này';
+        });
+    </script>
+    <!-- END FIREBASE GLOBAL VIEW COUNTER -->
+</body>
+</html>
