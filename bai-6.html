@@ -14,13 +14,9 @@
                 processEscapes: true
             },
             svg: {
-                fontCache: 'local',
-                scale: 1.1
-            },
-            options: {
-                renderActions: {
-                    addMenu: []
-                }
+                scale: 1,
+                matchFontHeight: false,
+                fontCache: 'local'
             }
         };
     </script>
@@ -31,27 +27,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
-        body { font-family: 'Comfortaa', cursive !important; scroll-behavior: smooth; line-height: 1.8; }
-        /* CHỈ áp font Comfortaa cho text thường, KHÔNG áp cho MathJax SVG */
-        body *:not(svg):not(svg *):not(mjx-container):not(mjx-container *) {
-            font-family: 'Comfortaa', cursive !important;
+        body { font-family: 'Comfortaa', cursive; scroll-behavior: smooth; line-height: 1.8; }
+
+        /* Áp dụng Comfortaa cho toàn trang trừ MathJax */
+        body, p, span, div, h1, h2, h3, h4, h5, h6,
+        a, li, ul, ol, td, th, table, input, button,
+        textarea, select, label, nav, header, footer,
+        section, article, aside, main {
+            font-family: 'Comfortaa', cursive;
         }
 
+        /* MathJax SVG: scale nhỏ lại cho cân với text Comfortaa */
         mjx-container {
             display: inline-block !important;
-            vertical-align: middle !important;
-            margin: 0 0.15em !important;
-            line-height: 0 !important;
-        }
-        /* SVG output: đảm bảo nét ngang căn bậc hai liền mạch */
-        mjx-container svg {
-            overflow: visible !important;
-            display: inline-block !important;
-            vertical-align: middle !important;
-        }
-        mjx-container svg path {
-            shape-rendering: geometricPrecision !important;
-            stroke: none !important;
+            vertical-align: -0.2em !important;
+            margin: 0 0.1em !important;
+            transform: scale(0.95);
+            transform-origin: center baseline;
         }
         
         nav {
@@ -310,7 +302,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen pb-24 text-slate-800">
 
-    <nav class="p-4 shadow-sm mb-6">
+    <nav class="p-3 shadow-sm mb-0">
         <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
             <a href="index.html" class="flex items-center gap-2 text-orange-600 font-bold hover:opacity-80 transition-opacity shrink-0">
                 <span class="text-xl">🏠</span>
@@ -333,7 +325,7 @@
         <p class="font-bold text-blue-600 animate-pulse">Đang tạo đề mới...</p>
     </div>
 
-    <div class="max-w-4xl mx-auto px-3 md:px-6 space-y-12">
+    <div class="max-w-4xl mx-auto px-3 md:px-6 space-y-12 mt-6">
         
         <div class="text-center py-6">
             <h1 class="text-3xl md:text-4xl font-black text-indigo-600 uppercase tracking-tighter flex items-center justify-center gap-3 flex-wrap">
@@ -375,7 +367,7 @@
                 <div class="relative w-full rounded-2xl overflow-hidden border-2 border-blue-100 shadow-md bg-black" style="aspect-ratio: 16/9;">
                     <iframe 
                         id="lesson-video"
-                        src="https://www.youtube.com/embed/hLqFk62iljI"
+                        src="https://www.youtube-nocookie.com/embed/hLqFk62iljI?rel=0"
                         title="Video Bài Học - Số vô tỉ và Căn bậc hai số học"
                         class="w-full h-full"
                         style="width:100%; height:100%; position:absolute; top:0; left:0;"
@@ -1142,9 +1134,7 @@
 
     // ======================== DOWNLOAD ========================
     async function downloadKnowledgePDF() {
-        const element = document.getElementById('capture-knowledge');
-        const opt = { margin: 15, filename: 'Kien-thuc-So-vo-ti-Can-bac-hai-so-hoc.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-        try { await html2pdf().set(opt).from(element).save(); } catch(e) { alert('Lỗi tải PDF!'); }
+        await captureWithMathJax('capture-knowledge', 'Kien-thuc-So-vo-ti-Can-bac-hai-so-hoc.png');
     }
 
     // Serialize một SVG (fontCache:local → tự chứa đủ) thành data URL PNG
@@ -1176,13 +1166,33 @@
         });
     }
 
+    // Chờ MathJax render xong hoàn toàn trước khi chụp
+    async function waitForMathJax() {
+        if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+            await window.MathJax.startup.promise;
+        }
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            await window.MathJax.typesetPromise();
+        }
+        // Thêm delay nhỏ để đảm bảo SVG đã paint xong (quan trọng trên mobile)
+        await new Promise(r => setTimeout(r, 300));
+    }
+
     // Chụp ảnh phần đề — thay mọi mjx-container bằng <img> PNG rồi dùng html2canvas
     async function captureWithMathJax(elementId, filename) {
         const loadingOverlay = document.getElementById('loading-overlay');
         loadingOverlay.style.display = 'flex';
+        loadingOverlay.querySelector('p').textContent = 'Đang chờ công thức toán render...';
+
+        // Chờ MathJax render xong trước khi chụp
+        await waitForMathJax();
+
         loadingOverlay.querySelector('p').textContent = 'Đang tạo ảnh...';
+
         try {
             const element = document.getElementById(elementId);
+
+            // 1. Clone element vào DOM (ẩn) để giữ layout
             const clone = element.cloneNode(true);
             clone.style.cssText = `
                 position: fixed; top: 0; left: 0; z-index: -9999;
@@ -1191,6 +1201,8 @@
             `;
             document.body.appendChild(clone);
 
+            // 2. Với mỗi mjx-container trong clone:
+            //    lấy SVG từ element GỐC (đã rendered) → serialize → thay bằng <img>
             const origContainers = Array.from(element.querySelectorAll('mjx-container'));
             const cloneContainers = Array.from(clone.querySelectorAll('mjx-container'));
             const DPR = 3;
@@ -1199,19 +1211,23 @@
                 const svg = orig.querySelector('svg');
                 const cloneItem = cloneContainers[i];
                 if (!svg || !cloneItem) return;
+
                 const result = await serializeSvgToDataUrl(svg, DPR);
                 if (!result) return;
+
                 const imgEl = document.createElement('img');
                 imgEl.src = result.dataUrl;
                 imgEl.style.cssText = `
                     display: inline-block;
-                    width: ${result.w}px; height: ${result.h}px;
+                    width: ${result.w}px;
+                    height: ${result.h}px;
                     vertical-align: ${orig.style.verticalAlign || 'middle'};
                     margin: 0 1px;
                 `;
                 cloneItem.replaceWith(imgEl);
             }));
 
+            // 3. Chờ tất cả img trong clone load xong
             await Promise.all(
                 Array.from(clone.querySelectorAll('img')).map(img =>
                     img.complete ? Promise.resolve() :
@@ -1219,24 +1235,112 @@
                 )
             );
 
+            // 4. Chụp clone bằng html2canvas
             const canvas = await html2canvas(clone, {
-                scale: 2, useCORS: true, allowTaint: true,
-                backgroundColor: '#ffffff', logging: false,
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false,
                 imageTimeout: 5000,
-                width: element.offsetWidth, height: clone.scrollHeight
+                width: element.offsetWidth,
+                height: clone.scrollHeight
             });
 
             document.body.removeChild(clone);
 
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+            const ua = navigator.userAgent;
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+            const isWebView = /FBAN|FBAV|FB_IAB|ZaloApp|zalo|Instagram|Line\/|MicroMessenger|WebView|(iPhone|iPod|iPad)(?!.*Safari)/i.test(ua);
+            const dataUrl = canvas.toDataURL('image/png');
+
+            if (!isMobile) {
+                // ── MÁY TÍNH: download thẳng ──────────────────────────
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } else if (isWebView) {
+                // ── ZALO / FACEBOOK / INSTAGRAM BROWSER ───────────────
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:99999;overflow:auto;-webkit-overflow-scrolling:touch;padding:20px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;';
+                overlay.innerHTML = `
+                    <div style="background:#1e293b;border-radius:16px;padding:16px 20px;max-width:360px;width:100%;margin-top:20px;">
+                        <div style="font-size:2rem;margin-bottom:8px;">⚠️</div>
+                        <p style="color:white;font-weight:bold;font-size:1rem;margin:0 0 8px;">Không lưu được trong Zalo/Facebook</p>
+                        <p style="color:#94a3b8;font-size:0.82rem;margin:0 0 16px;line-height:1.6;">
+                            Trình duyệt trong ứng dụng không cho phép lưu ảnh.<br>
+                            Hãy mở trang bằng <b style="color:#38bdf8">Chrome</b> hoặc <b style="color:#38bdf8">Safari</b>:
+                        </p>
+                        <div style="background:#0f172a;border-radius:12px;padding:12px;text-align:left;font-size:0.8rem;color:#cbd5e1;line-height:2;">
+                            <div>1️⃣ Nhấn <b style="color:white">⋮</b> hoặc <b style="color:white">···</b> góc trên bên phải</div>
+                            <div>2️⃣ Chọn <b style="color:#4ade80">"Mở bằng trình duyệt"</b></div>
+                            <div>3️⃣ Bấm nút tải ảnh lại</div>
+                        </div>
+                        <p style="color:#64748b;font-size:0.75rem;margin:12px 0 4px;">Hoặc xem ảnh bên dưới rồi chụp màn hình</p>
+                        <button onclick="this.closest('div').parentNode.style.justifyContent='flex-start'" 
+                            style="background:#3b82f6;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.85rem;cursor:pointer;margin-bottom:4px;">
+                            📷 Xem ảnh để chụp màn hình
+                        </button>
+                        <button onclick="this.closest('[style*=z-index]').remove()" 
+                            style="background:#475569;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.85rem;cursor:pointer;margin-top:4px;">
+                            ✖ Đóng
+                        </button>
+                    </div>
+                    <img src="${dataUrl}" style="max-width:100%;border-radius:12px;margin-top:16px;display:block;">
+                `;
+                document.body.appendChild(overlay);
+
+            } else {
+                // ── CHROME / SAFARI / TRÌNH DUYỆT THẬT ───────────────
+                let saved = false;
+                if (navigator.canShare) {
+                    try {
+                        const blob = await (await fetch(dataUrl)).blob();
+                        const file = new File([blob], filename, { type: 'image/png' });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({ files: [file], title: filename });
+                            saved = true;
+                        }
+                    } catch(e) {
+                        // Người dùng huỷ hoặc lỗi → fallback
+                    }
+                }
+
+                if (!saved) {
+                    const win = window.open('', '_blank');
+                    if (win) {
+                        win.document.write(`<!DOCTYPE html><html><head>
+                            <meta name="viewport" content="width=device-width,initial-scale=1">
+                            <title>${filename}</title>
+                            <style>body{margin:0;background:#000;display:flex;flex-direction:column;align-items:center;padding:16px;font-family:sans-serif;}p{color:#fbbf24;font-size:0.9rem;text-align:center;margin-bottom:10px;}img{max-width:100%;border-radius:8px;}</style>
+                        </head><body>
+                            <p>📱 Giữ tay vào ảnh → chọn <b>Lưu ảnh</b></p>
+                            <img src="${dataUrl}">
+                        </body></html>`);
+                        win.document.close();
+                    } else {
+                        const overlay = document.createElement('div');
+                        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:99999;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px;text-align:center;';
+                        const imgEl = document.createElement('img');
+                        imgEl.src = dataUrl;
+                        imgEl.style.cssText = 'max-width:100%;border-radius:12px;margin-top:10px;display:block;margin-left:auto;margin-right:auto;';
+                        overlay.innerHTML = '<p style="color:white;font-weight:bold;font-size:1rem;margin-bottom:4px;">📱 Giữ tay vào ảnh → chọn <b>Lưu ảnh</b></p><button onclick="this.parentNode.remove()" style="background:#ef4444;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.9rem;margin-bottom:12px;cursor:pointer;">✖ Đóng</button>';
+                        overlay.appendChild(imgEl);
+                        document.body.appendChild(overlay);
+                    }
+                }
+            }
 
             loadingOverlay.style.display = 'none';
         } catch (error) {
             console.error('captureWithMathJax error:', error);
-            try { document.body.removeChild(document.querySelector('[style*="z-index: -9999"]')); } catch(e) {}
+            if (document.body.contains(document.querySelector('[style*="z-index: -9999"]'))) {
+                document.body.removeChild(document.querySelector('[style*="z-index: -9999"]'));
+            }
             loadingOverlay.style.display = 'none';
             alert('Đã xảy ra lỗi khi tải ảnh: ' + error.message);
         }
@@ -1334,10 +1438,13 @@
 
         function initStats() {
             const data = loadStorage();
+
+            // Lượt truy cập
             data.visits = (data.visits || 0) + 1;
             saveStorage(data);
             document.getElementById('visit-count').textContent = data.visits;
 
+            // Lần làm bài & điểm cao nhất
             const attempts = data.scores || [];
             document.getElementById('attempt-count').textContent = attempts.length;
             if (attempts.length > 0) {
@@ -1345,29 +1452,70 @@
                 document.getElementById('best-score').textContent = best.toFixed(1);
             }
 
-            data.likes = data.likes || 0;
-            document.getElementById('like-count').textContent = data.likes;
-            if (data.liked) document.getElementById('like-btn').classList.add('liked');
+            // Like — hiển thị trạng thái đã like chưa (localStorage)
+            if (data.liked) {
+                document.getElementById('like-btn').classList.add('liked');
+            }
+            // Load số like toàn cầu từ Firebase
+            loadGlobalLikes();
 
+            // Biểu đồ tiến bộ
             renderProgress(attempts);
         }
 
-        function toggleLike() {
+        // ── Like toàn cầu (Firebase) ──────────────────────────────────
+        const FIREBASE_LIKE_URL = 'https://toan7-tieu-son-default-rtdb.firebaseio.com/likes/bai-6.json';
+
+        async function loadGlobalLikes() {
+            try {
+                const res = await fetch(FIREBASE_LIKE_URL);
+                const val = await res.json();
+                document.getElementById('like-count').textContent = (typeof val === 'number' ? val : 0).toLocaleString('vi-VN');
+            } catch(e) {}
+        }
+
+        // Atomic increment / decrement like qua ETag (tránh race condition)
+        async function changeGlobalLike(delta) {
+            const MAX_RETRY = 5;
+            for (let i = 0; i < MAX_RETRY; i++) {
+                try {
+                    const readRes = await fetch(FIREBASE_LIKE_URL, { headers: { 'X-Firebase-ETag': 'true' } });
+                    const etag = readRes.headers.get('ETag');
+                    const current = await readRes.json();
+                    const newVal = Math.max(0, (typeof current === 'number' ? current : 0) + delta);
+                    const writeRes = await fetch(FIREBASE_LIKE_URL, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'if-match': etag },
+                        body: JSON.stringify(newVal)
+                    });
+                    if (writeRes.ok) {
+                        document.getElementById('like-count').textContent = newVal.toLocaleString('vi-VN');
+                        return;
+                    }
+                    // HTTP 412 → ETag cũ, retry
+                } catch(e) { return; }
+            }
+        }
+
+        async function toggleLike() {
             const data = loadStorage();
             const btn = document.getElementById('like-btn');
             if (data.liked) {
+                // Bỏ like
                 data.liked = false;
-                data.likes = Math.max(0, (data.likes || 1) - 1);
                 btn.classList.remove('liked');
+                saveStorage(data);
+                await changeGlobalLike(-1);
             } else {
+                // Thêm like
                 data.liked = true;
-                data.likes = (data.likes || 0) + 1;
                 btn.classList.add('liked');
+                saveStorage(data);
                 if (typeof confetti === 'function') confetti({ particleCount: 60, spread: 60, origin: { y: 0.2 } });
+                await changeGlobalLike(+1);
             }
-            document.getElementById('like-count').textContent = data.likes;
-            saveStorage(data);
         }
+        // ── Kết thúc Like toàn cầu ───────────────────────────────────
 
         function saveScore(score) {
             const data = loadStorage();
@@ -1417,27 +1565,57 @@
     </script>
     <!-- ===================== KẾT THÚC BỔ SUNG STATS ===================== -->
 
-    <!-- COUNTAPI GLOBAL VIEW COUNTER -->
+    <!-- FIREBASE GLOBAL VIEW COUNTER -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var NAMESPACE = 'toan7-vi-cong-dong';
-            var PAGE_KEY  = 'bai-6.html';
-            var VISITED_KEY = 'toan7_visited_bai6';
+        document.addEventListener('DOMContentLoaded', async function () {
+            var FIREBASE_URL = 'https://toan7-tieu-son-default-rtdb.firebaseio.com';
+            var PAGE_KEY = 'bai-6';
+            var VISITED_KEY = 'toan7_firebase_visited_bai6';
             var badge = document.getElementById('global-view-badge');
+
+            async function getCount(key) {
+                try {
+                    var res = await fetch(FIREBASE_URL + '/views/' + key + '.json');
+                    var data = await res.json();
+                    return data || 0;
+                } catch(e) { return 0; }
+            }
+
+            // Atomic increment qua ETag — tránh race condition
+            async function incrementCount(key) {
+                const url = FIREBASE_URL + '/views/' + key + '.json';
+                const MAX_RETRY = 5;
+                for (var i = 0; i < MAX_RETRY; i++) {
+                    try {
+                        var readRes = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' } });
+                        var etag = readRes.headers.get('ETag');
+                        var current = await readRes.json();
+                        var newVal = (typeof current === 'number' ? current : 0) + 1;
+
+                        var writeRes = await fetch(url, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'if-match': etag },
+                            body: JSON.stringify(newVal)
+                        });
+
+                        if (writeRes.ok) return newVal; // Thành công
+                        // HTTP 412: ETag lỗi thời → retry
+                    } catch(e) { return await getCount(key); }
+                }
+                return await getCount(key);
+            }
+
+            var count;
             if (!localStorage.getItem(VISITED_KEY)) {
                 localStorage.setItem(VISITED_KEY, '1');
-                fetch('https://api.counterapi.dev/v1/' + NAMESPACE + '/' + PAGE_KEY + '/up')
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) { if (badge) badge.textContent = '👥 ' + (data.count || 0).toLocaleString('vi-VN') + ' người đã truy cập bài này'; })
-                    .catch(function() { if (badge) badge.textContent = '👥 0 người đã truy cập bài này'; });
+                count = await incrementCount(PAGE_KEY);
             } else {
-                fetch('https://api.counterapi.dev/v1/' + NAMESPACE + '/' + PAGE_KEY + '/')
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) { if (badge) badge.textContent = '👥 ' + (data.count || 0).toLocaleString('vi-VN') + ' người đã truy cập bài này'; })
-                    .catch(function() { if (badge) badge.textContent = '👥 0 người đã truy cập bài này'; });
+                count = await getCount(PAGE_KEY);
             }
+
+            if (badge) badge.textContent = '👥 ' + count.toLocaleString('vi-VN') + ' người đã truy cập bài này';
         });
     </script>
-    <!-- END COUNTAPI GLOBAL VIEW COUNTER -->
+    <!-- END FIREBASE GLOBAL VIEW COUNTER -->
 </body>
 </html>
