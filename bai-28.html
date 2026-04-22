@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 28: Phép Chia Đa Thức Một Biến</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: {
+                scale: 1,
+                matchFontHeight: false,
+                fontCache: 'local'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body { font-family: 'Comfortaa', cursive; scroll-behavior: smooth; line-height: 1.8; }
+
+        /* Áp dụng Comfortaa cho toàn trang trừ MathJax */
+        body, p, span, div, h1, h2, h3, h4, h5, h6,
+        a, li, ul, ol, td, th, table, input, button,
+        textarea, select, label, nav, header, footer,
+        section, article, aside, main {
+            font-family: 'Comfortaa', cursive;
+        }
+
+        mjx-container {
+            display: inline-block !important;
+            vertical-align: -0.2em !important;
+            margin: 0 0.1em !important;
+            transform: scale(0.95);
+            transform-origin: center baseline;
+        }
+
+        nav {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .section-dashed { border: 3px dashed #cbd5e1; border-radius: 24px; transition: border-color 0.3s; }
+        .section-dashed:hover { border-color: #3b82f6; }
+
+        .check-btn { transition: all 0.2s; cursor: pointer; border: 2px solid #e2e8f0; }
+        .selected-true  { background-color: #22c55e !important; color: white !important; border-color: #16a34a !important; }
+        .selected-false { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+        .correct-highlight { border: 3px solid #22c55e !important; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
+
+        .mcq-option { border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s; border-radius: 16px; }
+        .mcq-option.selected { border-color: #3b82f6; background-color: #eff6ff; }
+        .mcq-option.correct  { border-color: #22c55e; background-color: #dcfce7; color: #166534; }
+        .mcq-option.wrong    { border-color: #ef4444; background-color: #fee2e2; color: #991b1b; }
+
+        .fill-input { border-bottom: 2px dashed #3b82f6; outline: none; text-align: center; width: 120px; font-weight: bold; color: #2563eb; background: transparent; }
+        .fill-correct { background-color: #dcfce7; border-color: #22c55e; border-style: solid; }
+        .fill-wrong   { background-color: #fee2e2; border-color: #ef4444; border-style: solid; }
+
+        .feedback-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border-left: 4px solid #ef4444; background-color: #fffafb; font-size: 0.85rem; }
+        .hint-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border: 1px dashed #eab308; background-color: #fefce8; color: #854d0e; font-size: 0.85rem; }
+
+        #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .loader { border: 6px solid #f3f3f3; border-top: 6px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+        .hint-btn { display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; border: 2px solid #f59e0b; padding: 6px 12px; border-radius: 12px; color: #92400e; font-size: 0.75rem; font-weight: bold; transition: all 0.2s; margin-left: 8px; cursor: pointer; }
+        .hint-btn:hover { background: #fde68a; transform: translateY(-1px); }
+
+        @keyframes bounce-in { 0%{transform:scale(0.9);opacity:0} 50%{transform:scale(1.05)} 100%{transform:scale(1);opacity:1} }
+        .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
+
+        .level-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+        .level-nhan-biet  { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .level-thong-hieu { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .level-van-dung   { background: #fecaca; color: #991b1b; border: 1px solid #ef4444; }
+
+        .score-excellent { background: linear-gradient(135deg,#10b981,#059669); color:white; animation: pulse-scale 1s ease-in-out infinite; }
+
+        /* ===== STATS BAR ===== */
+        #stats-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+        .stat-item { display:flex; align-items:center; gap:4px; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 10px; border-radius:20px; font-size:0.78rem; font-weight:bold; color:#1e40af; }
+        .stat-item span.val { font-size:0.85rem; font-weight:900; color:#1d4ed8; }
+        #like-btn { background:#fff0f0; border:1px solid #fca5a5; color:#dc2626; border-radius:20px; padding:4px 12px; font-size:0.78rem; font-weight:bold; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:4px; }
+        #like-btn:hover { background:#fee2e2; }
+        #like-btn.liked { background:#ef4444; border-color:#ef4444; color:white; animation:likeAnim 0.4s ease; }
+        @keyframes likeAnim { 0%{transform:scale(1);} 50%{transform:scale(1.3);} 100%{transform:scale(1);} }
+
+        /* ===== PROGRESS PANEL ===== */
+        #progress-panel { background:white; border-radius:20px; padding:20px; border:2px dashed #3b82f6; margin-bottom:0; }
+        #progress-chart { display:flex; align-items:flex-end; gap:8px; height:100px; padding:8px 0; }
+        .bar-wrap { display:flex; flex-direction:column; align-items:center; flex:1; height:100%; justify-content:flex-end; gap:4px; }
+        .bar { width:100%; min-height:4px; border-radius:6px 6px 0 0; transition:height 0.5s ease; }
+        .bar-label { font-size:0.65rem; color:#64748b; text-align:center; }
+        .bar-score { font-size:0.7rem; font-weight:bold; color:#1e40af; }
+        .trend-badge { display:inline-flex; align-items:center; gap:4px; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:bold; }
+        .trend-up   { background:#dcfce7; color:#166534; }
+        .trend-down { background:#fee2e2; color:#991b1b; }
+        .trend-same { background:#f1f5f9; color:#475569; }
+        .score-good      { background: linear-gradient(135deg,#3b82f6,#2563eb); color:white; }
+        .score-average   { background: linear-gradient(135deg,#f59e0b,#d97706); color:white; }
+        .score-low       { background: linear-gradient(135deg,#ef4444,#dc2626); color:white; }
+        @keyframes pulse-scale { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+
+        .download-btn { background: linear-gradient(135deg,#8b5cf6,#6366f1); color:white; padding:10px 20px; border-radius:16px; font-weight:bold; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(139,92,246,0.3); font-size:0.875rem; }
+        .download-btn:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(139,92,246,0.4); }
+        .download-btn:active { transform:translateY(0); }
+
+        /* CHATBOT */
+        #chatbot-container { position:fixed; top:50%; right:20px; transform:translateY(-50%); z-index:1000; }
+        #chatbot-toggle { width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); border:none; cursor:pointer; box-shadow:0 8px 24px rgba(0,106,255,0.4); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:32px; transition:all 0.3s; position:relative; }
+        #chatbot-toggle:hover { transform:scale(1.1); box-shadow:0 12px 32px rgba(0,106,255,0.6); }
+        .chatbot-label { position:absolute; bottom:-28px; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; padding:4px 12px; border-radius:12px; font-size:10px; font-weight:bold; white-space:nowrap; box-shadow:0 4px 12px rgba(0,106,255,0.3); }
+        #chatbot-window { display:none; position:fixed; top:50%; right:100px; transform:translateY(-50%); width:340px; height:480px; background:white; border-radius:20px; box-shadow:0 8px 32px rgba(0,0,0,0.15); flex-direction:column; overflow:hidden; animation:slideUp 0.3s ease-out; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        #chatbot-header { background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+        #chatbot-close { background:none; border:none; color:white; font-size:24px; cursor:pointer; padding:0; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s; }
+        #chatbot-close:hover { background:rgba(255,255,255,0.2); }
+        #chatbot-messages { flex:1; overflow-y:auto; padding:16px; background:#f8fafc; }
+        .chat-message { margin-bottom:12px; animation:fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .chat-message.bot { display:flex; gap:8px; }
+        .chat-message.user { display:flex; justify-content:flex-end; }
+        .message-content { padding:10px 14px; border-radius:16px; max-width:75%; font-size:0.9rem; line-height:1.4; }
+        .chat-message.bot .message-content { background:white; color:#1e293b; border:1px solid #e2e8f0; }
+        .chat-message.user .message-content { background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); color:white; }
+        .bot-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+        #chatbot-input-area { padding:12px; border-top:1px solid #e2e8f0; background:white; display:flex; gap:8px; }
+        #chatbot-input { flex:1; padding:10px 14px; border:1px solid #e2e8f0; border-radius:20px; outline:none; font-size:0.9rem; transition:border-color 0.2s; }
+        #chatbot-input:focus { border-color:#00B2FF; }
+        #chatbot-send { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#00B2FF 0%,#006AFF 100%); border:none; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; transition:all 0.2s; }
+        #chatbot-send:hover { transform:scale(1.05); }
+        .quick-questions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+        .quick-question-btn { padding:6px 12px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; font-size:0.75rem; cursor:pointer; transition:all 0.2s; color:#1e40af; }
+        .quick-question-btn:hover { background:#dbeafe; transform:translateY(-1px); }
+
+        /* GAME: BẮN BÓNG BAY */
+        #bb-canvas { cursor: crosshair; }
+        #bb-question-box { transition: all 0.3s; }
+        #bb-cannon { pointer-events: none; z-index: 2; }
+
+        @keyframes shake-cl {
+            0%,100%{transform:translateX(0)}
+            20%{transform:translateX(-7px)}
+            40%{transform:translateX(7px)}
+            60%{transform:translateX(-4px)}
+            80%{transform:translateX(4px)}
+        }
+        #cl-touch-clone { position:fixed; pointer-events:none; z-index:9999; opacity:0.85; transform:scale(1.1); transition:none; display:none; }
+
+        @media (max-width: 640px) {
+            #chatbot-window { width:calc(100vw - 40px); height:60vh; top:50%; right:20px; transform:translateY(-50%); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 text-slate-800">
+
+    <nav class="p-3 shadow-sm mb-6">
+        <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <a href="index.html" class="flex items-center gap-2 text-orange-600 font-bold hover:opacity-80 transition-opacity shrink-0">
+                <span class="text-xl">🏠</span>
+                <span class="hidden sm:inline">Trang chủ</span>
+            </a>
+            <!-- STATS BAR INLINE -->
+            <div id="stats-bar" class="flex items-center gap-2 flex-wrap">
+                <div class="stat-item">👁️ <span class="val" id="visit-count">0</span></div>
+                <div class="stat-item">📝 <span class="val" id="attempt-count">0</span> lần</div>
+                <div class="stat-item">⭐ <span class="val" id="best-score">--</span></div>
+                <button id="like-btn" onclick="toggleLike()">❤️ <span id="like-count">0</span></button>
+            </div>
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest hidden md:block">Toán 7 - Bài 28 ✨</div>
+        </div>
+    </nav>
+
+    <div id="loading-overlay">
+        <div class="loader mb-4"></div>
+        <p class="font-bold text-blue-600 animate-pulse">Đang tạo đề mới...</p>
+    </div>
+
+    <div id="cl-touch-clone"></div>
+
+    <div class="max-w-4xl mx-auto px-3 md:px-6 space-y-12">
+
+        <!-- TIÊU ĐỀ -->
+        <div class="text-center py-6">
+            <h1 class="text-3xl md:text-4xl font-black text-indigo-600 uppercase tracking-tighter flex items-center justify-center gap-3 flex-wrap">
+                <span>➗</span> Bài 28: Phép Chia Đa Thức Một Biến <span>📐</span>
+            </h1>
+            <p class="text-slate-500 font-bold mt-2">Chia đơn thức cho đơn thức – Chia đa thức cho đơn thức – Chia đa thức có sắp xếp – Kết nối tri thức - Toán 7</p>
+            <!-- COUNTAPI GLOBAL VIEW BADGE -->
+            <p id="global-view-badge" class="text-slate-400 text-sm font-bold mt-1">👁 Đang tải...</p>
+        </div>
+
+        <!-- TIẾN BỘ HỌC TẬP -->
+        <div id="progress-panel" class="hidden">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h2 class="text-lg font-bold text-blue-800">📈 Tiến Bộ Học Tập</h2>
+                <div id="trend-display"></div>
+            </div>
+            <div id="progress-chart"></div>
+            <div id="progress-stats" class="mt-3 grid grid-cols-3 gap-3 text-center text-sm"></div>
+        </div>
+
+        <!-- KIẾN THỨC -->
+        <div id="capture-knowledge" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-blue-800">📖 Kiến Thức Trọng Tâm</h2>
+                <button onclick="downloadKnowledgePDF()" class="download-btn">
+                    <span>📥</span> Tải Offline
+                </button>
+            </div>
+
+            <!-- VIDEO placeholder -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🎬</span>
+                    <h3 class="font-bold text-blue-700 text-base">Video Bài Học</h3>
+                    <span class="text-xs bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">YouTube</span>
+                </div>
+                <div class="relative w-full rounded-2xl overflow-hidden border-2 border-blue-100 shadow-md bg-black" style="aspect-ratio:16/9;">
+                    <iframe src="https://www.youtube.com/embed/EWN6Ts9AvOY"
+                        title="Video Bài Học - Phép chia đa thức một biến"
+                        class="w-full h-full" style="width:100%;height:100%;position:absolute;top:0;left:0;"
+                        frameborder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture;web-share" allowfullscreen>
+                    </iframe>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 text-center">💡 Xem video trước khi làm bài tập bên dưới</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+
+                <!-- Ô 1: Chia đơn thức cho đơn thức -->
+                <div class="bg-indigo-50/60 p-5 rounded-2xl border border-indigo-100 space-y-3">
+                    <h3 class="font-bold text-indigo-700">1. Chia đơn thức cho đơn thức</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• <strong>Điều kiện:</strong> Đơn thức A chia hết cho đơn thức B khi mỗi biến của B đều có trong A với số mũ không lớn hơn.</li>
+                        <li>• <strong>Quy tắc:</strong> Chia hệ số cho hệ số, chia lũy thừa cho lũy thừa cùng cơ số.</li>
+                        <li>• <strong>Công thức:</strong> \(x^m \div x^n = x^{m-n}\) (với \(m \geq n\))</li>
+                        <li>• <strong>Ví dụ:</strong></li>
+                        <li class="ml-4">\(12x^5 \div 4x^2 = 3x^3\)</li>
+                        <li class="ml-4">\(15x^4y^3 \div 5x^2y = 3x^2y^2\)</li>
+                    </ul>
+                    <div class="flex justify-center mt-3">
+                        <canvas id="fig1" width="300" height="160" style="max-width:100%"></canvas>
+                    </div>
+                </div>
+
+                <!-- Ô 2: Chia đa thức cho đơn thức -->
+                <div class="bg-emerald-50/60 p-5 rounded-2xl border border-emerald-100 space-y-3">
+                    <h3 class="font-bold text-emerald-700">2. Chia đa thức cho đơn thức</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• <strong>Quy tắc:</strong> Chia từng hạng tử của đa thức cho đơn thức rồi cộng các kết quả lại.</li>
+                        <li>• <strong>Công thức:</strong></li>
+                        <li class="ml-4">\((A + B + C) \div D = \frac{A}{D} + \frac{B}{D} + \frac{C}{D}\)</li>
+                        <li>• <strong>Ví dụ:</strong></li>
+                        <li class="ml-4">\((6x^3 - 4x^2 + 2x) \div 2x\)</li>
+                        <li class="ml-4">\(= 3x^2 - 2x + 1\)</li>
+                    </ul>
+                    <div class="flex justify-center mt-2">
+                        <canvas id="fig2" width="300" height="170" style="max-width:100%"></canvas>
+                    </div>
+                </div>
+
+                <!-- Ô 3: Phép chia đa thức có sắp xếp (chia có dư) -->
+                <div class="bg-violet-50/60 p-5 rounded-2xl border border-violet-100 space-y-3">
+                    <h3 class="font-bold text-violet-700">3. Chia đa thức cho đa thức (thuật toán)</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• <strong>Bước 1:</strong> Sắp xếp cả hai đa thức theo bậc giảm dần.</li>
+                        <li>• <strong>Bước 2:</strong> Chia hạng tử bậc cao nhất của số bị chia cho hạng tử bậc cao nhất của số chia.</li>
+                        <li>• <strong>Bước 3:</strong> Nhân kết quả vừa tìm với số chia, trừ vào số bị chia. Lặp lại.</li>
+                        <li>• \(A = B \cdot Q + R\) (với \(\deg R < \deg B\))</li>
+                        <li>• Nếu \(R = 0\): phép chia hết.</li>
+                    </ul>
+                    <div class="flex justify-center mt-2">
+                        <canvas id="fig3" width="300" height="155" style="max-width:100%"></canvas>
+                    </div>
+                </div>
+
+                <!-- Ô 4: Tổng hợp & Vận dụng -->
+                <div class="bg-orange-50/60 p-5 rounded-2xl border border-orange-100 space-y-3">
+                    <h3 class="font-bold text-orange-700">4. Ví dụ chia đa thức cho đa thức</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• Chia \(x^3 - 2x^2 + x - 2\) cho \(x - 2\):</li>
+                        <li class="ml-4">Bước 1: \(x^3 \div x = x^2\)</li>
+                        <li class="ml-4">Bước 2: \(x^3-2x^2+x-2 - x^2(x-2) = x-2\)</li>
+                        <li class="ml-4">Bước 3: \((x-2) \div (x-2) = 1\)</li>
+                        <li class="ml-4"><strong>Kết quả:</strong> \(x^2 + 1\), dư \(0\)</li>
+                        <li>• <strong>Kiểm tra:</strong> \((x-2)(x^2+1) = x^3-2x^2+x-2\) ✓</li>
+                    </ul>
+                    <div class="flex justify-center mt-2">
+                        <canvas id="fig4" width="300" height="170" style="max-width:100%"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bảng tóm tắt công thức -->
+            <div class="mt-6 p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-indigo-50 border border-indigo-100">
+                <h3 class="font-bold text-indigo-700 mb-4 text-center text-base">📐 Sơ đồ tổng hợp – Phép chia đa thức một biến</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center text-sm">
+                    <div class="bg-white rounded-xl p-4 border-2 border-indigo-200 shadow-sm">
+                        <div class="text-2xl mb-1">➗</div>
+                        <div class="font-black text-indigo-700 mb-1">Đơn thức ÷ Đơn thức</div>
+                        <div class="text-slate-600">\(x^m \div x^n = x^{m-n}\)</div>
+                        <div class="text-xs text-slate-400 mt-1">Chia hệ số, trừ số mũ</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border-2 border-emerald-200 shadow-sm">
+                        <div class="text-2xl mb-1">✅</div>
+                        <div class="font-black text-emerald-700 mb-1">Đa thức ÷ Đơn thức</div>
+                        <div class="text-slate-600">\((A+B) \div C = \frac{A}{C}+\frac{B}{C}\)</div>
+                        <div class="text-xs text-slate-400 mt-1">Chia từng hạng tử</div>
+                    </div>
+                    <div class="bg-white rounded-xl p-4 border-2 border-violet-200 shadow-sm">
+                        <div class="text-2xl mb-1">⚠️</div>
+                        <div class="font-black text-violet-700 mb-1">Đa thức ÷ Đa thức</div>
+                        <div class="text-slate-600">\(A = B \cdot Q + R\)</div>
+                        <div class="text-xs text-slate-400 mt-1">Thuật toán chia có dư</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== TRÒ CHƠI: BẮN BÓNG BAY ===================== -->
+        <div class="bg-white p-6 section-dashed shadow-md" id="match-game-section">
+            <h2 class="text-2xl font-black text-indigo-600 flex items-center gap-3 mb-1">
+                <span class="text-3xl">🎯</span> BẮN BÓNG BAY
+            </h2>
+            <p class="text-slate-600 mb-1 font-medium">
+                Mỗi bóng chứa một kết quả. Đọc phép chia bên dưới rồi <strong>bắn đúng bóng</strong> chứa đáp án!
+            </p>
+            <p class="text-xs text-indigo-500 font-bold mb-4">🎈 Nhấn vào bóng đúng để nổ — sai sẽ mất một mạng!</p>
+
+            <!-- HUD -->
+            <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-bold text-indigo-700">❤️ Mạng: <span id="bb-lives" class="text-red-500 text-base">❤️❤️❤️</span></span>
+                    <span class="text-sm font-bold text-indigo-700">🎯 Điểm: <span id="bb-score" class="text-indigo-600 text-base font-black">0</span></span>
+                    <span class="text-sm font-bold text-indigo-700">📊 Câu: <span id="bb-progress" class="text-slate-600">1/12</span></span>
+                </div>
+                <button onclick="bbRestart()" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold py-1.5 px-4 rounded-xl text-xs border border-indigo-200 transition-all">🔄 Chơi lại</button>
+            </div>
+
+            <!-- Question display -->
+            <div id="bb-question-box" class="bg-gradient-to-r from-indigo-50 to-violet-50 border-2 border-indigo-200 rounded-2xl p-4 text-center mb-4 min-h-[64px] flex items-center justify-center">
+                <span id="bb-question-text" class="font-black text-indigo-700 text-lg"></span>
+            </div>
+
+            <!-- Canvas game area -->
+            <div class="relative w-full rounded-2xl overflow-hidden border-2 border-indigo-100 bg-gradient-to-b from-sky-100 to-blue-50" style="height:280px;">
+                <canvas id="bb-canvas" style="width:100%;height:100%;display:block;"></canvas>
+                <!-- Cannon at bottom center -->
+                <div id="bb-cannon" style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:2.2rem;user-select:none;">🔫</div>
+            </div>
+
+            <!-- Feedback bar -->
+            <div id="bb-feedback" class="hidden mt-3 p-3 rounded-xl text-sm font-bold text-center"></div>
+
+            <!-- Game over / Win screen -->
+            <div id="bb-endscreen" class="hidden text-center space-y-3 py-8 mt-4">
+                <div id="bb-end-icon" class="text-6xl"></div>
+                <h3 id="bb-end-title" class="text-2xl font-black text-indigo-600"></h3>
+                <p id="bb-end-msg" class="text-violet-600 font-bold"></p>
+                <button onclick="bbRestart()" class="mt-3 bg-indigo-500 hover:bg-indigo-600 text-white font-black py-3 px-10 rounded-full text-base transition-all shadow-lg">🔄 Chơi lại</button>
+            </div>
+        </div>
+
+        <!-- MCQ -->
+        <div id="capture-mcq" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">📝 PHẦN 1: Trắc nghiệm (15 câu)</h2>
+                <button onclick="downloadMCQImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="mcq-container" class="space-y-8"></div>
+        </div>
+
+        <!-- T/F -->
+        <div id="capture-tf" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">✔️ PHẦN 2: Đúng/Sai (5 câu)</h2>
+                <button onclick="downloadTFImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="tf-container" class="space-y-10"></div>
+        </div>
+
+        <!-- FILL -->
+        <div id="capture-fill" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">🖋️ PHẦN 3: Điền đáp án (5 câu)</h2>
+                <button onclick="downloadFillImage()" class="download-btn"><span>📥</span> Tải Đề Offline</button>
+            </div>
+            <div id="fill-container" class="space-y-6"></div>
+        </div>
+
+        <!-- NỘP BÀI -->
+        <div class="text-center py-12">
+            <button id="submit-btn" onclick="checkResults()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-16 rounded-full shadow-2xl transition-all active:scale-95 text-xl tracking-widest flex items-center gap-4 mx-auto">
+                <span>📤</span> NỘP BÀI
+            </button>
+            <div id="result-board" class="mt-8 hidden">
+                <div class="bg-white section-dashed p-8 inline-block shadow-xl w-full max-w-2xl">
+                    <div id="score-text" class="text-4xl font-black mb-2 p-6 rounded-2xl"></div>
+                    <div id="score-message" class="text-lg font-bold mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT -->
+    <div id="chatbot-container">
+        <button id="chatbot-toggle" onclick="toggleChatbot()">
+            💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>
+        </button>
+        <div id="chatbot-window">
+            <div id="chatbot-header">
+                <div>
+                    <div style="font-weight:bold;font-size:1rem;">Trợ lý Toán học</div>
+                    <div style="font-size:0.75rem;opacity:0.9;">Hỗ trợ 24/7</div>
+                </div>
+                <button id="chatbot-close" onclick="toggleChatbot()">×</button>
+            </div>
+            <div id="chatbot-messages">
+                <div class="chat-message bot">
+                    <div class="bot-avatar">💬</div>
+                    <div>
+                        <div class="message-content">
+                            Xin chào! Tôi có thể giúp bạn về <strong>phép chia đa thức một biến</strong>. Hãy hỏi tôi!
+                        </div>
+                        <div class="quick-questions">
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Chia đơn thức cho đơn thức như thế nào?')">Đơn thức ÷ Đơn thức?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Chia đa thức cho đơn thức như thế nào?')">Đa thức ÷ Đơn thức?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Cho ví dụ phép chia đa thức')">Ví dụ?</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chatbot-input-area">
+                <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button id="chatbot-send" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ======================== GAME: BẮN BÓNG BAY ========================
+    const BB_QUESTIONS = [
+        { q: "12x⁵ ÷ 4x²  = ?",  correct: "3x³",    wrongs: ["3x⁷","8x³","4x³"] },
+        { q: "−15x⁴ ÷ 3x² = ?",  correct: "−5x²",   wrongs: ["5x²","−5x⁶","−12x²"] },
+        { q: "(6x³−4x²+2x) ÷ 2x = ?", correct: "3x²−2x+1", wrongs: ["3x²−2x","3x²+2x+1","6x²−4x+2"] },
+        { q: "(x²+5x+6) ÷ (x+2) = ?",  correct: "x+3", wrongs: ["x+2","x+6","x−3"] },
+        { q: "(x²−9) ÷ (x−3) = ?",     correct: "x+3", wrongs: ["x−3","x+9","x²+3"] },
+        { q: "(9x⁴−3x³) ÷ 3x² = ?",   correct: "3x²−x", wrongs: ["3x²−1","9x²−3x","3x³−x²"] },
+        { q: "(x³−1) ÷ (x−1) = ?",     correct: "x²+x+1", wrongs: ["x²−x+1","x²+1","x²−1"] },
+        { q: "(8x⁴−4x²) ÷ 4x² = ?",   correct: "2x²−1", wrongs: ["2x²−4","4x²−1","2x⁴−x²"] },
+        { q: "(x²+2x+1) ÷ (x+1) = ?",  correct: "x+1", wrongs: ["x+2","x−1","x²+1"] },
+        { q: "20x⁵ ÷ 5x² = ?",         correct: "4x³", wrongs: ["4x⁷","15x³","4x²"] },
+        { q: "(x²−4x+4) ÷ (x−2) = ?",  correct: "x−2", wrongs: ["x+2","x−4","x²−2"] },
+        { q: "(2x³−x²) ÷ x = ?",       correct: "2x²−x", wrongs: ["2x²−1","2x³−x","x²−x"] },
+    ];
+
+    // ---- state ----
+    let bbQuestions = [], bbQIdx = 0, bbScore = 0, bbLives = 3;
+    let bbBalloons = [], bbAnimId = null, bbLocked = false;
+    let bbCanvas, bbCtx, bbW, bbH;
+
+    const BB_COLORS = [
+        ['#f87171','#ef4444'], ['#fb923c','#f97316'], ['#facc15','#eab308'],
+        ['#4ade80','#22c55e'], ['#60a5fa','#3b82f6'], ['#c084fc','#a855f7'],
+        ['#f472b6','#ec4899'], ['#34d399','#10b981'],
+    ];
+
+    function bbInit() {
+        bbCanvas = document.getElementById('bb-canvas');
+        const container = bbCanvas.parentElement;
+        bbCanvas.width  = container.clientWidth  || 600;
+        bbCanvas.height = container.clientHeight || 280;
+        bbW = bbCanvas.width; bbH = bbCanvas.height;
+        bbCtx = bbCanvas.getContext('2d');
+        bbCanvas.addEventListener('click', bbHandleClick);
+    }
+
+    function bbRestart() {
+        if (bbAnimId) cancelAnimationFrame(bbAnimId);
+        bbQuestions = [...BB_QUESTIONS].sort(() => Math.random() - 0.5);
+        bbQIdx = 0; bbScore = 0; bbLives = 3; bbBalloons = []; bbLocked = false;
+        document.getElementById('bb-endscreen').classList.add('hidden');
+        document.getElementById('bb-feedback').classList.add('hidden');
+        bbUpdateHUD();
+        bbLoadQuestion();
+    }
+
+    function bbUpdateHUD() {
+        document.getElementById('bb-score').textContent = bbScore;
+        document.getElementById('bb-lives').textContent = '❤️'.repeat(bbLives) + '🖤'.repeat(Math.max(0, 3 - bbLives));
+        document.getElementById('bb-progress').textContent = (bbQIdx + 1) + '/' + bbQuestions.length;
+    }
+
+    function bbLoadQuestion() {
+        if (bbQIdx >= bbQuestions.length) { bbEndGame(true); return; }
+        if (bbLives <= 0) { bbEndGame(false); return; }
+        bbLocked = false;
+        const q = bbQuestions[bbQIdx];
+        document.getElementById('bb-question-text').textContent = q.q;
+        bbUpdateHUD();
+
+        // Build answer pool: 1 correct + 3 wrongs, shuffled
+        const pool = [q.correct, ...q.wrongs].sort(() => Math.random() - 0.5);
+
+        // Spawn balloons
+        bbBalloons = [];
+        const cols = pool.length;
+        const spacing = bbW / (cols + 1);
+        pool.forEach((text, i) => {
+            const col = BB_COLORS[i % BB_COLORS.length];
+            bbBalloons.push({
+                x: spacing * (i + 1),
+                y: bbH + 60 + Math.random() * 40,
+                vy: -(0.6 + Math.random() * 0.5),
+                r: Math.min(48, bbW * 0.1),
+                text,
+                color: col[0],
+                shade: col[1],
+                isCorrect: text === q.correct,
+                popped: false,
+                popAnim: 0,   // >0 means popping
+                wobble: Math.random() * Math.PI * 2,
+                wobbleSpeed: 0.04 + Math.random() * 0.02,
+                opacity: 1,
+            });
+        });
+
+        if (bbAnimId) cancelAnimationFrame(bbAnimId);
+        bbLoop();
+    }
+
+    function bbLoop() {
+        bbCtx.clearRect(0, 0, bbW, bbH);
+
+        // Draw sky gradient
+        const sky = bbCtx.createLinearGradient(0, 0, 0, bbH);
+        sky.addColorStop(0, '#e0f2fe');
+        sky.addColorStop(1, '#bfdbfe');
+        bbCtx.fillStyle = sky;
+        bbCtx.fillRect(0, 0, bbW, bbH);
+
+        // Draw little clouds (decorative)
+        bbDrawClouds();
+
+        let allGone = true;
+        bbBalloons.forEach(b => {
+            if (b.popped && b.popAnim <= 0) return;
+            allGone = false;
+
+            if (b.popped) {
+                b.popAnim -= 0.08;
+                bbDrawPop(b);
+                return;
+            }
+
+            // Float up
+            b.y += b.vy;
+            b.wobble += b.wobbleSpeed;
+            const wx = Math.sin(b.wobble) * 3;
+
+            bbDrawBalloon(b, wx);
+
+            // If balloon floats off screen (correct one escaped = punish)
+            if (b.y + b.r < -10) {
+                if (b.isCorrect && !bbLocked) {
+                    bbLocked = true;
+                    bbLives--;
+                    bbShowFeedback('💨 Bóng đúng bay mất! Mất 1 mạng.', false);
+                    setTimeout(() => { bbNextQuestion(); }, 1200);
+                }
+                b.popped = true; b.popAnim = 0;
+            }
+        });
+
+        if (!allGone) {
+            bbAnimId = requestAnimationFrame(bbLoop);
+        }
+    }
+
+    function bbDrawClouds() {
+        const clouds = [{x:bbW*0.15,y:30,s:0.7},{x:bbW*0.55,y:18,s:0.9},{x:bbW*0.82,y:38,s:0.6}];
+        clouds.forEach(c => {
+            bbCtx.save();
+            bbCtx.globalAlpha = 0.5;
+            bbCtx.fillStyle = '#fff';
+            bbCtx.beginPath();
+            bbCtx.arc(c.x, c.y, 22*c.s, 0, Math.PI*2);
+            bbCtx.arc(c.x+18*c.s, c.y-6*c.s, 16*c.s, 0, Math.PI*2);
+            bbCtx.arc(c.x+36*c.s, c.y, 20*c.s, 0, Math.PI*2);
+            bbCtx.fill();
+            bbCtx.restore();
+        });
+    }
+
+    function bbDrawBalloon(b, wx) {
+        const cx = b.x + wx, cy = b.y, r = b.r;
+        bbCtx.save();
+        bbCtx.globalAlpha = b.opacity;
+
+        // Shadow
+        bbCtx.shadowColor = 'rgba(0,0,0,0.15)';
+        bbCtx.shadowBlur = 8;
+        bbCtx.shadowOffsetY = 4;
+
+        // Body gradient
+        const grad = bbCtx.createRadialGradient(cx - r*0.28, cy - r*0.28, r*0.05, cx, cy, r);
+        grad.addColorStop(0, '#fff');
+        grad.addColorStop(0.25, b.color + 'cc');
+        grad.addColorStop(1, b.shade);
+        bbCtx.fillStyle = grad;
+        bbCtx.beginPath();
+        bbCtx.ellipse(cx, cy, r, r * 1.15, 0, 0, Math.PI * 2);
+        bbCtx.fill();
+        bbCtx.shadowBlur = 0; bbCtx.shadowOffsetY = 0;
+
+        // Shine
+        bbCtx.fillStyle = 'rgba(255,255,255,0.45)';
+        bbCtx.beginPath();
+        bbCtx.ellipse(cx - r*0.25, cy - r*0.35, r*0.22, r*0.15, -0.4, 0, Math.PI*2);
+        bbCtx.fill();
+
+        // Knot
+        bbCtx.fillStyle = b.shade;
+        bbCtx.beginPath();
+        bbCtx.arc(cx, cy + r*1.15, 5, 0, Math.PI*2);
+        bbCtx.fill();
+
+        // String
+        bbCtx.strokeStyle = b.shade + 'aa';
+        bbCtx.lineWidth = 1.5;
+        bbCtx.beginPath();
+        bbCtx.moveTo(cx, cy + r*1.15 + 5);
+        bbCtx.bezierCurveTo(cx + 8, cy + r*1.5, cx - 6, cy + r*1.9, cx, cy + r*2.3);
+        bbCtx.stroke();
+
+        // Text label
+        const fs = Math.max(9, Math.min(14, r * 0.28));
+        bbCtx.fillStyle = '#1e293b';
+        bbCtx.font = `bold ${fs}px "Comfortaa", sans-serif`;
+        bbCtx.textAlign = 'center';
+        bbCtx.textBaseline = 'middle';
+        // Wrap text if needed
+        const maxW = r * 1.7;
+        wrapText(bbCtx, b.text, cx, cy - r*0.05, maxW, fs + 4);
+
+        bbCtx.restore();
+    }
+
+    function wrapText(ctx, text, cx, cy, maxW, lineH) {
+        const words = text.split(' ');
+        let lines = [], line = '';
+        words.forEach(w => {
+            const test = line ? line + ' ' + w : w;
+            if (ctx.measureText(test).width > maxW && line) {
+                lines.push(line); line = w;
+            } else { line = test; }
+        });
+        lines.push(line);
+        const startY = cy - (lines.length - 1) * lineH / 2;
+        lines.forEach((l, i) => ctx.fillText(l, cx, startY + i * lineH));
+    }
+
+    function bbDrawPop(b) {
+        if (b.popAnim <= 0) return;
+        const prog = b.popAnim; // 1 → 0
+        const cx = b.x, cy = b.y, r = b.r;
+        bbCtx.save();
+        bbCtx.globalAlpha = prog;
+        // Burst particles
+        const n = 10;
+        for (let i = 0; i < n; i++) {
+            const angle = (Math.PI * 2 / n) * i;
+            const dist = r * (1.4 - prog) * 2;
+            const px = cx + Math.cos(angle) * dist;
+            const py = cy + Math.sin(angle) * dist;
+            bbCtx.fillStyle = b.color;
+            bbCtx.beginPath();
+            bbCtx.arc(px, py, 5 * prog, 0, Math.PI*2);
+            bbCtx.fill();
+        }
+        // Star flash
+        bbCtx.fillStyle = b.isCorrect ? '#facc15' : '#f87171';
+        bbCtx.font = `${Math.round(r * 1.2 * prog)}px serif`;
+        bbCtx.textAlign = 'center'; bbCtx.textBaseline = 'middle';
+        bbCtx.fillText(b.isCorrect ? '💥' : '💨', cx, cy);
+        bbCtx.restore();
+    }
+
+    function bbHandleClick(e) {
+        if (bbLocked) return;
+        const rect = bbCanvas.getBoundingClientRect();
+        const scaleX = bbW / rect.width;
+        const scaleY = bbH / rect.height;
+        const mx = (e.clientX - rect.left) * scaleX;
+        const my = (e.clientY - rect.top)  * scaleY;
+
+        for (const b of bbBalloons) {
+            if (b.popped) continue;
+            const wx = Math.sin(b.wobble) * 3;
+            const dx = mx - (b.x + wx), dy = my - b.y;
+            if (dx*dx + dy*dy <= (b.r * 1.15) * (b.r * 1.15)) {
+                bbLocked = true;
+                b.popped = true; b.popAnim = 1.0;
+
+                if (b.isCorrect) {
+                    bbScore += 10;
+                    bbShowFeedback('🎉 Chính xác! +10 điểm', true);
+                    confetti({ particleCount: 60, spread: 70, origin: { y: 0.55 }, colors: ['#6366f1','#22c55e','#facc15'] });
+                    setTimeout(() => bbNextQuestion(), 1100);
+                } else {
+                    bbLives--;
+                    // Pop correct balloon too
+                    bbBalloons.forEach(bb => { if (bb.isCorrect) { bb.popped = true; bb.popAnim = 1.0; } });
+                    const q = bbQuestions[bbQIdx];
+                    bbShowFeedback(`❌ Sai rồi! Đáp án đúng là: ${q.correct}`, false);
+                    setTimeout(() => bbNextQuestion(), 1400);
+                }
+                bbUpdateHUD();
+                break;
+            }
+        }
+    }
+
+    function bbNextQuestion() {
+        bbQIdx++;
+        document.getElementById('bb-feedback').classList.add('hidden');
+        if (bbLives <= 0) { bbEndGame(false); return; }
+        if (bbQIdx >= bbQuestions.length) { bbEndGame(true); return; }
+        bbLoadQuestion();
+    }
+
+    function bbShowFeedback(msg, ok) {
+        const fb = document.getElementById('bb-feedback');
+        fb.textContent = msg;
+        fb.className = 'mt-3 p-3 rounded-xl text-sm font-bold text-center ' + (ok ? 'text-green-700 bg-green-50 border border-green-200' : 'text-red-700 bg-red-50 border border-red-200');
+        fb.classList.remove('hidden');
+    }
+
+    function bbEndGame(won) {
+        if (bbAnimId) cancelAnimationFrame(bbAnimId);
+        const es = document.getElementById('bb-endscreen');
+        es.classList.remove('hidden');
+        const icon = document.getElementById('bb-end-icon');
+        const title = document.getElementById('bb-end-title');
+        const msg = document.getElementById('bb-end-msg');
+        if (won) {
+            icon.textContent = '🏆';
+            title.textContent = 'XUẤT SẮC! Bắn hết bóng rồi!';
+            title.className = 'text-2xl font-black text-indigo-600';
+            msg.textContent = `Tổng điểm: ${bbScore} | Còn ${bbLives} mạng 🎉`;
+            confetti({ particleCount: 250, spread: 200, colors: ['#6366f1','#22c55e','#facc15','#f87171'] });
+            setTimeout(() => confetti({ particleCount: 150, spread: 160, origin: { y: 0.2 } }), 700);
+        } else {
+            icon.textContent = '💔';
+            title.textContent = 'Hết mạng rồi!';
+            title.className = 'text-2xl font-black text-red-500';
+            msg.textContent = `Điểm đạt được: ${bbScore} — Cố lên, chơi lại nào!`;
+        }
+    }
+
+    function initMatchGame() { /* compatibility shim — balloon game handles itself */ }
+    function resetMatchGame() { bbRestart(); }
+
+    // ======================== QUESTION BANKS ========================
+    const QUESTION_BANK = {
+        nb: [
+            {
+                q: "\\(x^m \\div x^n\\) (với \\(m \\geq n\\)) bằng:",
+                opts: ["\\(x^{m-n}\\)","\\(x^{m+n}\\)","\\(x^{m \\cdot n}\\)","\\(x^{m/n}\\)"],
+                ans: 0,
+                exp: "Khi chia hai lũy thừa cùng cơ số, ta giữ cơ số và trừ số mũ: xᵐ ÷ xⁿ = xᵐ⁻ⁿ.",
+                hint: "Chia lũy thừa cùng cơ số → trừ số mũ"
+            },
+            {
+                q: "\\(12x^5 \\div 4x^2\\) bằng:",
+                opts: ["\\(3x^3\\)","\\(3x^7\\)","\\(8x^3\\)","\\(3x^{2.5}\\)"],
+                ans: 0,
+                exp: "12÷4=3; x⁵÷x²=x³. Kết quả: 3x³.",
+                hint: "Chia hệ số: 12÷4=3; trừ số mũ: 5−2=3"
+            },
+            {
+                q: "Để chia đa thức cho đơn thức, ta:",
+                opts: ["Chia từng hạng tử của đa thức cho đơn thức","Chia hạng tử đầu tiên cho đơn thức","Cộng thêm đơn thức vào đa thức","Trừ đơn thức khỏi từng hạng tử"],
+                ans: 0,
+                exp: "Quy tắc: (A+B+C)÷D = A/D + B/D + C/D.",
+                hint: "(A+B)÷C = A/C + B/C"
+            },
+            {
+                q: "\\((6x^3 - 4x^2 + 2x) \\div 2x\\) bằng:",
+                opts: ["\\(3x^2-2x+1\\)","\\(3x^2-2x\\)","\\(6x^2-4x+2\\)","\\(3x^3-2x^2+x\\)"],
+                ans: 0,
+                exp: "6x³÷2x=3x²; −4x²÷2x=−2x; 2x÷2x=1. Kết quả: 3x²−2x+1.",
+                hint: "Chia từng hạng tử: 6x³÷2x; −4x²÷2x; 2x÷2x"
+            },
+            {
+                q: "Trong phép chia đa thức \\(A = B \\cdot Q + R\\), điều kiện của số dư \\(R\\) là:",
+                opts: ["\\(\\deg(R) < \\deg(B)\\)","\\(\\deg(R) > \\deg(B)\\)","\\(\\deg(R) = \\deg(B)\\)","\\(R = 0\\) luôn luôn"],
+                ans: 0,
+                exp: "Số dư R phải có bậc nhỏ hơn bậc của số chia B (hoặc R=0 nếu chia hết).",
+                hint: "Bậc dư < bậc số chia"
+            },
+            {
+                q: "\\(-15x^4 \\div 3x^2\\) bằng:",
+                opts: ["\\(-5x^2\\)","\\(5x^2\\)","\\(-5x^6\\)","\\(-12x^2\\)"],
+                ans: 0,
+                exp: "−15÷3=−5; x⁴÷x²=x². Kết quả: −5x².",
+                hint: "Chú ý dấu âm: (−15)÷3=−5"
+            },
+            {
+                q: "Phép chia \\((x^2-4) \\div (x-2)\\) có kết quả là:",
+                opts: ["\\(x+2\\)","\\(x-2\\)","\\(x^2+4\\)","\\(x+4\\)"],
+                ans: 0,
+                exp: "x²−4 = (x−2)(x+2), nên (x²−4)÷(x−2) = x+2.",
+                hint: "x²−4 = (x−2)(x+2)"
+            }
+        ],
+        th: [
+            {
+                q: "\\((9x^4 - 3x^3 + 6x^2) \\div 3x^2\\) bằng:",
+                opts: ["\\(3x^2-x+2\\)","\\(3x^2-x\\)","\\(9x^2-3x+6\\)","\\(3x^4-x^3+2x^2\\)"],
+                ans: 0,
+                exp: "9x⁴÷3x²=3x²; −3x³÷3x²=−x; 6x²÷3x²=2. Kết quả: 3x²−x+2.",
+                hint: "Chia từng hạng tử cho 3x²"
+            },
+            {
+                q: "\\((x^2+5x+6) \\div (x+2)\\) bằng:",
+                opts: ["\\(x+3\\)","\\(x+2\\)","\\(x+6\\)","\\(x^2+3x\\)"],
+                ans: 0,
+                exp: "x²+5x+6 = (x+2)(x+3). Vậy kết quả là x+3.",
+                hint: "Phân tích: x²+5x+6 = (x+2)(x+3)"
+            },
+            {
+                q: "\\((x^2 - 9) \\div (x - 3)\\) bằng:",
+                opts: ["\\(x+3\\)","\\(x-3\\)","\\(x+9\\)","\\(x^2+3\\)"],
+                ans: 0,
+                exp: "x²−9 = (x−3)(x+3). Vậy (x²−9)÷(x−3) = x+3.",
+                hint: "Hằng đẳng thức: x²−9 = (x−3)(x+3)"
+            },
+            {
+                q: "Chia \\(x^3 - 1\\) cho \\(x - 1\\), kết quả thương là:",
+                opts: ["\\(x^2+x+1\\)","\\(x^2-x+1\\)","\\(x^2+1\\)","\\(x^2-1\\)"],
+                ans: 0,
+                exp: "x³−1 = (x−1)(x²+x+1). Thương là x²+x+1.",
+                hint: "Hằng đẳng thức: a³−b³ = (a−b)(a²+ab+b²)"
+            },
+            {
+                q: "\\((8x^4 - 4x^2) \\div 4x^2\\) bằng:",
+                opts: ["\\(2x^2-1\\)","\\(2x^2-4\\)","\\(2x^4-x^2\\)","\\(4x^2-1\\)"],
+                ans: 0,
+                exp: "8x⁴÷4x²=2x²; −4x²÷4x²=−1. Kết quả: 2x²−1.",
+                hint: "8x⁴÷4x²=2x²; −4x²÷4x²=−1"
+            }
+        ],
+        vd: [
+            {
+                q: "Chia \\(2x^3 - 3x^2 + x\\) cho \\(x\\), kết quả là:",
+                opts: ["\\(2x^2-3x+1\\)","\\(2x^2-3x\\)","\\(2x^3-3x^2\\)","\\(2x-3+\\frac{1}{x}\\)"],
+                ans: 0,
+                exp: "2x³÷x=2x²; −3x²÷x=−3x; x÷x=1. Kết quả: 2x²−3x+1.",
+                hint: "Chia từng hạng tử cho x"
+            },
+            {
+                q: "Tìm \\(Q\\) biết \\(x^2 + 3x + 2 = (x+1) \\cdot Q\\):",
+                opts: ["\\(Q = x+2\\)","\\(Q = x+1\\)","\\(Q = x+3\\)","\\(Q = x-2\\)"],
+                ans: 0,
+                exp: "x²+3x+2 = (x+1)(x+2). Vậy Q = x+2.",
+                hint: "Phân tích nhân tử: x²+3x+2 = (x+1)(x+2)"
+            },
+            {
+                q: "Chia \\(x^3+2x^2-x-2\\) cho \\(x+2\\), dư là:",
+                opts: ["\\(0\\)","\\(2\\)","\\(-2\\)","\\(x-1\\)"],
+                ans: 0,
+                exp: "x³+2x²−x−2 = x²(x+2)−(x+2) = (x+2)(x²−1). Chia hết, dư 0.",
+                hint: "Nhóm: x²(x+2)−1(x+2) = (x+2)(x²−1)"
+            }
+        ]
+    };
+
+    const TF_BANK = [
+        {
+            q: "Chia đơn thức cho đơn thức",
+            items: [
+                {t:"a) \\(10x^4 \\div 2x^2 = 5x^2\\)", a:true,  exp:"Đúng! 10÷2=5, x⁴÷x²=x². Kết quả: 5x².", h:"Chia hệ số: 10÷2=5; trừ số mũ: 4−2=2"},
+                {t:"b) \\(6x^3 \\div 3x^3 = 2x\\)", a:false, exp:"Sai! 6x³÷3x³ = 2 (không còn x vì 3−3=0, x⁰=1).", h:"x³÷x³ = x⁰ = 1"},
+                {t:"c) \\(-12x^5 \\div 4x^2 = -3x^3\\)", a:true,  exp:"Đúng! −12÷4=−3, x⁵÷x²=x³.", h:"(−12)÷4=−3; 5−2=3"},
+                {t:"d) \\(8x^6 \\div 2x^3 = 4x^2\\)", a:false, exp:"Sai! 8÷2=4, x⁶÷x³=x³. Kết quả đúng: 4x³.", h:"Trừ số mũ: 6−3=3, không phải 2"}
+            ]
+        },
+        {
+            q: "Chia đa thức cho đơn thức",
+            items: [
+                {t:"a) \\((4x^3-2x^2) \\div 2x = 2x^2-x\\)", a:true,  exp:"Đúng! 4x³÷2x=2x², −2x²÷2x=−x.", h:"Chia từng hạng tử"},
+                {t:"b) \\((6x^2+3x) \\div 3x = 2x+1\\)", a:true,  exp:"Đúng! 6x²÷3x=2x, 3x÷3x=1.", h:"6x²÷3x=2x; 3x÷3x=1"},
+                {t:"c) \\((x^3-x) \\div x = x^2\\)", a:false, exp:"Sai! x³÷x=x², −x÷x=−1. Kết quả đúng: x²−1.", h:"Phải chia cả hạng tử −x cho x"},
+                {t:"d) \\((9x^4-6x^3+3x^2) \\div 3x^2 = 3x^2-2x+1\\)", a:true,  exp:"Đúng! 9x⁴÷3x²=3x², −6x³÷3x²=−2x, 3x²÷3x²=1.", h:"Chia từng hạng tử cho 3x²"}
+            ]
+        },
+        {
+            q: "Phép chia có dư và kiểm tra",
+            items: [
+                {t:"a) \\(A = B \\cdot Q + R\\) trong đó \\(\\deg(R) < \\deg(B)\\) hoặc \\(R=0\\)", a:true,  exp:"Đúng! Đây là định nghĩa phép chia đa thức có dư.", h:"Điều kiện bắt buộc của số dư"},
+                {t:"b) Mọi phép chia đa thức đều chia hết (dư bằng 0)", a:false, exp:"Sai! Có thể có dư khác 0, ví dụ (x²+1)÷(x+1) dư là 2.", h:"Chia hết chỉ khi R=0"},
+                {t:"c) Kiểm tra phép chia: \\((x^2-1) \\div (x-1) = x+1\\) vì \\((x-1)(x+1)=x^2-1\\)", a:true,  exp:"Đúng! Nhân lại: (x−1)(x+1)=x²−1. Phép chia đúng.", h:"Kiểm tra: thương × số chia = số bị chia"},
+                {t:"d) \\((x^2+2) \\div (x+1)\\) chia hết", a:false, exp:"Sai! Dư của phép chia này khác 0. Thực hiện: x²+2=(x+1)(x−1)+3, dư là 3.", h:"Thử x=−1: (−1)²+2=3≠0"}
+            ]
+        },
+        {
+            q: "Phân tích và áp dụng",
+            items: [
+                {t:"a) \\((x^2-4) \\div (x+2) = x-2\\)", a:true,  exp:"Đúng! x²−4=(x+2)(x−2), vậy thương là x−2.", h:"x²−4=(x+2)(x−2)"},
+                {t:"b) \\((x^3-8) \\div (x-2) = x^2+2x+4\\)", a:true,  exp:"Đúng! x³−8=(x−2)(x²+2x+4).", h:"Hằng đẳng thức a³−b³=(a−b)(a²+ab+b²)"},
+                {t:"c) \\((x^2+4x+4) \\div (x+2) = x+2\\)", a:true,  exp:"Đúng! x²+4x+4=(x+2)². Thương là x+2.", h:"x²+4x+4=(x+2)²"},
+                {t:"d) Nếu \\((x^2+bx+6) \\div (x+2)\\) chia hết thì \\(b=5\\)", a:true,  exp:"Đúng! x²+5x+6=(x+2)(x+3). Với b=5 phép chia hết.", h:"Thử: x²+5x+6=(x+2)(x+3)"}
+            ]
+        },
+        {
+            q: "Vận dụng tổng hợp",
+            items: [
+                {t:"a) \\((2x^3+4x^2-6x) \\div 2x = x^2+2x-3\\)", a:true,  exp:"Đúng! 2x³÷2x=x², 4x²÷2x=2x, −6x÷2x=−3.", h:"Chia từng hạng tử cho 2x"},
+                {t:"b) Bậc của thương trong phép chia \\(x^5 \\div x^2\\) là 3", a:true,  exp:"Đúng! x⁵÷x²=x³, bậc là 3.", h:"5−2=3"},
+                {t:"c) \\((x^2-x-6) \\div (x-3) = x+2\\)", a:true,  exp:"Đúng! x²−x−6=(x−3)(x+2).", h:"Phân tích: x²−x−6=(x−3)(x+2)"},
+                {t:"d) \\(20x^4y^2 \\div 4x^2y = 5x^3y\\)", a:false, exp:"Sai! 20÷4=5; x⁴÷x²=x²; y²÷y=y. Kết quả đúng: 5x²y.", h:"x⁴÷x²=x², không phải x³"}
+            ]
+        }
+    ];
+
+    const FILL_BANK = [
+        {q:"\\(15x^6 \\div 3x^2 = ax^4\\). Tìm \\(a\\).", a:"5", exp:"15÷3=5; x⁶÷x²=x⁴. Vậy a=5.", hint:"Chia hệ số: 15÷3=5"},
+        {q:"\\(x^m \\div x^3 = x^5\\). Tìm \\(m\\).", a:"8", exp:"m−3=5 → m=8.", hint:"xᵐ÷x³=xᵐ⁻³=x⁵ → m−3=5"},
+        {q:"\\((10x^4-5x^2) \\div 5x^2 = 2x^2 + c\\). Tìm \\(c\\).", a:"-1", exp:"10x⁴÷5x²=2x²; −5x²÷5x²=−1. Vậy c=−1.", hint:"−5x²÷5x²=−1"},
+        {q:"\\((x^2+7x+12) \\div (x+3)\\). Thương là \\(x+k\\). Tìm \\(k\\).", a:"4", exp:"x²+7x+12=(x+3)(x+4). Thương là x+4, nên k=4.", hint:"Phân tích: x²+7x+12=(x+3)(x+?)"},
+        {q:"Chia \\(x^3-8\\) cho \\(x-2\\). Số dư bằng bao nhiêu?", a:"0", exp:"x³−8=(x−2)(x²+2x+4). Chia hết, dư 0.", hint:"x³−8=x³−2³=(x−2)(x²+2x+4)"},
+        {q:"\\(-24x^5 \\div 6x^3 = nx^2\\). Tìm \\(n\\).", a:"-4", exp:"(−24)÷6=−4; x⁵÷x³=x². Vậy n=−4.", hint:"Chú ý dấu: (−24)÷6=−4"},
+        {q:"\\((x^2-16) \\div (x-4) = x+p\\). Tìm \\(p\\).", a:"4", exp:"x²−16=(x−4)(x+4). Thương là x+4, nên p=4.", hint:"x²−16=(x−4)(x+4)"},
+        {q:"\\((12x^3+8x^2-4x) \\div 4x = 3x^2 + 2x + q\\). Tìm \\(q\\).", a:"-1", exp:"−4x÷4x=−1. Vậy q=−1.", hint:"−4x÷4x=−1"},
+        {q:"Chia \\(x^2+3x+1\\) cho \\(x+1\\). Số dư bằng bao nhiêu?", a:"-1", exp:"x²+3x+1=(x+1)(x+2)+(−1). Số dư là −1.", hint:"Thay x=−1: (−1)²+3(−1)+1=1−3+1=−1"},
+        {q:"\\(x^n \\div x^4 = x^3\\). Tìm \\(n\\).", a:"7", exp:"n−4=3 → n=7.", hint:"xⁿ÷x⁴=xⁿ⁻⁴=x³ → n=7"},
+        {q:"\\((6x^4-3x^2+9x) \\div 3x\\). Hệ số của \\(x\\) trong kết quả là bao nhiêu?", a:"-1", exp:"6x⁴÷3x=2x³; −3x²÷3x=−x; 9x÷3x=3. Hệ số của x là −1.", hint:"−3x²÷3x=−x, hệ số là −1"},
+        {q:"\\((x^2+x-6) \\div (x-2) = x+k\\). Tìm \\(k\\).", a:"3", exp:"x²+x−6=(x−2)(x+3). Thương là x+3, nên k=3.", hint:"Phân tích: x²+x−6=(x−2)(x+3)"}
+    ];
+
+    // ======================== MAIN QUIZ ========================
+    let MCQ=[], TF=[], FILL=[];
+    let userMcq = [];
+    let userTf  = [];
+    let submitted = false;
+
+    function shuffle(arr) {
+        for (let i=arr.length-1;i>0;i--) {
+            const j=Math.floor(Math.random()*(i+1));
+            [arr[i],arr[j]]=[arr[j],arr[i]];
+        }
+    }
+
+    function generateQuestions() {
+        MCQ=[];
+        const nb=[...QUESTION_BANK.nb]; shuffle(nb);
+        for (let i=0;i<7;i++) MCQ.push({...nb[i%nb.length], l:'nb'});
+        const th=[...QUESTION_BANK.th]; shuffle(th);
+        for (let i=0;i<5;i++) MCQ.push({...th[i%th.length], l:'th'});
+        const vd=[...QUESTION_BANK.vd]; shuffle(vd);
+        for (let i=0;i<3;i++) MCQ.push({...vd[i%vd.length], l:'vd'});
+        const tfPool=[...TF_BANK]; shuffle(tfPool); TF=tfPool.slice(0,5);
+        const fillPool=[...FILL_BANK]; shuffle(fillPool); FILL=fillPool.slice(0,5);
+    }
+
+    function init() {
+        generateQuestions();
+        userMcq = Array(MCQ.length).fill(null);
+        userTf  = Array(TF.length).fill(null).map(() => Array(4).fill(null));
+        renderAll();
+        bbInit();
+        bbRestart();
+    }
+
+    function toggleHint(id) {
+        const el=document.getElementById(id);
+        el.style.display=el.style.display==='block'?'none':'block';
+    }
+
+    function renderAll() {
+        const mcqBox=document.getElementById('mcq-container');
+        mcqBox.innerHTML='';
+        MCQ.forEach((d,i)=>{
+            if (!d||!d.q) return;
+            let badge='';
+            if (d.l==='nb') badge='<span class="level-badge level-nhan-biet">NHẬN BIẾT</span>';
+            else if (d.l==='th') badge='<span class="level-badge level-thong-hieu">THÔNG HIỂU</span>';
+            else badge='<span class="level-badge level-van-dung">VẬN DỤNG</span>';
+            let optsHtml=d.opts.map((o,j)=>`
+                <div id="mcq-${i}-${j}" class="mcq-option p-4 rounded-2xl" onclick="setMcq(${i},${j})">
+                    <span class="font-black mr-2 text-blue-500">${String.fromCharCode(65+j)}.</span>${o}
+                </div>`).join('');
+            mcqBox.innerHTML+=`
+                <div id="mcq-card-${i}" class="bg-slate-50 p-5 rounded-2xl border space-y-3">
+                    <div class="flex items-start justify-between flex-wrap gap-2">
+                        <span class="font-bold"><strong>Câu ${i+1}.</strong> ${d.q}</span>
+                        <div class="flex items-center gap-2">${badge}<button onclick="toggleHint('mcq-hint-${i}')" class="hint-btn">💡 Gợi ý</button></div>
+                    </div>
+                    <div id="mcq-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${optsHtml}</div>
+                    <div id="mcq-fb-${i}" class="feedback-box"></div>
+                </div>`;
+        });
+
+        const tfBox=document.getElementById('tf-container');
+        tfBox.innerHTML='';
+        TF.forEach((d,i)=>{
+            let rows=d.items.map((it,j)=>`
+                <tr class="border-b last:border-0">
+                    <td class="py-3 pr-4 text-sm">${it.t}</td>
+                    <td class="py-3 whitespace-nowrap">
+                        <button id="tf-btn-${i}-${j}-t" onclick="setTf(${i},${j},true)"  class="check-btn px-5 py-2 rounded-xl mr-2 font-bold text-sm bg-slate-100">Đúng</button>
+                        <button id="tf-btn-${i}-${j}-s" onclick="setTf(${i},${j},false)" class="check-btn px-5 py-2 rounded-xl font-bold text-sm bg-slate-100">Sai</button>
+                        <button onclick="toggleHint('tf-hint-${i}-${j}')" class="hint-btn">💡</button>
+                    </td>
+                </tr>
+                <tr><td colspan="2"><div id="tf-hint-${i}-${j}" class="hint-box">💡 ${it.h}</div><div id="tf-fb-${i}-${j}" class="feedback-box"></div></td></tr>`).join('');
+            tfBox.innerHTML+=`
+                <div class="bg-slate-50 p-5 rounded-2xl border space-y-2">
+                    <h4 class="font-bold text-blue-700">Câu ${i+1}: ${d.q}</h4>
+                    <table class="w-full"><tbody>${rows}</tbody></table>
+                </div>`;
+        });
+
+        const fillBox=document.getElementById('fill-container');
+        fillBox.innerHTML='';
+        FILL.forEach((d,i)=>{
+            fillBox.innerHTML+=`
+                <div class="bg-slate-50 p-5 rounded-2xl border space-y-2">
+                    <div class="flex items-start justify-between">
+                        <span><strong>Câu ${i+1}.</strong> ${d.q}</span>
+                        <button onclick="toggleHint('fill-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                    </div>
+                    <div id="fill-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                    <div class="flex items-center gap-4 mt-2">
+                        <input type="text" id="fill-${i}" class="fill-input">
+                    </div>
+                    <div id="fill-fb-${i}" class="feedback-box"></div>
+                </div>`;
+        });
+
+        if (window.MathJax) MathJax.typesetPromise([
+            document.getElementById('mcq-container'),
+            document.getElementById('tf-container'),
+            document.getElementById('fill-container')
+        ]).catch(()=>{});
+    }
+
+    function setMcq(q,o) {
+        if (submitted) return;
+        userMcq[q]=o;
+        document.getElementById(`mcq-card-${q}`).querySelectorAll('.mcq-option').forEach(opt=>opt.classList.remove('selected'));
+        document.getElementById(`mcq-${q}-${o}`).classList.add('selected');
+    }
+    function setTf(q,i,v) {
+        if (submitted) return;
+        userTf[q][i]=v;
+        document.getElementById(`tf-btn-${q}-${i}-t`).classList.remove('selected-true');
+        document.getElementById(`tf-btn-${q}-${i}-s`).classList.remove('selected-false');
+        if (v) document.getElementById(`tf-btn-${q}-${i}-t`).classList.add('selected-true');
+        else   document.getElementById(`tf-btn-${q}-${i}-s`).classList.add('selected-false');
+    }
+
+    function celebrate(score) {
+        const pct=(score/10)*100;
+        if (pct>=90) {
+            const end=Date.now()+3000;
+            const iv=setInterval(()=>{if(Date.now()>end){clearInterval(iv);return;} confetti({particleCount:100,spread:160,origin:{y:0.6}});},250);
+        } else if (pct>=70) {
+            confetti({particleCount:150,spread:100,origin:{y:0.6}});
+            setTimeout(()=>confetti({particleCount:100,spread:80,origin:{y:0.6}}),500);
+        } else if (pct>=50) {
+            confetti({particleCount:100,spread:70,origin:{y:0.6}});
+        } else {
+            confetti({particleCount:50,spread:50,origin:{y:0.6}});
+        }
+    }
+
+    function checkResults() {
+        submitted=true;
+        let correct=0;
+        const total=MCQ.length+TF.length*4+FILL.length;
+
+        MCQ.forEach((d,i)=>{
+            const fb=document.getElementById(`mcq-fb-${i}`);
+            const opts=document.getElementById(`mcq-card-${i}`).querySelectorAll('.mcq-option');
+            opts[d.ans].classList.add('correct');
+            if (userMcq[i]===d.ans) {
+                correct++;
+                fb.innerHTML='✔️ <strong>Đúng!</strong> '+d.exp;
+                fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+            } else {
+                if (userMcq[i]!==null) opts[userMcq[i]].classList.add('wrong');
+                fb.innerHTML='❌ <strong>Sai!</strong> '+d.exp;
+                fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+            }
+            fb.style.display='block';
+        });
+
+        TF.forEach((d,i)=>{
+            d.items.forEach((it,j)=>{
+                const fb=document.getElementById(`tf-fb-${i}-${j}`);
+                if (userTf[i][j]===it.a) {
+                    correct++;
+                    fb.innerHTML='✔️ '+it.exp;
+                    fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+                } else {
+                    fb.innerHTML='❌ '+it.exp;
+                    fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+                }
+                fb.style.display='block';
+                if (it.a) document.getElementById(`tf-btn-${i}-${j}-t`).classList.add('correct-highlight');
+                else       document.getElementById(`tf-btn-${i}-${j}-s`).classList.add('correct-highlight');
+            });
+        });
+
+        FILL.forEach((d,i)=>{
+            const input=document.getElementById(`fill-${i}`);
+            const fb=document.getElementById(`fill-fb-${i}`);
+            const user=input.value.trim().toLowerCase().replace(/\s+/g,'').replace(/,/g,'.').replace(/°/g,'').replace(/cm/g,'');
+            const ans=d.a.toLowerCase().replace(/\s+/g,'').replace(/,/g,'.').replace(/°/g,'').replace(/cm/g,'');
+            let ok = user===ans;
+            if (!ok) {
+                function evalFrac(s){const m=s.match(/^(-?\d+)\/(\d+)$/);if(m)return parseInt(m[1])/parseInt(m[2]);const n=parseFloat(s);return isNaN(n)?null:n;}
+                const uVal=evalFrac(user), aVal=evalFrac(ans);
+                if (uVal!==null && aVal!==null && Math.abs(uVal-aVal)<0.01) ok=true;
+            }
+            if (ok) {
+                correct++;
+                input.classList.add('fill-correct');
+                fb.innerHTML='✔️ '+d.exp;
+                fb.className='feedback-box block text-green-700 bg-green-50 border-green-300';
+            } else {
+                input.classList.add('fill-wrong');
+                fb.innerHTML='❌ Đáp án: <strong>'+d.a+'</strong>. '+d.exp;
+                fb.className='feedback-box block text-red-700 bg-red-50 border-red-300';
+            }
+            fb.style.display='block';
+        });
+
+        const score=(correct/total)*10;
+        const pct=(correct/total)*100;
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('result-board').classList.remove('hidden');
+        const scoreText=document.getElementById('score-text');
+        scoreText.innerHTML=`<div class="text-center"><div class="text-5xl font-black mb-2">${score.toFixed(1)}/10</div><div class="text-lg">Đúng ${correct}/${total} câu (${pct.toFixed(0)}%)</div></div>`;
+        if (pct>=90)      {scoreText.classList.add('score-excellent'); document.getElementById('score-message').innerHTML='🎉 <span class="text-green-600">XUẤT SẮC!</span>';}
+        else if (pct>=70) {scoreText.classList.add('score-good');      document.getElementById('score-message').innerHTML='👏 <span class="text-blue-600">KHÁ TỐT!</span>';}
+        else if (pct>=50) {scoreText.classList.add('score-average');   document.getElementById('score-message').innerHTML='💪 <span class="text-orange-600">TRUNG BÌNH</span>';}
+        else              {scoreText.classList.add('score-low');       document.getElementById('score-message').innerHTML='📚 <span class="text-red-600">CẦN CỐ GẮNG</span>';}
+        celebrate(score);
+        saveScore(score);
+        showOptions();
+        if (window.MathJax) {
+            MathJax.typesetPromise([
+                document.getElementById('mcq-container'),
+                document.getElementById('tf-container'),
+                document.getElementById('fill-container'),
+                document.getElementById('result-board')
+            ]).catch(err => console.warn('MathJax typeset error:', err));
+        }
+        document.getElementById('result-board').scrollIntoView({behavior:'smooth',block:'center'});
+    }
+
+    function showOptions() {
+        const old=document.getElementById('post-options');
+        if (old) old.remove();
+        const container=document.getElementById('result-board');
+        const div=document.createElement('div');
+        div.id='post-options';
+        div.className='mt-8 p-6 bg-white rounded-2xl shadow-xl border-2 border-blue-400 animate-bounce-in';
+        div.innerHTML=`
+            <h3 class="text-xl font-bold text-blue-800 mb-4 text-center">🌟 Tiếp tục?</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="regenerate('retry')"      class="p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all border-b-4 border-gray-300 active:border-b-0 font-bold text-gray-700">🔄 Làm lại</button>
+                <button onclick="regenerate('equivalent')" class="p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-all border-b-4 border-blue-300 active:border-b-0 font-bold text-blue-700">📚 Đề mới tương đương</button>
+                <button onclick="regenerate('harder')"     class="p-4 bg-orange-100 hover:bg-orange-200 rounded-xl transition-all border-b-4 border-orange-300 active:border-b-0 font-bold text-orange-700">🚀 Đề nâng cao</button>
+            </div>`;
+        container.appendChild(div);
+    }
+
+    async function regenerate(mode) {
+        document.getElementById('loading-overlay').style.display='flex';
+        await new Promise(r=>setTimeout(r,800));
+        if (mode!=='retry') generateQuestions();
+        submitted=false;
+        userMcq=Array(MCQ.length).fill(null);
+        userTf=Array(TF.length).fill(null).map(()=>Array(4).fill(null));
+        const opts=document.getElementById('post-options');
+        if (opts) opts.remove();
+        document.getElementById('result-board').classList.add('hidden');
+        document.getElementById('submit-btn').classList.remove('hidden');
+        renderAll();
+        document.getElementById('loading-overlay').style.display='none';
+        document.getElementById('capture-mcq').scrollIntoView({behavior:'smooth'});
+    }
+
+    // ======================== DOWNLOAD ========================
+    async function downloadKnowledgePDF() {
+        await captureWithMathJax('capture-knowledge', 'Kien-thuc-Phep-chia-da-thuc-mot-bien.png');
+    }
+    // ===== Hàm serialize SVG của MathJax thành ảnh PNG =====
+    function serializeSvgToDataUrl(svgEl, dpr) {
+        return new Promise((resolve) => {
+            const clone = svgEl.cloneNode(true);
+            clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+            const bRect = svgEl.getBoundingClientRect();
+            const w = bRect.width || parseFloat(svgEl.getAttribute('width')) || 50;
+            const h = bRect.height || parseFloat(svgEl.getAttribute('height')) || 20;
+            clone.setAttribute('width', w);
+            clone.setAttribute('height', h);
+            const svgStr = new XMLSerializer().serializeToString(clone);
+            const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => {
+                const c = document.createElement('canvas');
+                c.width  = w * dpr;
+                c.height = h * dpr;
+                const ctx = c.getContext('2d');
+                ctx.clearRect(0, 0, c.width, c.height);
+                ctx.drawImage(img, 0, 0, c.width, c.height);
+                URL.revokeObjectURL(url);
+                resolve({ dataUrl: c.toDataURL('image/png'), w, h });
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+            img.src = url;
+        });
+    }
+
+    // Chờ MathJax render xong hoàn toàn trước khi chụp
+    async function waitForMathJax() {
+        if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+            await window.MathJax.startup.promise;
+        }
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            await window.MathJax.typesetPromise();
+        }
+        await new Promise(r => setTimeout(r, 300));
+    }
+
+    // ===== Hàm chụp ảnh có MathJax: thay mjx-container bằng <img> PNG rồi dùng html2canvas =====
+    async function captureWithMathJax(elementId, filename) {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        loadingOverlay.style.display = 'flex';
+        loadingOverlay.querySelector('p').textContent = 'Đang chờ công thức toán render...';
+
+        await waitForMathJax();
+
+        loadingOverlay.querySelector('p').textContent = 'Đang tạo ảnh...';
+
+        try {
+            const element = document.getElementById(elementId);
+            const clone = element.cloneNode(true);
+            clone.style.cssText = `
+                position: fixed; top: 0; left: 0; z-index: -9999;
+                width: ${element.offsetWidth}px;
+                background: #ffffff; pointer-events: none;
+            `;
+            document.body.appendChild(clone);
+
+            const origContainers = Array.from(element.querySelectorAll('mjx-container'));
+            const cloneContainers = Array.from(clone.querySelectorAll('mjx-container'));
+            const DPR = 3;
+
+            await Promise.all(origContainers.map(async (orig, i) => {
+                const svg = orig.querySelector('svg');
+                const cloneItem = cloneContainers[i];
+                if (!svg || !cloneItem) return;
+                const result = await serializeSvgToDataUrl(svg, DPR);
+                if (!result) return;
+                const imgEl = document.createElement('img');
+                imgEl.src = result.dataUrl;
+                imgEl.style.cssText = `
+                    display: inline-block;
+                    width: ${result.w}px;
+                    height: ${result.h}px;
+                    vertical-align: ${orig.style.verticalAlign || 'middle'};
+                    margin: 0 1px;
+                `;
+                cloneItem.replaceWith(imgEl);
+            }));
+
+            await Promise.all(
+                Array.from(clone.querySelectorAll('img')).map(img =>
+                    img.complete ? Promise.resolve() :
+                    new Promise(r => { img.onload = r; img.onerror = r; })
+                )
+            );
+
+            const canvas = await html2canvas(clone, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                imageTimeout: 5000,
+                width: element.offsetWidth,
+                height: clone.scrollHeight
+            });
+
+            document.body.removeChild(clone);
+
+            const ua = navigator.userAgent;
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+            const isWebView = /FBAN|FBAV|FB_IAB|ZaloApp|zalo|Instagram|Line\/|MicroMessenger|WebView|(iPhone|iPod|iPad)(?!.*Safari)/i.test(ua);
+            const dataUrl = canvas.toDataURL('image/png');
+
+            if (!isMobile) {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } else if (isWebView) {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:99999;overflow:auto;-webkit-overflow-scrolling:touch;padding:20px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;';
+                overlay.innerHTML = `
+                    <div style="background:#1e293b;border-radius:16px;padding:16px 20px;max-width:360px;width:100%;margin-top:20px;">
+                        <div style="font-size:2rem;margin-bottom:8px;">⚠️</div>
+                        <p style="color:white;font-weight:bold;font-size:1rem;margin:0 0 8px;">Không lưu được trong Zalo/Facebook</p>
+                        <p style="color:#94a3b8;font-size:0.82rem;margin:0 0 16px;line-height:1.6;">
+                            Trình duyệt trong ứng dụng không cho phép lưu ảnh.<br>
+                            Hãy mở trang bằng <b style="color:#38bdf8">Chrome</b> hoặc <b style="color:#38bdf8">Safari</b>:
+                        </p>
+                        <div style="background:#0f172a;border-radius:12px;padding:12px;text-align:left;font-size:0.8rem;color:#cbd5e1;line-height:2;">
+                            <div>1️⃣ Nhấn <b style="color:white">⋮</b> hoặc <b style="color:white">···</b> góc trên bên phải</div>
+                            <div>2️⃣ Chọn <b style="color:#4ade80">"Mở bằng trình duyệt"</b></div>
+                            <div>3️⃣ Bấm nút tải ảnh lại</div>
+                        </div>
+                        <p style="color:#64748b;font-size:0.75rem;margin:12px 0 4px;">Hoặc xem ảnh bên dưới rồi chụp màn hình</p>
+                        <button onclick="this.closest('div').parentNode.style.justifyContent='flex-start'"
+                            style="background:#3b82f6;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.85rem;cursor:pointer;margin-bottom:4px;">
+                            📷 Xem ảnh để chụp màn hình
+                        </button>
+                        <button onclick="this.closest('[style*=z-index]').remove()"
+                            style="background:#475569;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.85rem;cursor:pointer;margin-top:4px;">
+                            ✖ Đóng
+                        </button>
+                    </div>
+                    <img src="${dataUrl}" style="max-width:100%;border-radius:12px;margin-top:16px;display:block;">
+                `;
+                document.body.appendChild(overlay);
+
+            } else {
+                let saved = false;
+                if (navigator.canShare) {
+                    try {
+                        const blob = await (await fetch(dataUrl)).blob();
+                        const file = new File([blob], filename, { type: 'image/png' });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({ files: [file], title: filename });
+                            saved = true;
+                        }
+                    } catch(e) {}
+                }
+
+                if (!saved) {
+                    const win = window.open('', '_blank');
+                    if (win) {
+                        win.document.write(`<!DOCTYPE html><html><head>
+                            <meta name="viewport" content="width=device-width,initial-scale=1">
+                            <title>${filename}</title>
+                            <style>body{margin:0;background:#000;display:flex;flex-direction:column;align-items:center;padding:16px;font-family:sans-serif;}p{color:#fbbf24;font-size:0.9rem;text-align:center;margin-bottom:10px;}img{max-width:100%;border-radius:8px;}</style>
+                        </head><body>
+                            <p>📱 Giữ tay vào ảnh → chọn <b>Lưu ảnh</b></p>
+                            <img src="${dataUrl}">
+                        </body></html>`);
+                        win.document.close();
+                    } else {
+                        const overlay = document.createElement('div');
+                        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:99999;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px;text-align:center;';
+                        const imgEl = document.createElement('img');
+                        imgEl.src = dataUrl;
+                        imgEl.style.cssText = 'max-width:100%;border-radius:12px;margin-top:10px;display:block;margin-left:auto;margin-right:auto;';
+                        overlay.innerHTML = '<p style="color:white;font-weight:bold;font-size:1rem;margin-bottom:4px;">📱 Giữ tay vào ảnh → chọn <b>Lưu ảnh</b></p><button onclick="this.parentNode.remove()" style="background:#ef4444;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.9rem;margin-bottom:12px;cursor:pointer;">✖ Đóng</button>';
+                        overlay.appendChild(imgEl);
+                        document.body.appendChild(overlay);
+                    }
+                }
+            }
+
+            loadingOverlay.style.display = 'none';
+        } catch (error) {
+            console.error('captureWithMathJax error:', error);
+            if (document.body.contains(document.querySelector('[style*="z-index: -9999"]'))) {
+                document.body.removeChild(document.querySelector('[style*="z-index: -9999"]'));
+            }
+            loadingOverlay.style.display = 'none';
+            alert('Đã xảy ra lỗi khi tải ảnh: ' + error.message);
+        }
+    }
+
+    async function downloadMCQImage()  { await captureWithMathJax('capture-mcq',  'De-TN-Bai28.png'); }
+    async function downloadTFImage()   { await captureWithMathJax('capture-tf',   'De-DS-Bai28.png'); }
+    async function downloadFillImage() { await captureWithMathJax('capture-fill', 'De-Dien-Bai28.png'); }
+
+    // ======================== CHATBOT ========================
+    const CHATBOT_KNOWLEDGE = {
+        'chia đơn thức cho đơn thức': 'Chia đơn thức cho đơn thức:<br>• Chia hệ số cho hệ số<br>• Chia lũy thừa cùng cơ số: \\(x^m \\div x^n = x^{m-n}\\)<br>• Ví dụ: \\(12x^5 \\div 4x^2 = 3x^3\\)',
+        'đơn thức': 'Chia đơn thức cho đơn thức:<br>• Chia hệ số: ví dụ 12÷4=3<br>• Trừ số mũ: x⁵÷x²=x³<br>• Điều kiện: mỗi biến trong số chia phải có trong số bị chia với số mũ ≤',
+        'chia đa thức cho đơn thức': 'Chia đa thức cho đơn thức:<br>• Chia từng hạng tử của đa thức cho đơn thức<br>• \\((A+B+C) \\div D = A/D + B/D + C/D\\)<br>• Ví dụ: \\((6x^3-4x^2+2x) \\div 2x = 3x^2-2x+1\\)',
+        'chia đa thức cho đa thức': 'Chia đa thức cho đa thức (thuật toán):<br>• Sắp xếp theo bậc giảm dần<br>• Chia hạng tử cao nhất của số bị chia cho hạng tử cao nhất của số chia<br>• Nhân và trừ, lặp lại đến khi bậc dư < bậc số chia<br>• \\(A = B \\cdot Q + R\\)',
+        'số dư': 'Số dư trong phép chia đa thức:<br>• Ký hiệu: \\(A = B \\cdot Q + R\\)<br>• Điều kiện: \\(\\deg(R) < \\deg(B)\\) hoặc R=0<br>• Nếu R=0: phép chia hết<br>• Kiểm tra: B·Q+R = A',
+        'ví dụ': '📌 Ví dụ chia đa thức:<br>• \\(12x^5 \\div 4x^2 = 3x^3\\)<br>• \\((6x^3-4x^2) \\div 2x = 3x^2-2x\\)<br>• \\((x^2-9) \\div (x-3) = x+3\\)<br>• \\(x^3-1 = (x-1)(x^2+x+1)\\)',
+        'hằng đẳng thức': 'Hằng đẳng thức hữu ích cho phép chia:<br>• \\(a^2-b^2 = (a-b)(a+b)\\)<br>• \\(a^3-b^3 = (a-b)(a^2+ab+b^2)\\)<br>• \\(a^3+b^3 = (a+b)(a^2-ab+b^2)\\)',
+        'kiểm tra': 'Kiểm tra phép chia đa thức:<br>• Nếu A÷B=Q dư R thì: \\(A = B \\cdot Q + R\\)<br>• Nhân lại: thương × số chia + dư = số bị chia<br>• Ví dụ: x²+5x+6 ÷ (x+2) = x+3<br>• Kiểm tra: (x+2)(x+3) = x²+5x+6 ✓',
+    };
+
+    function toggleChatbot() {
+        const win=document.getElementById('chatbot-window');
+        const toggle=document.getElementById('chatbot-toggle');
+        if (win.style.display==='flex') {
+            win.style.display='none';
+            toggle.innerHTML='💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>';
+        } else {
+            win.style.display='flex';
+            toggle.innerHTML='✖<span class="chatbot-label">Đóng</span>';
+        }
+    }
+    function addBotMessage(text) {
+        const container=document.getElementById('chatbot-messages');
+        const div=document.createElement('div');
+        div.className='chat-message bot';
+        div.innerHTML=`<div class="bot-avatar">💬</div><div class="message-content">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop=container.scrollHeight;
+        if (window.MathJax) MathJax.typeset([container]);
+    }
+    function addUserMessage(text) {
+        const container=document.getElementById('chatbot-messages');
+        const div=document.createElement('div');
+        div.className='chat-message user';
+        div.innerHTML=`<div class="message-content">${text}</div>`;
+        container.appendChild(div);
+        container.scrollTop=container.scrollHeight;
+    }
+    function getBotResponse(question) {
+        const q=question.toLowerCase().trim();
+        for (const [kw,ans] of Object.entries(CHATBOT_KNOWLEDGE)) {
+            if (q.includes(kw)) return ans;
+        }
+        if (q.includes('chia') && q.includes('đa thức')) return 'Để chia đa thức:<br>• Chia cho đơn thức: chia từng hạng tử<br>• Chia cho đa thức: dùng thuật toán chia có dư<br>• \\(A = B \\cdot Q + R\\), với deg(R) < deg(B)';
+        return '🤔 Chưa hiểu câu hỏi.<br>Bạn có thể hỏi:<br>• <em>"Chia đơn thức cho đơn thức như thế nào?"</em><br>• <em>"Chia đa thức cho đơn thức như thế nào?"</em><br>• <em>"Cho ví dụ phép chia đa thức"</em>';
+    }
+    function sendMessage() {
+        const input=document.getElementById('chatbot-input');
+        const q=input.value.trim();
+        if (!q) return;
+        addUserMessage(q); input.value='';
+        setTimeout(()=>addBotMessage(getBotResponse(q)),500);
+    }
+    function sendQuickQuestion(q) {
+        addUserMessage(q);
+        setTimeout(()=>addBotMessage(getBotResponse(q)),500);
+    }
+
+
+    // ============================================================
+    // HÌNH VẼ TOÁN HỌC — Canvas rendering engine
+    // Tính toán hoàn toàn bằng toán học: bisector, normal, centroid offset
+    // ============================================================
+    (function() {
+      // --- Math helpers ---
+      function norm(ax, ay) {
+        const d = Math.hypot(ax, ay);
+        return d < 1e-9 ? [0,0] : [ax/d, ay/d];
+      }
+      function perp(ux, uy) { return [-uy, ux]; } // 90° CCW
+
+      // Label position: offset from vertex away from centroid
+      function labelPos(vx, vy, cx, cy, dist) {
+        const [ux, uy] = norm(vx - cx, vy - cy);
+        return [vx + ux * dist, vy + uy * dist];
+      }
+
+      // Angle arc from vertex toward p1 and p2, radius r
+      // Returns: {startAngle, endAngle, sweepAngle} in radians
+      function arcAngles(vx, vy, p1x, p1y, p2x, p2y) {
+        const a1 = Math.atan2(p1y - vy, p1x - vx);
+        const a2 = Math.atan2(p2y - vy, p2x - vx);
+        return { a1, a2 };
+      }
+
+      // Bisector unit vector at vertex toward p1 and p2
+      function bisectorDir(vx, vy, p1x, p1y, p2x, p2y) {
+        const [u1x, u1y] = norm(p1x - vx, p1y - vy);
+        const [u2x, u2y] = norm(p2x - vx, p2y - vy);
+        return norm(u1x + u2x, u1y + u2y);
+      }
+
+      // Tick marks perpendicular to segment, at midpoint, n ticks
+      function drawTick(ctx, ax, ay, bx, by, n, color, gap = 6, hw = 7) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        const mx = (ax + bx) / 2, my = (ay + by) / 2;
+        const [ux, uy] = norm(bx - ax, by - ay);
+        const [px, py] = perp(ux, uy);
+        const offsets = n === 1 ? [0] : n === 2 ? [-gap/2, gap/2] : [-gap, 0, gap];
+        offsets.forEach(off => {
+          const cx = mx + ux * off, cy = my + uy * off;
+          ctx.beginPath();
+          ctx.moveTo(cx - px * hw, cy - py * hw);
+          ctx.lineTo(cx + px * hw, cy + py * hw);
+          ctx.stroke();
+        });
+        ctx.restore();
+      }
+
+      // Draw angle arc at vertex (vx,vy) toward p1 and p2
+      function drawArc(ctx, vx, vy, p1x, p1y, p2x, p2y, r, color) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.18;
+        ctx.lineWidth = 1.5;
+        const {a1, a2} = arcAngles(vx, vy, p1x, p1y, p2x, p2y);
+
+        // Determine sweep direction: go from a1 to a2 the shorter way
+        let da = a2 - a1;
+        while (da > Math.PI) da -= 2*Math.PI;
+        while (da < -Math.PI) da += 2*Math.PI;
+        const ccw = da < 0;
+
+        ctx.beginPath();
+        ctx.moveTo(vx, vy);
+        ctx.arc(vx, vy, r, a1, a2, ccw);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath();
+        ctx.arc(vx, vy, r, a1, a2, ccw);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Draw triangle outline + fill
+      function drawTriangle(ctx, pts, fillColor, strokeColor) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        pts.forEach(p => ctx.lineTo(p[0], p[1]));
+        ctx.closePath();
+        ctx.fillStyle = fillColor;
+        ctx.globalAlpha = 0.38;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Draw vertex label
+      function drawLabel(ctx, x, y, text, color, size = 14) {
+        ctx.save();
+        ctx.font = `bold ${size}px "Comfortaa", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y);
+        ctx.restore();
+      }
+
+      // Draw angle label at bisector direction
+      function drawAngleLabel(ctx, vx, vy, p1x, p1y, p2x, p2y, text, color, r = 28) {
+        const [bx, by] = bisectorDir(vx, vy, p1x, p1y, p2x, p2y);
+        const lx = vx + bx * r, ly = vy + by * r;
+        ctx.save();
+        ctx.font = `bold 11.5px "Comfortaa", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, lx, ly);
+        ctx.restore();
+      }
+
+      // Edge length label, offset outward from triangle centroid
+      function drawEdgeLabel(ctx, ax, ay, bx, by, cx, cy, text, color) {
+        const mx = (ax + bx) / 2, my = (ay + by) / 2;
+        const [ux, uy] = norm(bx - ax, by - ay);
+        const [px, py] = perp(ux, uy);
+        // choose side away from third point
+        const dot = (cx - mx) * px + (cy - my) * py;
+        const side = dot > 0 ? -1 : 1;
+        const lx = mx + px * 15 * side, ly = my + py * 15 * side;
+        ctx.save();
+        ctx.font = `bold 11px "Comfortaa", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, lx, ly);
+        ctx.restore();
+      }
+
+      // Centroid
+      function centroid(pts) {
+        return [
+          pts.reduce((s,p)=>s+p[0],0)/pts.length,
+          pts.reduce((s,p)=>s+p[1],0)/pts.length
+        ];
+      }
+
+      // ----------------------------------------------------------------
+      // FIGURE 1: Đơn thức ÷ Đơn thức — minh họa trừ số mũ
+      // ----------------------------------------------------------------
+      function drawFig1() {
+        const canvas = document.getElementById('fig1');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+        function box(x,y,w,h,col,txt) {
+          ctx.save();
+          ctx.fillStyle = col+'22'; ctx.strokeStyle = col; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.roundRect(x,y,w,h,8); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = col; ctx.font = 'bold 13px "Comfortaa", sans-serif';
+          ctx.fillText(txt, x+w/2, y+h/2);
+          ctx.restore();
+        }
+
+        // 12x⁵ ÷ 4x² = 3x³
+        box(10, 14, 70, 34, '#4f46e5', '12x⁵');
+        ctx.fillStyle='#64748b'; ctx.font='bold 18px serif'; ctx.fillText('÷', 87, 31);
+        ctx.font='bold 13px "Comfortaa", sans-serif';
+        box(100, 14, 60, 34, '#d97706', '4x²');
+        ctx.fillStyle='#64748b'; ctx.font='bold 18px serif'; ctx.fillText('=', 169, 31);
+        ctx.font='bold 13px "Comfortaa", sans-serif';
+        box(183, 14, 60, 34, '#059669', '3x³');
+
+        // Annotation arrows
+        ctx.strokeStyle='#94a3b8'; ctx.lineWidth=1.2; ctx.setLineDash([3,2]);
+        ctx.beginPath(); ctx.moveTo(45, 48); ctx.lineTo(45, 64); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(130, 48); ctx.lineTo(130, 64); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(213, 48); ctx.lineTo(213, 64); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='#4f46e5'; ctx.font='bold 11px "Comfortaa", sans-serif';
+        ctx.fillText('12÷4=3', 45, 76);
+        ctx.fillStyle='#d97706';
+        ctx.fillText('x⁵÷x²', 130, 76);
+        ctx.fillStyle='#059669';
+        ctx.fillText('=x³', 213, 76);
+
+        // Formula row
+        ctx.fillStyle='#1e293b'; ctx.font='bold 11.5px "Comfortaa", sans-serif';
+        ctx.fillText('Quy tắc: xᵐ ÷ xⁿ = xᵐ⁻ⁿ  (m ≥ n)', W/2, H-26);
+        ctx.fillStyle='#059669';
+        ctx.fillText('Chia hệ số  •  Trừ số mũ', W/2, H-10);
+      }
+
+      // ----------------------------------------------------------------
+      // FIGURE 2: Đa thức ÷ Đơn thức — chia từng hạng tử
+      // ----------------------------------------------------------------
+      function drawFig2() {
+        const canvas = document.getElementById('fig2');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+        function box(x,y,w,h,col,txt) {
+          ctx.save();
+          ctx.fillStyle=col+'18'; ctx.strokeStyle=col; ctx.lineWidth=1.8;
+          ctx.beginPath(); ctx.roundRect(x,y,w,h,6); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=col; ctx.font='bold 11.5px "Comfortaa", sans-serif';
+          ctx.fillText(txt, x+w/2, y+h/2);
+          ctx.restore();
+        }
+
+        // Numerator: 6x³ - 4x² + 2x
+        const terms = ['6x³', '−4x²', '+2x'];
+        const tcols = ['#4f46e5','#d97706','#7c3aed'];
+        const tw = 62, gap = 5, ox = 8;
+        terms.forEach((t,i) => box(ox+i*(tw+gap), 8, tw, 30, tcols[i], t));
+
+        // Division line
+        ctx.strokeStyle='#64748b'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(8,42); ctx.lineTo(8+3*(tw+gap)-gap,42); ctx.stroke();
+        ctx.fillStyle='#64748b'; ctx.font='bold 11px "Comfortaa", sans-serif';
+        ctx.fillText('÷ 2x', 8+3*(tw+gap)+20, 25);
+
+        // Arrow down
+        ctx.strokeStyle='#94a3b8'; ctx.lineWidth=1.5; ctx.setLineDash([3,2]);
+        ctx.beginPath(); ctx.moveTo(W/2, 44); ctx.lineTo(W/2, 58); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='#94a3b8';
+        ctx.beginPath(); ctx.moveTo(W/2-5,56); ctx.lineTo(W/2+5,56); ctx.lineTo(W/2,64); ctx.closePath(); ctx.fill();
+
+        // Result
+        const rterms = ['3x²', '−2x', '+1'];
+        const rcols = ['#4f46e5','#d97706','#7c3aed'];
+        rterms.forEach((t,i) => box(ox+i*(tw+gap), 68, tw, 30, rcols[i], t));
+
+        ctx.fillStyle='#059669'; ctx.font='bold 10.5px "Comfortaa", sans-serif';
+        ctx.fillText('Chia từng hạng tử: (A+B+C)÷D = A/D+B/D+C/D', W/2, H-10);
+      }
+
+      // ----------------------------------------------------------------
+      // FIGURE 3: Sơ đồ thuật toán chia đa thức
+      // ----------------------------------------------------------------
+      function drawFig3() {
+        const canvas = document.getElementById('fig3');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+        function pill(x,y,w,h,col,txt,sub) {
+          ctx.save();
+          ctx.fillStyle=col+'18'; ctx.strokeStyle=col; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.roundRect(x,y,w,h,10); ctx.fill(); ctx.stroke();
+          ctx.fillStyle=col; ctx.font='bold 11px "Comfortaa", sans-serif';
+          ctx.fillText(txt, x+w/2, y+h/2-(sub?6:0));
+          if(sub){ctx.font='bold 9px "Comfortaa", sans-serif'; ctx.fillStyle=col+'bb'; ctx.fillText(sub,x+w/2,y+h/2+8);}
+          ctx.restore();
+        }
+        function arrow(y1,y2) {
+          ctx.strokeStyle='#94a3b8'; ctx.lineWidth=1.5;
+          ctx.beginPath(); ctx.moveTo(W/2,y1); ctx.lineTo(W/2,y2); ctx.stroke();
+          ctx.fillStyle='#94a3b8';
+          ctx.beginPath(); ctx.moveTo(W/2-5,y2-2); ctx.lineTo(W/2+5,y2-2); ctx.lineTo(W/2,y2+4); ctx.fill();
+        }
+
+        pill(20, 4, W-40, 26, '#4f46e5', 'Sắp xếp A và B theo bậc giảm dần', null);
+        arrow(30, 40);
+        pill(20, 40, W-40, 26, '#059669', 'Chia hạng tử bậc cao nhất: A₁ ÷ B₁', null);
+        arrow(66, 76);
+        pill(20, 76, W-40, 26, '#d97706', 'Nhân kết quả với B, trừ vào A', null);
+        arrow(102, 112);
+        pill(20, 112, W-40, 26, '#7c3aed', 'Lặp lại đến khi deg(R) < deg(B)', null);
+
+        ctx.fillStyle='#059669'; ctx.font='bold 10.5px "Comfortaa", sans-serif';
+        ctx.fillText('A = B·Q + R  (deg R < deg B)', W/2, H-8);
+      }
+
+      // ----------------------------------------------------------------
+      // FIGURE 4: Ví dụ chia đa thức x²+5x+6 cho x+2
+      // ----------------------------------------------------------------
+      function drawFig4() {
+        const canvas = document.getElementById('fig4');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        const lines = [
+          { text: 'Chia (x² + 5x + 6) cho (x + 2):', color: '#1e293b', bold: true },
+          { text: 'Bước 1:  x² ÷ x = x  → x(x+2) = x²+2x', color: '#4f46e5' },
+          { text: 'Trừ: (x²+5x+6) − (x²+2x) = 3x+6', color: '#d97706' },
+          { text: 'Bước 2:  3x ÷ x = 3  → 3(x+2) = 3x+6', color: '#059669' },
+          { text: 'Trừ: (3x+6) − (3x+6) = 0  ✓ chia hết', color: '#059669' },
+        ];
+        lines.forEach((l,i) => {
+          ctx.save();
+          ctx.fillStyle = l.color;
+          ctx.font = (l.bold ? 'bold' : 'bold') + ' 11px "Comfortaa", sans-serif';
+          ctx.fillText(l.text, 10, 16 + i*28);
+          ctx.restore();
+        });
+
+        ctx.strokeStyle='#059669'; ctx.lineWidth=2; ctx.setLineDash([4,2]);
+        ctx.beginPath(); ctx.moveTo(10,H-28); ctx.lineTo(W-10,H-28); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='#059669'; ctx.font='bold 11px "Comfortaa", sans-serif';
+        ctx.textAlign='center';
+        ctx.fillText('Kết quả: (x²+5x+6) ÷ (x+2) = x+3, dư 0', W/2, H-12);
+      }
+
+      // Render all figures after page load
+      function renderAllFigs() {
+        drawFig1(); drawFig2(); drawFig3(); drawFig4();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderAllFigs);
+      } else {
+        renderAllFigs();
+      }
+    })();
+
+    window.onload = function() { init(); renderAllFigs(); initStats(); };
+
+    // ===================== STATS & LIKE & PROGRESS (bai-28) =====================
+    const STORAGE_KEY = 'bai28_phep_chia_da_thuc_mot_bien';
+
+    function loadStorage() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+        catch(e) { return {}; }
+    }
+    function saveStorage(data) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+    }
+
+    function initStats() {
+        const data = loadStorage();
+
+        data.visits = (data.visits || 0) + 1;
+        saveStorage(data);
+        document.getElementById('visit-count').textContent = data.visits;
+
+        const attempts = data.scores || [];
+        document.getElementById('attempt-count').textContent = attempts.length;
+        if (attempts.length > 0) {
+            const best = Math.max(...attempts.map(s => s.score));
+            document.getElementById('best-score').textContent = best.toFixed(1);
+        }
+
+        if (data.liked) document.getElementById('like-btn').classList.add('liked');
+        loadGlobalLikes();
+
+        renderProgress(attempts);
+    }
+
+    // ── Like toàn cầu (Firebase) ──────────────────────────────────
+    const FIREBASE_LIKE_URL = 'https://toan7-tieu-son-default-rtdb.firebaseio.com/likes/bai-28.json';
+
+    async function loadGlobalLikes() {
+        try {
+            const res = await fetch(FIREBASE_LIKE_URL);
+            const val = await res.json();
+            document.getElementById('like-count').textContent = (typeof val === 'number' ? val : 0).toLocaleString('vi-VN');
+        } catch(e) {}
+    }
+
+    async function changeGlobalLike(delta) {
+        const MAX_RETRY = 5;
+        for (let i = 0; i < MAX_RETRY; i++) {
+            try {
+                const readRes = await fetch(FIREBASE_LIKE_URL, { headers: { 'X-Firebase-ETag': 'true' } });
+                const etag = readRes.headers.get('ETag');
+                const current = await readRes.json();
+                const newVal = Math.max(0, (typeof current === 'number' ? current : 0) + delta);
+                const writeRes = await fetch(FIREBASE_LIKE_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'if-match': etag },
+                    body: JSON.stringify(newVal)
+                });
+                if (writeRes.ok) {
+                    document.getElementById('like-count').textContent = newVal.toLocaleString('vi-VN');
+                    return;
+                }
+            } catch(e) { return; }
+        }
+    }
+
+    function toggleLike() {
+        const data = loadStorage();
+        const btn = document.getElementById('like-btn');
+        if (data.liked) {
+            data.liked = false;
+            btn.classList.remove('liked');
+            saveStorage(data);
+            changeGlobalLike(-1);
+        } else {
+            data.liked = true;
+            btn.classList.add('liked');
+            saveStorage(data);
+            confetti({ particleCount: 60, spread: 60, origin: { y: 0.2 } });
+            changeGlobalLike(+1);
+        }
+    }
+    // ── Kết thúc Like toàn cầu ───────────────────────────────────
+
+    function saveScore(score) {
+        const data = loadStorage();
+        if (!data.scores) data.scores = [];
+        data.scores.push({ score: parseFloat(score.toFixed(1)), time: new Date().toLocaleDateString('vi-VN') });
+        if (data.scores.length > 10) data.scores = data.scores.slice(-10);
+        document.getElementById('attempt-count').textContent = data.scores.length;
+        document.getElementById('best-score').textContent = Math.max(...data.scores.map(s => s.score)).toFixed(1);
+        saveStorage(data);
+        renderProgress(data.scores);
+    }
+
+    function renderProgress(attempts) {
+        const panel = document.getElementById('progress-panel');
+        const chart = document.getElementById('progress-chart');
+        const statsDiv = document.getElementById('progress-stats');
+        const trendDiv = document.getElementById('trend-display');
+
+        if (!attempts || attempts.length === 0) { panel.classList.add('hidden'); return; }
+        panel.classList.remove('hidden');
+
+        chart.innerHTML = attempts.map((s, i) => {
+            const pct = Math.max(4, (s.score / 10) * 100);
+            const color = s.score >= 9 ? '#10b981' : s.score >= 7 ? '#3b82f6' : s.score >= 5 ? '#f59e0b' : '#ef4444';
+            return `<div class="bar-wrap">
+                <div class="bar-score">${s.score}</div>
+                <div class="bar" style="height:${pct}%;background:${color};"></div>
+                <div class="bar-label">L${i+1}</div>
+            </div>`;
+        }).join('');
+
+        const scores = attempts.map(s => s.score);
+        const avg = (scores.reduce((a,b) => a+b,0) / scores.length).toFixed(1);
+        const best = Math.max(...scores).toFixed(1);
+        const latest = scores[scores.length-1].toFixed(1);
+        statsDiv.innerHTML = `
+            <div class="bg-blue-50 rounded-xl p-3 border border-blue-100"><div class="font-black text-blue-700 text-lg">${avg}</div><div class="text-slate-500 text-xs">Điểm TB</div></div>
+            <div class="bg-green-50 rounded-xl p-3 border border-green-100"><div class="font-black text-green-700 text-lg">${best}</div><div class="text-slate-500 text-xs">Cao nhất</div></div>
+            <div class="bg-orange-50 rounded-xl p-3 border border-orange-100"><div class="font-black text-orange-700 text-lg">${latest}</div><div class="text-slate-500 text-xs">Lần này</div></div>`;
+
+        if (scores.length >= 2) {
+            const diff = scores[scores.length-1] - scores[scores.length-2];
+            trendDiv.innerHTML = diff > 0
+                ? `<span class="trend-badge trend-up">📈 Tăng +${diff.toFixed(1)} điểm</span>`
+                : diff < 0
+                ? `<span class="trend-badge trend-down">📉 Giảm ${diff.toFixed(1)} điểm</span>`
+                : `<span class="trend-badge trend-same">➡️ Giữ nguyên</span>`;
+        } else {
+            trendDiv.innerHTML = `<span class="trend-badge trend-same">🆕 Lần đầu làm bài</span>`;
+        }
+    }
+    // ===================== END STATS =====================
+    </script>
+
+    <!-- FIREBASE GLOBAL VIEW COUNTER -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            var FIREBASE_URL = 'https://toan7-tieu-son-default-rtdb.firebaseio.com';
+            var PAGE_KEY = 'bai-28';
+            var VISITED_KEY = 'toan7_firebase_visited_bai28';
+            var badge = document.getElementById('global-view-badge');
+
+            async function getCount(key) {
+                try {
+                    var res = await fetch(FIREBASE_URL + '/views/' + key + '.json');
+                    var data = await res.json();
+                    return data || 0;
+                } catch(e) { return 0; }
+            }
+
+            async function incrementCount(key) {
+                const url = FIREBASE_URL + '/views/' + key + '.json';
+                const MAX_RETRY = 5;
+                for (var i = 0; i < MAX_RETRY; i++) {
+                    try {
+                        var readRes = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' } });
+                        var etag = readRes.headers.get('ETag');
+                        var current = await readRes.json();
+                        var newVal = (typeof current === 'number' ? current : 0) + 1;
+                        var writeRes = await fetch(url, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'if-match': etag },
+                            body: JSON.stringify(newVal)
+                        });
+                        if (writeRes.ok) return newVal;
+                    } catch(e) { return await getCount(key); }
+                }
+                return await getCount(key);
+            }
+
+            var count;
+            if (!localStorage.getItem(VISITED_KEY)) {
+                localStorage.setItem(VISITED_KEY, '1');
+                count = await incrementCount(PAGE_KEY);
+            } else {
+                count = await getCount(PAGE_KEY);
+            }
+
+            if (badge) badge.textContent = '👥 ' + count.toLocaleString('vi-VN') + ' người đã truy cập bài này';
+        });
+    </script>
+    <!-- END FIREBASE GLOBAL VIEW COUNTER -->
+</body>
+</html>
