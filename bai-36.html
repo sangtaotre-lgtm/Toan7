@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài 36: Hình Hộp Chữ Nhật và Hình Lập Phương</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: { 
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            svg: {
+                scale: 1,
+                matchFontHeight: false,
+                fontCache: 'local'
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        body { font-family: 'Comfortaa', cursive !important; scroll-behavior: smooth; line-height: 1.8; }
+        * { font-family: 'Comfortaa', cursive !important; }
+        
+        mjx-container {
+            display: inline-block !important;
+            vertical-align: -0.2em !important;
+            margin: 0 0.1em !important;
+            transform: scale(0.95);
+            transform-origin: center baseline;
+        }
+        
+        nav {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .section-dashed {
+            border: 3px dashed #cbd5e1;
+            border-radius: 24px;
+            transition: border-color 0.3s;
+        }
+        .section-dashed:hover { border-color: #3b82f6; }
+
+        .check-btn { transition: all 0.2s; cursor: pointer; border: 2px solid #e2e8f0; }
+        .selected-true { background-color: #22c55e !important; color: white !important; border-color: #16a34a !important; }
+        .selected-false { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
+        .correct-highlight { border: 3px solid #22c55e !important; box-shadow: 0 0 8px rgba(34, 197, 94, 0.4); }
+        
+        .mcq-option { border: 2px solid #e2e8f0; cursor: pointer; transition: all 0.2s; border-radius: 16px; }
+        .mcq-option.selected { border-color: #3b82f6; background-color: #eff6ff; }
+        .mcq-option.correct { border-color: #22c55e; background-color: #dcfce7; color: #166534; }
+        .mcq-option.wrong { border-color: #ef4444; background-color: #fee2e2; color: #991b1b; }
+        
+        .fill-input { border-bottom: 2px dashed #3b82f6; outline: none; text-align: center; width: 120px; font-weight: bold; color: #2563eb; background: transparent; }
+        .fill-correct { background-color: #dcfce7; border-color: #22c55e; border-style: solid; }
+        .fill-wrong { background-color: #fee2e2; border-color: #ef4444; border-style: solid; }
+        
+        .feedback-box { display: none; margin-top: 0.5rem; padding: 0.75rem; border-radius: 0.75rem; border-left: 4px solid #ef4444; background-color: #fffafb; font-size: 0.85rem; }
+
+        .hint-box { 
+            display: none; 
+            margin-top: 0.5rem; 
+            padding: 0.75rem; 
+            border-radius: 0.75rem; 
+            border: 1px dashed #eab308; 
+            background-color: #fefce8; 
+            color: #854d0e; 
+            font-size: 0.85rem;
+        }
+
+        .btn-download { background-color: #4f46e5; color: white; padding: 6px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: bold; display: flex; align-items: center; gap: 4px; transition: opacity 0.2s; }
+        .btn-download:hover { opacity: 0.9; }
+
+        #loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .loader { border: 6px solid #f3f3f3; border-top: 6px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .hint-btn { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 4px; 
+            background: #fef3c7; 
+            border: 2px solid #f59e0b; 
+            padding: 6px 12px; 
+            border-radius: 12px; 
+            color: #92400e; 
+            font-size: 0.75rem; 
+            font-weight: bold; 
+            transition: all 0.2s;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        .hint-btn:hover {
+            background: #fde68a;
+            transform: translateY(-1px);
+        }
+
+        @keyframes bounce-in {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-bounce-in {
+            animation: bounce-in 0.5s ease-out;
+        }
+
+        .level-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .level-nhan-biet { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .level-thong-hieu { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        .level-van-dung { background: #fecaca; color: #991b1b; border: 1px solid #ef4444; }
+
+        .score-excellent { background: linear-gradient(135deg, #10b981, #059669); color: white; animation: pulse-scale 1s ease-in-out infinite; }
+        .score-good { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+        .score-average { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .score-low { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+
+        @keyframes pulse-scale {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white; padding: 10px 20px; border-radius: 16px; font-weight: bold;
+            display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;
+            border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); font-size: 0.875rem;
+        }
+        .download-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4); }
+        .download-btn:active { transform: translateY(0); }
+
+        /* CHATBOT STYLES */
+        #chatbot-container { position: fixed; top: 50%; right: 20px; transform: translateY(-50%); z-index: 1000; }
+        #chatbot-toggle {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%);
+            border: none; cursor: pointer; box-shadow: 0 8px 24px rgba(0, 106, 255, 0.4);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 32px; transition: all 0.3s; position: relative;
+        }
+        #chatbot-toggle:hover { transform: scale(1.1); box-shadow: 0 12px 32px rgba(0, 106, 255, 0.6); }
+        .chatbot-label {
+            position: absolute; bottom: -28px;
+            background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%);
+            color: white; padding: 4px 12px; border-radius: 12px; font-size: 10px; font-weight: bold;
+            white-space: nowrap; box-shadow: 0 4px 12px rgba(0, 106, 255, 0.3);
+        }
+        #chatbot-window {
+            display: none; position: fixed; top: 50%; right: 100px; transform: translateY(-50%);
+            width: 340px; height: 480px; background: white; border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); flex-direction: column; overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        #chatbot-header { background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; }
+        #chatbot-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s; }
+        #chatbot-close:hover { background: rgba(255, 255, 255, 0.2); }
+        #chatbot-messages { flex: 1; overflow-y: auto; padding: 16px; background: #f8fafc; }
+        .chat-message { margin-bottom: 12px; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-message.bot { display: flex; gap: 8px; }
+        .chat-message.user { display: flex; justify-content: flex-end; }
+        .message-content { padding: 10px 14px; border-radius: 16px; max-width: 75%; font-size: 0.9rem; line-height: 1.4; }
+        .chat-message.bot .message-content { background: white; color: #1e293b; border: 1px solid #e2e8f0; }
+        .chat-message.user .message-content { background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%); color: white; }
+        .bot-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        #chatbot-input-area { padding: 12px; border-top: 1px solid #e2e8f0; background: white; display: flex; gap: 8px; }
+        #chatbot-input { flex: 1; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 20px; outline: none; font-size: 0.9rem; transition: border-color 0.2s; }
+        #chatbot-input:focus { border-color: #00B2FF; }
+        #chatbot-send { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #00B2FF 0%, #006AFF 100%); border: none; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; }
+        #chatbot-send:hover { transform: scale(1.05); }
+        .quick-questions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .quick-question-btn { padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; color: #1e40af; }
+        .quick-question-btn:hover { background: #dbeafe; transform: translateY(-1px); }
+
+        /* GAME: TÍNH NHANH */
+        .speed-option {
+            border: 3px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+            font-size: 1rem;
+            background: white;
+            text-align: center;
+        }
+        .speed-option:hover { border-color: #f97316; background: #fff7ed; transform: scale(1.03); }
+        .speed-option.selected-ans { border-color: #3b82f6; background: #eff6ff; }
+        .speed-option.ans-correct { border-color: #22c55e; background: #dcfce7; color: #166534; animation: pop 0.3s ease; }
+        .speed-option.ans-wrong { border-color: #ef4444; background: #fee2e2; color: #991b1b; animation: shake 0.4s ease; }
+        .speed-option.ans-reveal { border-color: #22c55e; background: #dcfce7; color: #166534; }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px); }
+            40% { transform: translateX(6px); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+        }
+
+        .timer-bar-outer {
+            width: 100%; height: 12px; background: #e2e8f0; border-radius: 99px; overflow: hidden;
+        }
+        .timer-bar-inner {
+            height: 100%; border-radius: 99px;
+            transition: width 0.1s linear, background-color 0.5s;
+            background: #22c55e;
+        }
+
+        .streak-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            color: white; padding: 4px 12px; border-radius: 99px;
+            font-weight: bold; font-size: 0.8rem;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+        }
+
+        @media (max-width: 640px) {
+            #chatbot-window { width: calc(100vw - 40px); height: 60vh; top: 50%; right: 20px; transform: translateY(-50%); }
+        }
+
+        /* ===== BỔ SUNG: STATS BAR ===== */
+        #stats-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .stat-item {
+            display: flex; align-items: center; gap: 4px;
+            background: #eff6ff; border: 1px solid #bfdbfe;
+            padding: 4px 10px; border-radius: 20px;
+            font-size: 0.78rem; font-weight: bold; color: #1e40af;
+        }
+        .stat-item span.val { font-size: 0.85rem; font-weight: 900; color: #1d4ed8; }
+
+        /* ===== BỔ SUNG: LIKE BUTTON ===== */
+        #like-btn {
+            background: #fff0f0; border: 1px solid #fca5a5; color: #dc2626;
+            border-radius: 20px; padding: 4px 12px; font-size: 0.78rem;
+            font-weight: bold; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; gap: 4px;
+        }
+        #like-btn:hover { background: #fee2e2; }
+        #like-btn.liked { background: #ef4444; border-color: #ef4444; color: white; animation: likeAnim 0.4s ease; }
+        @keyframes likeAnim { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+        /* ===== BỔ SUNG: PROGRESS CHART ===== */
+        #progress-panel { background: white; border-radius: 20px; padding: 20px; border: 2px dashed #3b82f6; }
+        #progress-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; padding: 8px 0; }
+        .bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; gap: 4px; }
+        .bar { width: 100%; min-height: 4px; border-radius: 6px 6px 0 0; transition: height 0.5s ease; }
+        .bar-label { font-size: 0.65rem; color: #64748b; text-align: center; }
+        .bar-score { font-size: 0.7rem; font-weight: bold; color: #1e40af; }
+        .trend-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .trend-up { background: #dcfce7; color: #166534; }
+        .trend-down { background: #fee2e2; color: #991b1b; }
+        .trend-same { background: #f1f5f9; color: #475569; }
+        /* ===== KẾT THÚC BỔ SUNG CSS ===== */
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 text-slate-800">
+
+    <nav class="p-4 shadow-sm mb-0">
+        <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <a href="index.html" class="flex items-center gap-2 text-orange-600 font-bold hover:opacity-80 transition-opacity shrink-0">
+                <span class="text-xl">🏠</span>
+                <span class="hidden sm:inline">Trang chủ</span>
+            </a>
+            <!-- BỔ SUNG: STATS INLINE -->
+            <div id="stats-bar" class="flex items-center gap-2 flex-wrap">
+                <div class="stat-item">👁️ <span class="val" id="visit-count">0</span></div>
+                <div class="stat-item">📝 <span class="val" id="attempt-count">0</span> lần</div>
+                <div class="stat-item">⭐ <span class="val" id="best-score">--</span></div>
+                <button id="like-btn" onclick="toggleLike()">❤️ <span id="like-count">0</span></button>
+            </div>
+            <!-- KẾT THÚC BỔ SUNG -->
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest hidden md:block">Toán 7 - Bài 36 ✨</div>
+        </div>
+    </nav>
+
+    <div id="loading-overlay">
+        <div class="loader mb-4"></div>
+        <p class="font-bold text-blue-600 animate-pulse">Đang tạo đề mới...</p>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-3 md:px-6 space-y-12">
+        
+        <div class="text-center py-6">
+            <h1 class="text-3xl md:text-4xl font-black text-blue-600 uppercase tracking-tighter flex items-center justify-center gap-3 flex-wrap">
+                <span>📦</span> Bài 36: Hình Hộp Chữ Nhật và Hình Lập Phương <span>🧊</span>
+            </h1>
+            <p class="text-slate-500 font-bold mt-2">Kết nối tri thức - Toán 7</p>
+            <!-- COUNTAPI GLOBAL VIEW COUNTER - hiển thị lượt xem toàn cầu -->
+            <p id="global-view-badge" class="text-slate-400 text-sm font-bold mt-1">👁 Đang tải...</p>
+            <!-- END COUNTAPI GLOBAL VIEW COUNTER -->
+        </div>
+
+        <!-- BỔ SUNG: TIẾN BỘ HỌC TẬP -->
+        <div id="progress-panel" class="hidden">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h2 class="text-lg font-bold text-blue-800">📈 Tiến Bộ Học Tập</h2>
+                <div id="trend-display"></div>
+            </div>
+            <div id="progress-chart"></div>
+            <div id="progress-stats" class="mt-3 grid grid-cols-3 gap-3 text-center text-sm"></div>
+        </div>
+        <!-- KẾT THÚC BỔ SUNG -->
+
+        <!-- KIẾN THỨC -->
+        <div id="capture-knowledge" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-blue-800">📖 Kiến Thức Trọng Tâm</h2>
+                <button onclick="downloadKnowledgePDF()" class="download-btn">
+                    <span>📥</span> Tải Offline
+                </button>
+            </div>
+            
+            <!-- VIDEO BÀI HỌC -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🎬</span>
+                    <h3 class="font-bold text-blue-700 text-base">Video Bài Học</h3>
+                    <span class="text-xs bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-bold">YouTube</span>
+                </div>
+                <div class="relative w-full rounded-2xl overflow-hidden border-2 border-blue-100 shadow-md bg-black" style="aspect-ratio: 16/9;">
+                    <iframe 
+                        id="lesson-video"
+                        src="https://www.youtube.com/embed/vVS1IDJC21w"
+                        title="Video Bài Học - Hình hộp chữ nhật và hình lập phương"
+                        class="w-full h-full"
+                        style="width:100%; height:100%; position:absolute; top:0; left:0;"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 text-center">💡 Xem video trước khi làm bài tập bên dưới</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 space-y-3">
+                    <h3 class="font-bold text-blue-700">1. Hình hộp chữ nhật</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• Có 6 mặt đều là hình chữ nhật</li>
+                        <li>• Có 3 kích thước: dài $a$, rộng $b$, cao $c$</li>
+                        <li>• Thể tích: $V = a \times b \times c$</li>
+                        <li>• Diện tích toàn phần: $S = 2(ab + bc + ca)$</li>
+                        <li>• <em>VD:</em> $a=4, b=3, c=2 \Rightarrow V = 24$</li>
+                    </ul>
+                </div>
+                <div class="bg-green-50/50 p-5 rounded-2xl border border-green-100 space-y-3">
+                    <h3 class="font-bold text-green-700">2. Hình lập phương</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• Là hình hộp chữ nhật đặc biệt: $a = b = c$</li>
+                        <li>• Có 6 mặt đều là hình vuông bằng nhau</li>
+                        <li>• Thể tích: $V = a^3$</li>
+                        <li>• Diện tích toàn phần: $S = 6a^2$</li>
+                        <li>• <em>VD:</em> $a=3 \Rightarrow V = 27, S = 54$</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50/50 p-5 rounded-2xl border border-purple-100 space-y-3">
+                    <h3 class="font-bold text-purple-700">3. Diện tích xung quanh</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• Hình hộp chữ nhật: $S_{xq} = 2(a+b) \times c$</li>
+                        <li>• Hình lập phương: $S_{xq} = 4a^2$</li>
+                        <li>• <em>VD (hộp):</em> $a=5, b=3, c=4$</li>
+                        <li>• $S_{xq} = 2(5+3) \times 4 = 64$</li>
+                    </ul>
+                </div>
+                <div class="bg-orange-50/50 p-5 rounded-2xl border border-orange-100 space-y-3">
+                    <h3 class="font-bold text-orange-700">4. Các yếu tố của hình hộp</h3>
+                    <ul class="space-y-2 text-slate-600">
+                        <li>• <strong>Đỉnh:</strong> 8 đỉnh</li>
+                        <li>• <strong>Cạnh:</strong> 12 cạnh (4 dài, 4 rộng, 4 cao)</li>
+                        <li>• <strong>Mặt:</strong> 6 mặt (3 cặp song song)</li>
+                        <li>• Đường chéo: $d = \sqrt{a^2+b^2+c^2}$</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRÒ CHƠI: TÍNH NHANH BẤM GIỜ -->
+        <div class="bg-white p-8 section-dashed shadow-md" id="speed-game-section">
+            <h2 class="text-2xl font-black text-orange-600 flex items-center gap-3 mb-2">
+                <span class="text-3xl">⚡</span> TÍNH NHANH BẤM GIỜ
+            </h2>
+            <p class="text-slate-600 mb-5 font-medium">Tính thể tích và diện tích thật nhanh! Có <strong>10 giây</strong> cho mỗi câu. Ghi càng nhiều điểm càng tốt!</p>
+
+            <!-- Màn hình bắt đầu -->
+            <div id="speed-start-screen" class="text-center py-8 space-y-4">
+                <div class="text-6xl mb-4">📦</div>
+                <p class="text-slate-600 font-medium">Trả lời đúng = +10 điểm &nbsp;|&nbsp; Sai hoặc hết giờ = -5 điểm</p>
+                <p class="text-slate-400 text-sm font-bold">Tổng cộng 10 câu hỏi ngẫu nhiên</p>
+                <button onclick="startSpeedGame()" class="mt-4 bg-orange-500 hover:bg-orange-600 text-white font-black py-4 px-10 rounded-full shadow-lg transition-all active:scale-95 text-lg tracking-wide">
+                    🚀 BẮT ĐẦU!
+                </button>
+            </div>
+
+            <!-- Màn hình chơi -->
+            <div id="speed-play-screen" class="hidden space-y-5">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-bold text-slate-500">Câu:</span>
+                        <span id="speed-qnum" class="text-xl font-black text-orange-600">1/10</span>
+                    </div>
+                    <div id="streak-display" class="hidden streak-badge">🔥 Streak: <span id="streak-count">0</span></div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-bold text-slate-500">Điểm:</span>
+                        <span id="speed-score" class="text-xl font-black text-blue-600">0</span>
+                    </div>
+                </div>
+
+                <!-- Timer -->
+                <div>
+                    <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                        <span>⏱️ Thời gian</span>
+                        <span id="speed-timer-text">10s</span>
+                    </div>
+                    <div class="timer-bar-outer">
+                        <div id="speed-timer-bar" class="timer-bar-inner" style="width:100%"></div>
+                    </div>
+                </div>
+
+                <!-- Câu hỏi -->
+                <div class="bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-2xl p-6 text-center">
+                    <p id="speed-question" class="text-xl font-black text-slate-800 mb-1"></p>
+                </div>
+
+                <!-- Đáp án -->
+                <div id="speed-options" class="grid grid-cols-2 gap-3"></div>
+
+                <!-- Phản hồi -->
+                <div id="speed-feedback" class="hidden text-center p-4 rounded-2xl font-bold text-lg animate-bounce-in"></div>
+            </div>
+
+            <!-- Màn hình kết quả -->
+            <div id="speed-result-screen" class="hidden text-center space-y-6 py-6 animate-bounce-in">
+                <div class="text-6xl" id="speed-result-emoji">🏆</div>
+                <div>
+                    <div class="text-5xl font-black text-orange-600 mb-1" id="speed-final-score">0</div>
+                    <div class="text-slate-500 font-bold" id="speed-result-detail">điểm</div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 max-w-xs mx-auto">
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-3">
+                        <div class="text-2xl font-black text-green-600" id="speed-correct-count">0</div>
+                        <div class="text-xs text-green-600 font-bold">Đúng</div>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-3">
+                        <div class="text-2xl font-black text-red-600" id="speed-wrong-count">0</div>
+                        <div class="text-xs text-red-600 font-bold">Sai</div>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 rounded-xl p-3">
+                        <div class="text-2xl font-black text-orange-600" id="speed-best-streak">0</div>
+                        <div class="text-xs text-orange-600 font-bold">Streak cao</div>
+                    </div>
+                </div>
+                <p id="speed-result-msg" class="text-blue-600 font-bold animate-pulse text-lg"></p>
+                <button onclick="resetSpeedGame()" class="bg-orange-500 hover:bg-orange-600 text-white font-black py-3 px-8 rounded-full shadow-lg transition-all active:scale-95">
+                    🔄 Chơi lại
+                </button>
+            </div>
+        </div>
+
+        <!-- MCQ -->
+        <div id="capture-mcq" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">📝 PHẦN 1: Trắc nghiệm (15 câu)</h2>
+                <button onclick="downloadMCQImage()" class="download-btn">
+                    <span>📥</span> Tải Đề Offline
+                </button>
+            </div>
+            <div id="mcq-container" class="space-y-8"></div>
+        </div>
+
+        <!-- T/F -->
+        <div id="capture-tf" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">✔️ PHẦN 2: Đúng/Sai (5 câu)</h2>
+                <button onclick="downloadTFImage()" class="download-btn">
+                    <span>📥</span> Tải Đề Offline
+                </button>
+            </div>
+            <div id="tf-container" class="space-y-10"></div>
+        </div>
+
+        <!-- FILL -->
+        <div id="capture-fill" class="bg-white p-6 section-dashed shadow-sm">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-blue-800 uppercase">🖋️ PHẦN 3: Điền đáp án (5 câu)</h2>
+                <button onclick="downloadFillImage()" class="download-btn">
+                    <span>📥</span> Tải Đề Offline
+                </button>
+            </div>
+            <div id="fill-container" class="space-y-6"></div>
+        </div>
+
+        <!-- NỘP BÀI -->
+        <div class="text-center py-12">
+            <button id="submit-btn" onclick="checkResults()" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-5 px-16 rounded-full shadow-2xl transition-all active:scale-95 text-xl tracking-widest flex items-center gap-4 mx-auto">
+                <span>📤</span> NỘP BÀI
+            </button>
+            <div id="result-board" class="mt-8 hidden">
+                <div class="bg-white section-dashed p-8 inline-block shadow-xl w-full max-w-2xl">
+                    <div id="score-text" class="text-4xl font-black mb-2 p-6 rounded-2xl"></div>
+                    <div id="score-message" class="text-lg font-bold mt-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHATBOT -->
+    <div id="chatbot-container">
+        <button id="chatbot-toggle" onclick="toggleChatbot()">
+            💬
+            <span class="chatbot-label">Chatbot Hỗ Trợ</span>
+        </button>
+        <div id="chatbot-window">
+            <div id="chatbot-header">
+                <div>
+                    <div style="font-weight: bold; font-size: 1rem;">Trợ lý Toán học</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">Hỗ trợ 24/7</div>
+                </div>
+                <button id="chatbot-close" onclick="toggleChatbot()">×</button>
+            </div>
+            <div id="chatbot-messages">
+                <div class="chat-message bot">
+                    <div class="bot-avatar">💬</div>
+                    <div>
+                        <div class="message-content">
+                            Xin chào! Tôi có thể giúp bạn về <strong>hình hộp chữ nhật và hình lập phương</strong>. Hãy hỏi tôi bất cứ điều gì!
+                        </div>
+                        <div class="quick-questions">
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Công thức thể tích hình hộp chữ nhật?')">Thể tích hộp?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Diện tích hình lập phương?')">Diện tích lập phương?</button>
+                            <button class="quick-question-btn" onclick="sendQuickQuestion('Hình lập phương khác hộp chữ nhật thế nào?')">So sánh hai hình?</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chatbot-input-area">
+                <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button id="chatbot-send" onclick="sendMessage()">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===================== QUESTION BANKS =====================
+        const QUESTION_BANK = {
+            nb: [
+                {
+                    q: "Hình hộp chữ nhật có bao nhiêu mặt?",
+                    opts: ["6 mặt", "4 mặt", "8 mặt", "12 mặt"],
+                    ans: 0,
+                    exp: "Hình hộp chữ nhật có 6 mặt, tất cả đều là hình chữ nhật.",
+                    hint: "Đếm các mặt: trên, dưới, trước, sau, trái, phải"
+                },
+                {
+                    q: "Hình hộp chữ nhật có bao nhiêu đỉnh?",
+                    opts: ["8 đỉnh", "6 đỉnh", "4 đỉnh", "12 đỉnh"],
+                    ans: 0,
+                    exp: "Hình hộp chữ nhật có 8 đỉnh.",
+                    hint: "Đếm các góc của hình hộp"
+                },
+                {
+                    q: "Hình hộp chữ nhật có bao nhiêu cạnh?",
+                    opts: ["12 cạnh", "8 cạnh", "6 cạnh", "4 cạnh"],
+                    ans: 0,
+                    exp: "Hình hộp chữ nhật có 12 cạnh (4 cạnh dài + 4 cạnh rộng + 4 cạnh cao).",
+                    hint: "4 cạnh theo mỗi chiều × 3 chiều"
+                },
+                {
+                    q: "Hình lập phương là hình hộp chữ nhật có đặc điểm gì?",
+                    opts: ["Ba kích thước bằng nhau", "Hai kích thước bằng nhau", "Tất cả các mặt là hình tròn", "Chỉ có 4 mặt"],
+                    ans: 0,
+                    exp: "Hình lập phương là hình hộp chữ nhật đặc biệt có $a = b = c$.",
+                    hint: "Hình lập phương đặc biệt vì..."
+                },
+                {
+                    q: "Thể tích hình hộp chữ nhật có chiều dài $a$, rộng $b$, cao $c$ là:",
+                    opts: ["$V = abc$", "$V = 2(ab+bc+ca)$", "$V = a+b+c$", "$V = a^3$"],
+                    ans: 0,
+                    exp: "Thể tích hình hộp chữ nhật: $V = a \\times b \\times c$.",
+                    hint: "Thể tích = dài × rộng × cao"
+                },
+                {
+                    q: "Thể tích hình lập phương cạnh $a$ là:",
+                    opts: ["$V = a^3$", "$V = 6a^2$", "$V = 4a^2$", "$V = 3a$"],
+                    ans: 0,
+                    exp: "Thể tích hình lập phương: $V = a^3 = a \\times a \\times a$.",
+                    hint: "Hình lập phương: $a=b=c$, thay vào công thức hộp"
+                },
+                {
+                    q: "Diện tích toàn phần hình lập phương cạnh $a$ là:",
+                    opts: ["$S = 6a^2$", "$S = 4a^2$", "$S = a^3$", "$S = 12a$"],
+                    ans: 0,
+                    exp: "Hình lập phương có 6 mặt vuông bằng nhau, mỗi mặt diện tích $a^2$. Tổng: $S = 6a^2$.",
+                    hint: "6 mặt, mỗi mặt là hình vuông cạnh $a$"
+                }
+            ],
+            th: [
+                {
+                    q: "Tính thể tích hình hộp chữ nhật có $a = 5$ cm, $b = 4$ cm, $c = 3$ cm:",
+                    opts: ["$60 \\text{ cm}^3$", "$47 \\text{ cm}^3$", "$24 \\text{ cm}^3$", "$94 \\text{ cm}^3$"],
+                    ans: 0,
+                    exp: "$V = 5 \\times 4 \\times 3 = 60 \\text{ cm}^3$.",
+                    hint: "V = a × b × c"
+                },
+                {
+                    q: "Tính diện tích toàn phần hình hộp chữ nhật $a=3, b=2, c=4$ (cm):",
+                    opts: ["$52 \\text{ cm}^2$", "$24 \\text{ cm}^2$", "$26 \\text{ cm}^2$", "$48 \\text{ cm}^2$"],
+                    ans: 0,
+                    exp: "$S = 2(3 \\times 2 + 2 \\times 4 + 4 \\times 3) = 2(6+8+12) = 2 \\times 26 = 52 \\text{ cm}^2$.",
+                    hint: "$S = 2(ab+bc+ca)$"
+                },
+                {
+                    q: "Tính thể tích hình lập phương cạnh $4$ cm:",
+                    opts: ["$64 \\text{ cm}^3$", "$48 \\text{ cm}^3$", "$16 \\text{ cm}^3$", "$96 \\text{ cm}^3$"],
+                    ans: 0,
+                    exp: "$V = 4^3 = 64 \\text{ cm}^3$.",
+                    hint: "$V = a^3$"
+                },
+                {
+                    q: "Diện tích xung quanh hình hộp chữ nhật $a=6, b=4, c=5$ (cm) là:",
+                    opts: ["$100 \\text{ cm}^2$", "$120 \\text{ cm}^2$", "$50 \\text{ cm}^2$", "$148 \\text{ cm}^2$"],
+                    ans: 0,
+                    exp: "$S_{xq} = 2(a+b) \\times c = 2(6+4) \\times 5 = 2 \\times 10 \\times 5 = 100 \\text{ cm}^2$.",
+                    hint: "$S_{xq} = 2(a+b) \\times c$"
+                },
+                {
+                    q: "Diện tích toàn phần hình lập phương cạnh $5$ cm là:",
+                    opts: ["$150 \\text{ cm}^2$", "$125 \\text{ cm}^2$", "$100 \\text{ cm}^2$", "$25 \\text{ cm}^2$"],
+                    ans: 0,
+                    exp: "$S = 6 \\times 5^2 = 6 \\times 25 = 150 \\text{ cm}^2$.",
+                    hint: "$S = 6a^2$"
+                },
+                {
+                    q: "Hình hộp chữ nhật có $V = 120 \\text{ cm}^3$, $a=5$ cm, $b=4$ cm. Chiều cao $c$ là:",
+                    opts: ["$6$ cm", "$4$ cm", "$8$ cm", "$5$ cm"],
+                    ans: 0,
+                    exp: "$c = V \\div (a \\times b) = 120 \\div (5 \\times 4) = 120 \\div 20 = 6$ cm.",
+                    hint: "Từ $V = abc$, suy ra $c = V / (ab)$"
+                }
+            ],
+            vd: [
+                {
+                    q: "Một bể nước hình hộp chữ nhật dài $2$ m, rộng $1{,}5$ m, cao $1$ m. Thể tích bể là:",
+                    opts: ["$3 \\text{ m}^3$", "$4{,}5 \\text{ m}^3$", "$9 \\text{ m}^3$", "$2{,}5 \\text{ m}^3$"],
+                    ans: 0,
+                    exp: "$V = 2 \\times 1{,}5 \\times 1 = 3 \\text{ m}^3$.",
+                    hint: "V = dài × rộng × cao"
+                },
+                {
+                    q: "Một hộp quà hình lập phương có cạnh $10$ cm. Cần bao nhiêu giấy gói để bọc kín hộp?",
+                    opts: ["$600 \\text{ cm}^2$", "$1000 \\text{ cm}^2$", "$400 \\text{ cm}^2$", "$100 \\text{ cm}^2$"],
+                    ans: 0,
+                    exp: "Diện tích toàn phần = $6 \\times 10^2 = 600 \\text{ cm}^2$.",
+                    hint: "Diện tích giấy = diện tích toàn phần"
+                },
+                {
+                    q: "Hộp chữ nhật $a=8, b=5, c=3$ cm và hộp lập phương cạnh $4$ cm. Hộp nào có thể tích lớn hơn?",
+                    opts: ["Hộp chữ nhật ($120 > 64$)", "Hộp lập phương ($64 > 120$)", "Bằng nhau", "Không xác định được"],
+                    ans: 0,
+                    exp: "$V_{hộp} = 8 \\times 5 \\times 3 = 120 \\text{ cm}^3$; $V_{lp} = 4^3 = 64 \\text{ cm}^3$. Hộp chữ nhật lớn hơn.",
+                    hint: "Tính từng thể tích rồi so sánh"
+                }
+            ]
+        };
+
+        const TF_BANK = [
+            {
+                q: "Các yếu tố của hình hộp chữ nhật",
+                items: [
+                    {t: "a) Hình hộp chữ nhật có 6 mặt đều là hình chữ nhật", a: true, exp: "Đúng! Tất cả 6 mặt của hình hộp chữ nhật đều là hình chữ nhật.", h: "Đếm mặt: trên, dưới, 4 mặt bên"},
+                    {t: "b) Hình hộp chữ nhật có tất cả 10 cạnh", a: false, exp: "Sai! Hình hộp chữ nhật có 12 cạnh (4+4+4).", h: "4 cạnh × 3 chiều = 12 cạnh"},
+                    {t: "c) Hình hộp chữ nhật có 8 đỉnh", a: true, exp: "Đúng! Hình hộp chữ nhật có 8 đỉnh.", h: "Đếm các góc nhọn của hình"},
+                    {t: "d) Các mặt đối diện của hình hộp chữ nhật bằng nhau và song song", a: true, exp: "Đúng! Hình hộp chữ nhật có 3 cặp mặt đối diện bằng nhau và song song.", h: "Mặt trên-dưới, trước-sau, trái-phải"}
+                ]
+            },
+            {
+                q: "Công thức tính hình lập phương cạnh $a$",
+                items: [
+                    {t: "a) Thể tích hình lập phương cạnh $a$ là $V = a^3$", a: true, exp: "Đúng! $V = a \\times a \\times a = a^3$.", h: "Hình lập phương: ba kích thước bằng nhau"},
+                    {t: "b) Diện tích toàn phần hình lập phương là $S = 4a^2$", a: false, exp: "Sai! $S = 6a^2$ vì có 6 mặt vuông bằng nhau.", h: "Có bao nhiêu mặt?"},
+                    {t: "c) Hình lập phương cạnh $3$ cm có thể tích $27 \\text{ cm}^3$", a: true, exp: "Đúng! $V = 3^3 = 27 \\text{ cm}^3$.", h: "$3^3 = ?$"},
+                    {t: "d) Diện tích xung quanh hình lập phương cạnh $a$ là $S_{xq} = 4a^2$", a: true, exp: "Đúng! 4 mặt bên, mỗi mặt diện tích $a^2$, tổng $4a^2$.", h: "Chỉ 4 mặt bên, không kể mặt đáy"}
+                ]
+            },
+            {
+                q: "Tính toán thể tích hình hộp chữ nhật",
+                items: [
+                    {t: "a) Hình hộp $a=2, b=3, c=5$ có $V = 30 \\text{ cm}^3$", a: true, exp: "Đúng! $V = 2 \\times 3 \\times 5 = 30 \\text{ cm}^3$.", h: "Nhân ba kích thước"},
+                    {t: "b) Hình hộp $a=4, b=4, c=4$ là hình lập phương cạnh $4$", a: true, exp: "Đúng! Khi $a=b=c$, hình hộp trở thành hình lập phương.", h: "Điều kiện của hình lập phương"},
+                    {t: "c) Hình hộp $a=6, b=2, c=3$ có $V = 11 \\text{ cm}^3$", a: false, exp: "Sai! $V = 6 \\times 2 \\times 3 = 36 \\text{ cm}^3$.", h: "Nhân, không phải cộng"},
+                    {t: "d) Nếu tăng gấp đôi cạnh hình lập phương thì thể tích tăng gấp 8", a: true, exp: "Đúng! $V_{mới} = (2a)^3 = 8a^3 = 8V$.", h: "$(2a)^3 = 2^3 \\cdot a^3 = 8a^3$"}
+                ]
+            },
+            {
+                q: "Diện tích toàn phần hình hộp",
+                items: [
+                    {t: "a) Diện tích toàn phần hình hộp $a=3, b=4, c=5$ là $S = 94 \\text{ cm}^2$", a: true, exp: "Đúng! $S = 2(12+20+15) = 2 \\times 47 = 94 \\text{ cm}^2$.", h: "$S = 2(ab+bc+ca)$"},
+                    {t: "b) Diện tích toàn phần hình lập phương cạnh $6$ là $S = 216 \\text{ cm}^2$", a: true, exp: "Đúng! $S = 6 \\times 6^2 = 6 \\times 36 = 216 \\text{ cm}^2$.", h: "$S = 6a^2$"},
+                    {t: "c) Diện tích xung quanh hình hộp $a=5, b=3, c=4$ là $S_{xq} = 48 \\text{ cm}^2$", a: false, exp: "Sai! $S_{xq} = 2(5+3) \\times 4 = 64 \\text{ cm}^2$.", h: "$S_{xq} = 2(a+b) \\times c$"},
+                    {t: "d) Hình hộp có $S = 2(ab+bc+ca)$ là công thức diện tích toàn phần", a: true, exp: "Đúng! Đây là công thức chuẩn tính diện tích toàn phần hình hộp chữ nhật.", h: "Ghi nhớ công thức này"}
+                ]
+            },
+            {
+                q: "So sánh và vận dụng",
+                items: [
+                    {t: "a) Hình lập phương là trường hợp đặc biệt của hình hộp chữ nhật", a: true, exp: "Đúng! Hình lập phương là hình hộp chữ nhật có ba chiều bằng nhau.", h: "Điều kiện đặc biệt: $a=b=c$"},
+                    {t: "b) Hai hình hộp có cùng thể tích thì có cùng diện tích toàn phần", a: false, exp: "Sai! Hai hình hộp có cùng thể tích có thể có diện tích toàn phần khác nhau.", h: "Hình dạng khác nhau có thể cùng thể tích"},
+                    {t: "c) Hình lập phương cạnh $a$ có diện tích lớn hơn hình hộp bất kỳ cùng thể tích", a: false, exp: "Sai! Trong tất cả các hình hộp cùng thể tích, hình lập phương có diện tích nhỏ nhất.", h: "Hình lập phương tối ưu hóa tỉ lệ V/S"},
+                    {t: "d) Thể tích hộp tăng khi tăng bất kỳ một kích thước nào", a: true, exp: "Đúng! $V = abc$, tăng bất kỳ $a$, $b$ hoặc $c$ đều làm $V$ tăng.", h: "V tỉ lệ thuận với mỗi kích thước"}
+                ]
+            }
+        ];
+
+        const FILL_BANK = [
+            {q: "Thể tích hình lập phương cạnh $5$ cm là $V$ = __ $\\text{cm}^3$", a: "125", exp: "$V = 5^3 = 125 \\text{ cm}^3$", hint: "$V = a^3$"},
+            {q: "Diện tích toàn phần hình lập phương cạnh $3$ cm là $S$ = __ $\\text{cm}^2$", a: "54", exp: "$S = 6 \\times 3^2 = 54 \\text{ cm}^2$", hint: "$S = 6a^2$"},
+            {q: "Hình hộp $a=4, b=3, c=2$ cm có thể tích $V$ = __ $\\text{cm}^3$", a: "24", exp: "$V = 4 \\times 3 \\times 2 = 24 \\text{ cm}^3$", hint: "$V = abc$"},
+            {q: "Hình hộp $a=5, b=4, c=3$ cm có diện tích toàn phần $S$ = __ $\\text{cm}^2$", a: "94", exp: "$S = 2(20+12+15) = 2 \\times 47 = 94 \\text{ cm}^2$", hint: "$S = 2(ab+bc+ca)$"},
+            {q: "Hình hộp có $V = 48 \\text{ cm}^3$, $a=4, b=3$. Chiều cao $c$ = __ cm", a: "4", exp: "$c = 48 \\div (4 \\times 3) = 48 \\div 12 = 4$ cm", hint: "$c = V \\div (a \\times b)$"},
+            {q: "Diện tích xung quanh hình hộp $a=6, b=4, c=5$ là $S_{xq}$ = __ $\\text{cm}^2$", a: "100", exp: "$S_{xq} = 2(6+4) \\times 5 = 100 \\text{ cm}^2$", hint: "$S_{xq} = 2(a+b) \\times c$"},
+            {q: "Hình lập phương cạnh $2$ dm có thể tích $V$ = __ $\\text{dm}^3$", a: "8", exp: "$V = 2^3 = 8 \\text{ dm}^3$", hint: "$V = a^3$"},
+            {q: "Hình hộp $a=10, b=5, c=2$ cm. Diện tích toàn phần $S$ = __ $\\text{cm}^2$", a: "160", exp: "$S = 2(50+10+20) = 2 \\times 80 = 160 \\text{ cm}^2$", hint: "$S = 2(ab+bc+ca)$"},
+            {q: "Hình lập phương có thể tích $64 \\text{ cm}^3$. Cạnh $a$ = __ cm", a: "4", exp: "$a^3 = 64 \\Rightarrow a = \\sqrt[3]{64} = 4$ cm", hint: "Tìm $a$ sao cho $a^3 = 64$"},
+            {q: "Số mặt của hình hộp chữ nhật là:", a: "6", exp: "Hình hộp chữ nhật có 6 mặt (trên, dưới, trước, sau, trái, phải).", hint: "Đếm tất cả các mặt"},
+            {q: "Hình hộp $a=3, b=3, c=3$ cm. Thể tích $V$ = __ $\\text{cm}^3$", a: "27", exp: "$V = 3^3 = 27 \\text{ cm}^3$ (đây là hình lập phương)", hint: "Ba cạnh bằng nhau → hình lập phương"},
+            {q: "Diện tích xung quanh hình lập phương cạnh $7$ cm là $S_{xq}$ = __ $\\text{cm}^2$", a: "196", exp: "$S_{xq} = 4 \\times 7^2 = 4 \\times 49 = 196 \\text{ cm}^2$", hint: "$S_{xq} = 4a^2$ (4 mặt bên)"}
+        ];
+
+        // ===================== SPEED GAME DATA =====================
+        const SPEED_QUESTIONS = [
+            { q: "Thể tích hộp $2 \\times 3 \\times 4$?", opts: ["$24$", "$9$", "$14$", "$36$"], ans: 0 },
+            { q: "Thể tích lập phương cạnh $3$?", opts: ["$27$", "$9$", "$18$", "$6$"], ans: 0 },
+            { q: "Diện tích TP lập phương cạnh $2$?", opts: ["$24$", "$8$", "$12$", "$16$"], ans: 0 },
+            { q: "Hình hộp có bao nhiêu mặt?", opts: ["$6$", "$4$", "$8$", "$12$"], ans: 0 },
+            { q: "Hình hộp có bao nhiêu đỉnh?", opts: ["$8$", "$6$", "$4$", "$10$"], ans: 0 },
+            { q: "Thể tích hộp $5 \\times 4 \\times 3$?", opts: ["$60$", "$47$", "$24$", "$12$"], ans: 0 },
+            { q: "Diện tích TP lập phương cạnh $3$?", opts: ["$54$", "$27$", "$36$", "$9$"], ans: 0 },
+            { q: "$S_{xq}$ hộp $a=4, b=3, c=2$?", opts: ["$28$", "$24$", "$48$", "$56$"], ans: 0 },
+            { q: "Thể tích lập phương cạnh $5$?", opts: ["$125$", "$25$", "$75$", "$150$"], ans: 0 },
+            { q: "Hình hộp có bao nhiêu cạnh?", opts: ["$12$", "$8$", "$6$", "$10$"], ans: 0 },
+            { q: "Diện tích TP hộp $3 \\times 2 \\times 1$?", opts: ["$22$", "$6$", "$11$", "$18$"], ans: 0 },
+            { q: "Thể tích lập phương cạnh $4$?", opts: ["$64$", "$16$", "$48$", "$32$"], ans: 0 },
+        ];
+
+        let speedGameState = { running: false, current: 0, score: 0, correct: 0, wrong: 0, streak: 0, bestStreak: 0, questions: [], timerInterval: null, timeLeft: 10, answered: false };
+
+        function shuffleArray(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function startSpeedGame() {
+            speedGameState.running = true;
+            speedGameState.current = 0;
+            speedGameState.score = 0;
+            speedGameState.correct = 0;
+            speedGameState.wrong = 0;
+            speedGameState.streak = 0;
+            speedGameState.bestStreak = 0;
+            speedGameState.questions = shuffleArray(SPEED_QUESTIONS).slice(0, 10);
+            document.getElementById('speed-start-screen').classList.add('hidden');
+            document.getElementById('speed-result-screen').classList.add('hidden');
+            document.getElementById('speed-play-screen').classList.remove('hidden');
+            showSpeedQuestion();
+        }
+
+        function showSpeedQuestion() {
+            const state = speedGameState;
+            if (state.current >= state.questions.length) { endSpeedGame(); return; }
+            state.answered = false;
+            const q = state.questions[state.current];
+            document.getElementById('speed-qnum').textContent = `${state.current + 1}/10`;
+            document.getElementById('speed-score').textContent = state.score;
+            document.getElementById('speed-question').innerHTML = q.q;
+            document.getElementById('speed-feedback').classList.add('hidden');
+            
+            const shuffledOpts = q.opts.map((o, i) => ({ text: o, isCorrect: i === q.ans }));
+            for (let i = shuffledOpts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledOpts[i], shuffledOpts[j]] = [shuffledOpts[j], shuffledOpts[i]];
+            }
+
+            const optsDiv = document.getElementById('speed-options');
+            optsDiv.innerHTML = '';
+            shuffledOpts.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'speed-option';
+                btn.innerHTML = opt.text;
+                btn.onclick = () => answerSpeed(idx, opt.isCorrect, shuffledOpts);
+                optsDiv.appendChild(btn);
+            });
+
+            const streakDiv = document.getElementById('streak-display');
+            if (state.streak >= 2) {
+                streakDiv.classList.remove('hidden');
+                document.getElementById('streak-count').textContent = state.streak;
+            } else {
+                streakDiv.classList.add('hidden');
+            }
+
+            startTimer();
+            if (window.MathJax) MathJax.typeset();
+        }
+
+        function startTimer() {
+            speedGameState.timeLeft = 10;
+            clearInterval(speedGameState.timerInterval);
+            updateTimerBar();
+            speedGameState.timerInterval = setInterval(() => {
+                speedGameState.timeLeft -= 0.1;
+                updateTimerBar();
+                if (speedGameState.timeLeft <= 0) {
+                    clearInterval(speedGameState.timerInterval);
+                    if (!speedGameState.answered) timeOut();
+                }
+            }, 100);
+        }
+
+        function updateTimerBar() {
+            const pct = Math.max(0, (speedGameState.timeLeft / 10) * 100);
+            const bar = document.getElementById('speed-timer-bar');
+            bar.style.width = pct + '%';
+            document.getElementById('speed-timer-text').textContent = Math.ceil(speedGameState.timeLeft) + 's';
+            if (pct > 50) bar.style.backgroundColor = '#22c55e';
+            else if (pct > 25) bar.style.backgroundColor = '#f59e0b';
+            else bar.style.backgroundColor = '#ef4444';
+        }
+
+        function answerSpeed(idx, isCorrect, shuffledOpts) {
+            if (speedGameState.answered) return;
+            speedGameState.answered = true;
+            clearInterval(speedGameState.timerInterval);
+            const btns = document.getElementById('speed-options').querySelectorAll('.speed-option');
+            const fb = document.getElementById('speed-feedback');
+            btns[idx].classList.add(isCorrect ? 'ans-correct' : 'ans-wrong');
+            if (!isCorrect) {
+                shuffledOpts.forEach((opt, i) => { if (opt.isCorrect) btns[i].classList.add('ans-reveal'); });
+            }
+            if (isCorrect) {
+                speedGameState.score += 10;
+                speedGameState.correct++;
+                speedGameState.streak++;
+                if (speedGameState.streak > speedGameState.bestStreak) speedGameState.bestStreak = speedGameState.streak;
+                fb.innerHTML = speedGameState.streak >= 3 ? `🔥 ĐÚNG! +10 điểm — Streak x${speedGameState.streak}!` : '✅ ĐÚNG! +10 điểm';
+                fb.className = 'text-center p-4 rounded-2xl font-bold text-lg animate-bounce-in bg-green-100 text-green-700 border-2 border-green-300';
+                if (speedGameState.streak >= 3) confetti({ particleCount: 40, spread: 60, origin: { y: 0.6 }, colors: ['#f59e0b','#ef4444','#22c55e'] });
+            } else {
+                speedGameState.score = Math.max(0, speedGameState.score - 5);
+                speedGameState.wrong++;
+                speedGameState.streak = 0;
+                fb.innerHTML = '❌ SAI! -5 điểm';
+                fb.className = 'text-center p-4 rounded-2xl font-bold text-lg animate-bounce-in bg-red-100 text-red-700 border-2 border-red-300';
+            }
+            fb.classList.remove('hidden');
+            document.getElementById('speed-score').textContent = speedGameState.score;
+            setTimeout(() => {
+                speedGameState.current++;
+                showSpeedQuestion();
+            }, 1200);
+        }
+
+        function timeOut() {
+            speedGameState.answered = true;
+            speedGameState.score = Math.max(0, speedGameState.score - 5);
+            speedGameState.wrong++;
+            speedGameState.streak = 0;
+            const fb = document.getElementById('speed-feedback');
+            fb.innerHTML = '⏰ HẾT GIỜ! -5 điểm';
+            fb.className = 'text-center p-4 rounded-2xl font-bold text-lg animate-bounce-in bg-orange-100 text-orange-700 border-2 border-orange-300';
+            fb.classList.remove('hidden');
+            document.getElementById('speed-score').textContent = speedGameState.score;
+            setTimeout(() => { speedGameState.current++; showSpeedQuestion(); }, 1200);
+        }
+
+        function endSpeedGame() {
+            clearInterval(speedGameState.timerInterval);
+            document.getElementById('speed-play-screen').classList.add('hidden');
+            const rs = document.getElementById('speed-result-screen');
+            rs.classList.remove('hidden');
+            document.getElementById('speed-final-score').textContent = speedGameState.score;
+            document.getElementById('speed-result-detail').textContent = `(${speedGameState.correct} đúng / ${speedGameState.wrong} sai)`;
+            document.getElementById('speed-correct-count').textContent = speedGameState.correct;
+            document.getElementById('speed-wrong-count').textContent = speedGameState.wrong;
+            document.getElementById('speed-best-streak').textContent = speedGameState.bestStreak;
+            const s = speedGameState.score;
+            let emoji = '🎯', msg = 'Luyện tập thêm nhé!';
+            if (s >= 90) { emoji = '🏆'; msg = '🔥 XUẤT SẮC! Bạn là nhà tính toán tốc độ!'; confetti({ particleCount: 200, spread: 180 }); }
+            else if (s >= 70) { emoji = '🥇'; msg = '👏 RẤT TỐT! Tiếp tục phát huy!'; confetti({ particleCount: 100, spread: 100 }); }
+            else if (s >= 50) { emoji = '🎯'; msg = '💪 KHÁ ĐẤY! Còn cải thiện được đấy!'; }
+            document.getElementById('speed-result-emoji').textContent = emoji;
+            document.getElementById('speed-result-msg').textContent = msg;
+        }
+
+        function resetSpeedGame() {
+            document.getElementById('speed-result-screen').classList.add('hidden');
+            document.getElementById('speed-start-screen').classList.remove('hidden');
+        }
+
+        // ===================== MAIN QUIZ =====================
+        let MCQ = [], TF = [], FILL = [];
+        let userMcq = Array(15).fill(null);
+        let userTf = Array(5).fill(null).map(() => Array(4).fill(null));
+        let submitted = false;
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
+
+        function generateQuestions() {
+            MCQ = [];
+            const nb = [...QUESTION_BANK.nb]; shuffle(nb);
+            for (let i = 0; i < 7; i++) { const q = nb[i % nb.length]; MCQ.push({...q, l: "nb"}); }
+            const th = [...QUESTION_BANK.th]; shuffle(th);
+            for (let i = 0; i < 5; i++) { const q = th[i % th.length]; MCQ.push({...q, l: "th"}); }
+            const vd = [...QUESTION_BANK.vd]; shuffle(vd);
+            for (let i = 0; i < 3; i++) { const q = vd[i % vd.length]; MCQ.push({...q, l: "vd"}); }
+            const tfPool = [...TF_BANK]; shuffle(tfPool); TF = tfPool.slice(0, 5);
+            const fillPool = [...FILL_BANK]; shuffle(fillPool); FILL = fillPool.slice(0, 5);
+        }
+
+        function init() { generateQuestions(); renderAll(); initStats(); }
+
+        function toggleHint(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function renderAll() {
+            const mcqBox = document.getElementById('mcq-container');
+            mcqBox.innerHTML = "";
+            MCQ.forEach((d, i) => {
+                if (!d || !d.q) return;
+                let badge = '';
+                if (d.l === 'nb') badge = '<span class="level-badge level-nhan-biet">NHẬN BIẾT</span>';
+                else if (d.l === 'th') badge = '<span class="level-badge level-thong-hieu">THÔNG HIỂU</span>';
+                else if (d.l === 'vd') badge = '<span class="level-badge level-van-dung">VẬN DỤNG</span>';
+                const opts = (d.opts || []).map((o, j) =>
+                    `<div onclick="setMcq(${i},${j})" id="mcq-${i}-${j}" class="mcq-option p-4 bg-white shadow-sm flex items-center mb-2">
+                        <span class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 mr-3 font-bold text-xs">${String.fromCharCode(65+j)}</span> ${o}
+                    </div>`
+                ).join('');
+                mcqBox.innerHTML += `
+                    <div class="p-5 border-b" id="mcq-card-${i}">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="font-bold text-blue-600">CÂU ${i+1} ${badge}</span>
+                            <button onclick="toggleHint('mcq-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                        </div>
+                        <p class="mb-4 text-slate-700 font-medium">${d.q}</p>
+                        <div id="mcq-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${opts}</div>
+                        <div id="mcq-fb-${i}" class="feedback-box"></div>
+                    </div>`;
+            });
+
+            const tfBox = document.getElementById('tf-container');
+            tfBox.innerHTML = "";
+            TF.forEach((d, i) => {
+                const rows = d.items.map((it, j) => `
+                    <tr class="border-b">
+                        <td class="py-4 px-4 text-sm font-medium">
+                            ${it.t}
+                            <button onclick="toggleHint('tf-hint-${i}-${j}')" class="hint-btn">💡 Gợi ý</button>
+                            <div id="tf-hint-${i}-${j}" class="hint-box">💡 ${it.h}</div>
+                            <div id="tf-fb-${i}-${j}" class="feedback-box"></div>
+                        </td>
+                        <td class="p-2 text-center">
+                            <button onclick="setTf(${i},${j},true)" id="tf-btn-${i}-${j}-t" class="check-btn w-10 h-10 rounded-xl">Đ</button>
+                        </td>
+                        <td class="p-2 text-center">
+                            <button onclick="setTf(${i},${j},false)" id="tf-btn-${i}-${j}-s" class="check-btn w-10 h-10 rounded-xl">S</button>
+                        </td>
+                    </tr>`).join('');
+                tfBox.innerHTML += `
+                    <div class="bg-slate-50 rounded-2xl border overflow-hidden">
+                        <div class="bg-white p-4 font-bold text-blue-800 border-b">Câu ${i+1}: ${d.q}</div>
+                        <table class="w-full"><tbody>${rows}</tbody></table>
+                    </div>`;
+            });
+
+            const fillBox = document.getElementById('fill-container');
+            fillBox.innerHTML = "";
+            FILL.forEach((d, i) => {
+                fillBox.innerHTML += `
+                    <div class="bg-slate-50 p-5 rounded-2xl border space-y-2">
+                        <div class="flex items-start justify-between">
+                            <span><strong>Câu ${i+1}.</strong> ${d.q}</span>
+                            <button onclick="toggleHint('fill-hint-${i}')" class="hint-btn">💡 Gợi ý</button>
+                        </div>
+                        <div id="fill-hint-${i}" class="hint-box">💡 ${d.hint}</div>
+                        <div class="flex items-center gap-4 mt-2">
+                            <input type="text" id="fill-${i}" class="fill-input">
+                        </div>
+                        <div id="fill-fb-${i}" class="feedback-box"></div>
+                    </div>`;
+            });
+            if (window.MathJax) MathJax.typeset();
+        }
+
+        function setMcq(q, o) {
+            if (submitted) return;
+            userMcq[q] = o;
+            document.getElementById(`mcq-card-${q}`).querySelectorAll('.mcq-option').forEach(opt => opt.classList.remove('selected'));
+            document.getElementById(`mcq-${q}-${o}`).classList.add('selected');
+        }
+
+        function setTf(q, i, v) {
+            if (submitted) return;
+            userTf[q][i] = v;
+            document.getElementById(`tf-btn-${q}-${i}-t`).classList.remove('selected-true');
+            document.getElementById(`tf-btn-${q}-${i}-s`).classList.remove('selected-false');
+            if (v) document.getElementById(`tf-btn-${q}-${i}-t`).classList.add('selected-true');
+            else document.getElementById(`tf-btn-${q}-${i}-s`).classList.add('selected-false');
+        }
+
+        function celebrate(score) {
+            const pct = (score / 10) * 100;
+            if (pct >= 90) {
+                const end = Date.now() + 3000;
+                const interval = setInterval(() => {
+                    if (Date.now() > end) { clearInterval(interval); return; }
+                    confetti({ particleCount: 100, spread: 160, origin: { y: 0.6 } });
+                }, 250);
+            } else if (pct >= 70) {
+                confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+                setTimeout(() => confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } }), 500);
+            } else if (pct >= 50) {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            } else {
+                confetti({ particleCount: 50, spread: 50, origin: { y: 0.6 } });
+            }
+        }
+
+        function checkResults() {
+            submitted = true;
+            let correct = 0;
+            let total = MCQ.length + TF.length * 4 + FILL.length;
+
+            MCQ.forEach((d, i) => {
+                const fb = document.getElementById(`mcq-fb-${i}`);
+                const opts = document.getElementById(`mcq-card-${i}`).querySelectorAll('.mcq-option');
+                const correctIdx = d.ans;
+                opts[correctIdx].classList.add('correct');
+                if (userMcq[i] === correctIdx) {
+                    correct++;
+                    fb.innerHTML = "✔️ <strong>Đúng!</strong> " + d.exp;
+                    fb.className = "feedback-box block text-green-700 bg-green-50 border-green-300";
+                    fb.style.display = 'block';
+                } else {
+                    if (userMcq[i] !== null) opts[userMcq[i]].classList.add('wrong');
+                    fb.innerHTML = "❌ <strong>Sai!</strong> " + d.exp;
+                    fb.className = "feedback-box block text-red-700 bg-red-50 border-red-300";
+                    fb.style.display = 'block';
+                }
+            });
+
+            TF.forEach((d, i) => {
+                d.items.forEach((it, j) => {
+                    const fb = document.getElementById(`tf-fb-${i}-${j}`);
+                    if (userTf[i][j] === it.a) {
+                        correct++;
+                        fb.innerHTML = "✔️ " + it.exp;
+                        fb.className = "feedback-box block text-green-700 bg-green-50 border-green-300";
+                    } else {
+                        fb.innerHTML = "❌ " + it.exp;
+                        fb.className = "feedback-box block text-red-700 bg-red-50 border-red-300";
+                    }
+                    fb.style.display = 'block';
+                    if (it.a) document.getElementById(`tf-btn-${i}-${j}-t`).classList.add('correct-highlight');
+                    else document.getElementById(`tf-btn-${i}-${j}-s`).classList.add('correct-highlight');
+                });
+            });
+
+            FILL.forEach((d, i) => {
+                const input = document.getElementById(`fill-${i}`);
+                const fb = document.getElementById(`fill-fb-${i}`);
+                const user = input.value.trim().toLowerCase().replace(/\s+/g, '').replace(/,/g, '.');
+                const ans = d.a.toLowerCase().replace(/\s+/g, '').replace(/,/g, '.');
+                function evalFrac(s) {
+                    const m = s.match(/^(-?\d+)\/(\d+)$/);
+                    if (m) return parseInt(m[1]) / parseInt(m[2]);
+                    const n = parseFloat(s);
+                    return isNaN(n) ? null : n;
+                }
+                const uVal = evalFrac(user);
+                const aVal = evalFrac(ans);
+                const isCorrect = user === ans || (uVal !== null && aVal !== null && Math.abs(uVal - aVal) < 0.001);
+                if (isCorrect) {
+                    correct++;
+                    input.classList.add('fill-correct');
+                    fb.innerHTML = "✔️ " + d.exp;
+                    fb.className = "feedback-box block text-green-700 bg-green-50 border-green-300";
+                } else {
+                    input.classList.add('fill-wrong');
+                    fb.innerHTML = "❌ Đáp án: <strong>" + d.a + "</strong>. " + d.exp;
+                    fb.className = "feedback-box block text-red-700 bg-red-50 border-red-300";
+                }
+                fb.style.display = 'block';
+            });
+
+            const score = (correct / total) * 10;
+            const pct = (correct / total) * 100;
+            document.getElementById('submit-btn').classList.add('hidden');
+            document.getElementById('result-board').classList.remove('hidden');
+            const scoreText = document.getElementById('score-text');
+            scoreText.innerHTML = `<div class="text-center"><div class="text-5xl font-black mb-2">${score.toFixed(1)}/10</div><div class="text-lg">Đúng ${correct}/${total} câu (${pct.toFixed(0)}%)</div></div>`;
+            if (pct >= 90) { scoreText.classList.add('score-excellent'); document.getElementById('score-message').innerHTML = '🎉 <span class="text-green-600">XUẤT SẮC!</span>'; }
+            else if (pct >= 70) { scoreText.classList.add('score-good'); document.getElementById('score-message').innerHTML = '👏 <span class="text-blue-600">KHÁ TỐT!</span>'; }
+            else if (pct >= 50) { scoreText.classList.add('score-average'); document.getElementById('score-message').innerHTML = '💪 <span class="text-orange-600">TRUNG BÌNH</span>'; }
+            else { scoreText.classList.add('score-low'); document.getElementById('score-message').innerHTML = '📚 <span class="text-red-600">CẦN CỐ GẮNG</span>'; }
+            celebrate(score);
+            showOptions();
+            if (window.MathJax) MathJax.typeset();
+            document.getElementById('result-board').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            saveScore(score);
+        }
+
+        function showOptions() {
+            const old = document.getElementById('post-options');
+            if (old) old.remove();
+            const container = document.getElementById('result-board');
+            const div = document.createElement('div');
+            div.id = 'post-options';
+            div.className = 'mt-8 p-6 bg-white rounded-2xl shadow-xl border-2 border-blue-400 animate-bounce-in';
+            div.innerHTML = `
+                <h3 class="text-xl font-bold text-blue-800 mb-4 text-center">🌟 Tiếp tục?</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="regenerate('retry')" class="p-4 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all border-b-4 border-gray-300 active:border-b-0 font-bold text-gray-700">🔄 Làm lại</button>
+                    <button onclick="regenerate('equivalent')" class="p-4 bg-blue-100 hover:bg-blue-200 rounded-xl transition-all border-b-4 border-blue-300 active:border-b-0 font-bold text-blue-700">📚 Đề mới tương đương</button>
+                    <button onclick="regenerate('harder')" class="p-4 bg-orange-100 hover:bg-orange-200 rounded-xl transition-all border-b-4 border-orange-300 active:border-b-0 font-bold text-orange-700">🚀 Đề nâng cao</button>
+                </div>`;
+            container.appendChild(div);
+        }
+
+        async function regenerate(mode) {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            await new Promise(r => setTimeout(r, 800));
+            submitted = false;
+            userMcq = Array(15).fill(null);
+            userTf = Array(5).fill(null).map(() => Array(4).fill(null));
+            const opts = document.getElementById('post-options');
+            if (opts) opts.remove();
+            document.getElementById('result-board').classList.add('hidden');
+            document.getElementById('submit-btn').classList.remove('hidden');
+            if (mode !== 'retry') generateQuestions();
+            renderAll();
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('capture-mcq').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ===================== DOWNLOAD FUNCTIONS =====================
+        function serializeSvgToDataUrl(svgEl, dpr) {
+            return new Promise((resolve) => {
+                const clone = svgEl.cloneNode(true);
+                clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+                const bRect = svgEl.getBoundingClientRect();
+                const w = bRect.width || parseFloat(svgEl.getAttribute('width')) || 50;
+                const h = bRect.height || parseFloat(svgEl.getAttribute('height')) || 20;
+                clone.setAttribute('width', w);
+                clone.setAttribute('height', h);
+                const svgStr = new XMLSerializer().serializeToString(clone);
+                const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const img = new Image();
+                img.onload = () => {
+                    const c = document.createElement('canvas');
+                    c.width = w * dpr; c.height = h * dpr;
+                    const ctx = c.getContext('2d');
+                    ctx.clearRect(0, 0, c.width, c.height);
+                    ctx.drawImage(img, 0, 0, c.width, c.height);
+                    URL.revokeObjectURL(url);
+                    resolve({ dataUrl: c.toDataURL('image/png'), w, h });
+                };
+                img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+                img.src = url;
+            });
+        }
+
+        async function waitForMathJax() {
+            if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                await window.MathJax.startup.promise;
+            }
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                await window.MathJax.typesetPromise();
+            }
+            await new Promise(r => setTimeout(r, 300));
+        }
+
+        async function captureWithMathJax(elementId, filename) {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.style.display = 'flex';
+            loadingOverlay.querySelector('p').textContent = 'Đang chờ công thức toán render...';
+            await waitForMathJax();
+            loadingOverlay.querySelector('p').textContent = 'Đang tạo ảnh...';
+            try {
+                const element = document.getElementById(elementId);
+                const clone = element.cloneNode(true);
+                clone.style.cssText = `position: fixed; top: 0; left: 0; z-index: -9999; width: ${element.offsetWidth}px; background: #ffffff; pointer-events: none;`;
+                document.body.appendChild(clone);
+                const origContainers = Array.from(element.querySelectorAll('mjx-container'));
+                const cloneContainers = Array.from(clone.querySelectorAll('mjx-container'));
+                const DPR = 3;
+                await Promise.all(origContainers.map(async (orig, i) => {
+                    const svg = orig.querySelector('svg');
+                    const cloneItem = cloneContainers[i];
+                    if (!svg || !cloneItem) return;
+                    const result = await serializeSvgToDataUrl(svg, DPR);
+                    if (!result) return;
+                    const imgEl = document.createElement('img');
+                    imgEl.src = result.dataUrl;
+                    imgEl.style.cssText = `display: inline-block; width: ${result.w}px; height: ${result.h}px; vertical-align: ${orig.style.verticalAlign || 'middle'}; margin: 0 1px;`;
+                    cloneItem.replaceWith(imgEl);
+                }));
+                await Promise.all(
+                    Array.from(clone.querySelectorAll('img')).map(img =>
+                        img.complete ? Promise.resolve() :
+                        new Promise(r => { img.onload = r; img.onerror = r; })
+                    )
+                );
+                const canvas = await html2canvas(clone, {
+                    scale: 2, useCORS: true, allowTaint: true,
+                    backgroundColor: '#ffffff', logging: false,
+                    imageTimeout: 5000, width: element.offsetWidth, height: clone.scrollHeight
+                });
+                document.body.removeChild(clone);
+                const ua = navigator.userAgent;
+                const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+                const isWebView = /FBAN|FBAV|FB_IAB|ZaloApp|zalo|Instagram|Line\/|MicroMessenger|WebView|(iPhone|iPod|iPad)(?!.*Safari)/i.test(ua);
+                const dataUrl = canvas.toDataURL('image/png');
+                if (!isMobile) {
+                    const link = document.createElement('a');
+                    link.download = filename; link.href = dataUrl;
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                } else if (isWebView) {
+                    const overlay = document.createElement('div');
+                    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:99999;overflow:auto;-webkit-overflow-scrolling:touch;padding:20px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;';
+                    overlay.innerHTML = `<div style="background:#1e293b;border-radius:16px;padding:16px 20px;max-width:360px;width:100%;margin-top:20px;"><div style="font-size:2rem;margin-bottom:8px;">⚠️</div><p style="color:white;font-weight:bold;font-size:1rem;margin:0 0 8px;">Không lưu được trong Zalo/Facebook</p><p style="color:#94a3b8;font-size:0.82rem;margin:0 0 16px;line-height:1.6;">Trình duyệt trong ứng dụng không cho phép lưu ảnh.<br>Hãy mở trang bằng <b style="color:#38bdf8">Chrome</b> hoặc <b style="color:#38bdf8">Safari</b>:</p><div style="background:#0f172a;border-radius:12px;padding:12px;text-align:left;font-size:0.8rem;color:#cbd5e1;line-height:2;"><div>1️⃣ Nhấn <b style="color:white">⋮</b> hoặc <b style="color:white">···</b> góc trên bên phải</div><div>2️⃣ Chọn <b style="color:#4ade80">"Mở bằng trình duyệt"</b></div><div>3️⃣ Bấm nút tải ảnh lại</div></div><p style="color:#64748b;font-size:0.75rem;margin:12px 0 4px;">Hoặc xem ảnh bên dưới rồi chụp màn hình</p><button onclick="this.closest('div').parentNode.style.justifyContent='flex-start'" style="background:#3b82f6;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.85rem;cursor:pointer;margin-bottom:4px;">📷 Xem ảnh để chụp màn hình</button><button onclick="this.closest('[style*=z-index]').remove()" style="background:#475569;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.85rem;cursor:pointer;margin-top:4px;">✖ Đóng</button></div><img src="${dataUrl}" style="max-width:100%;border-radius:12px;margin-top:16px;display:block;">`;
+                    document.body.appendChild(overlay);
+                } else {
+                    let saved = false;
+                    if (navigator.canShare) {
+                        try {
+                            const blob = await (await fetch(dataUrl)).blob();
+                            const file = new File([blob], filename, { type: 'image/png' });
+                            if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: filename }); saved = true; }
+                        } catch(e) {}
+                    }
+                    if (!saved) {
+                        const win = window.open('', '_blank');
+                        if (win) {
+                            win.document.write(`<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>${filename}</title><style>body{margin:0;background:#000;display:flex;flex-direction:column;align-items:center;padding:16px;font-family:sans-serif;}p{color:#fbbf24;font-size:0.9rem;text-align:center;margin-bottom:10px;}img{max-width:100%;border-radius:8px;}</style></head><body><p>📱 Giữ tay vào ảnh → chọn <b>Lưu ảnh</b></p><img src="${dataUrl}"></body></html>`);
+                            win.document.close();
+                        } else {
+                            const overlay = document.createElement('div');
+                            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:99999;overflow:auto;-webkit-overflow-scrolling:touch;padding:16px;text-align:center;';
+                            const imgEl = document.createElement('img');
+                            imgEl.src = dataUrl;
+                            imgEl.style.cssText = 'max-width:100%;border-radius:12px;margin-top:10px;display:block;margin-left:auto;margin-right:auto;';
+                            overlay.innerHTML = '<p style="color:white;font-weight:bold;font-size:1rem;margin-bottom:4px;">📱 Giữ tay vào ảnh → chọn <b>Lưu ảnh</b></p><button onclick="this.parentNode.remove()" style="background:#ef4444;color:white;padding:8px 20px;border-radius:12px;border:none;font-size:0.9rem;margin-bottom:12px;cursor:pointer;">✖ Đóng</button>';
+                            overlay.appendChild(imgEl);
+                            document.body.appendChild(overlay);
+                        }
+                    }
+                }
+                loadingOverlay.style.display = 'none';
+            } catch (error) {
+                console.error('captureWithMathJax error:', error);
+                loadingOverlay.style.display = 'none';
+                alert('Đã xảy ra lỗi khi tải ảnh: ' + error.message);
+            }
+        }
+
+        async function downloadKnowledgePDF() {
+            await captureWithMathJax('capture-knowledge', 'Kien-thuc-Hinh-hop-chu-nhat-Hinh-lap-phuong.png');
+        }
+        async function downloadMCQImage() {
+            await captureWithMathJax('capture-mcq', 'De-Trac-Nghiem-Bai36.png');
+        }
+        async function downloadTFImage() {
+            await captureWithMathJax('capture-tf', 'De-Dung-Sai-Bai36.png');
+        }
+        async function downloadFillImage() {
+            await captureWithMathJax('capture-fill', 'De-Tra-Loi-Ngan-Bai36.png');
+        }
+
+        // ===================== CHATBOT =====================
+        const CHATBOT_KNOWLEDGE = {
+            'thể tích hộp': 'Thể tích hình hộp chữ nhật:<br>• Công thức: $V = a \\times b \\times c$<br>• $a$ = chiều dài, $b$ = chiều rộng, $c$ = chiều cao<br>• VD: $a=4, b=3, c=2 \\Rightarrow V = 24 \\text{ cm}^3$',
+            'thể tích lập phương': 'Thể tích hình lập phương:<br>• Công thức: $V = a^3$<br>• VD: cạnh $a=5 \\Rightarrow V = 125 \\text{ cm}^3$<br>• Vì hình lập phương có $a=b=c$',
+            'thể tích': 'Công thức thể tích:<br>• Hình hộp chữ nhật: $V = abc$<br>• Hình lập phương: $V = a^3$<br>• VD hộp: $3\\times4\\times5=60$; VD LP: $4^3=64$',
+            'diện tích': 'Công thức diện tích:<br>• Hộp chữ nhật TP: $S = 2(ab+bc+ca)$<br>• Hộp XQ: $S_{xq} = 2(a+b)c$<br>• Lập phương TP: $S = 6a^2$<br>• Lập phương XQ: $S_{xq} = 4a^2$',
+            'lập phương': 'Hình lập phương:<br>• Là hình hộp đặc biệt: $a = b = c$<br>• 6 mặt vuông bằng nhau<br>• $V = a^3$; $S = 6a^2$; $S_{xq} = 4a^2$',
+            'hình hộp': 'Hình hộp chữ nhật:<br>• 6 mặt hình chữ nhật<br>• 12 cạnh, 8 đỉnh<br>• $V = abc$; $S = 2(ab+bc+ca)$; $S_{xq} = 2(a+b)c$',
+            'cạnh': 'Hình hộp chữ nhật có 12 cạnh:<br>• 4 cạnh theo chiều dài<br>• 4 cạnh theo chiều rộng<br>• 4 cạnh theo chiều cao<br>Hình lập phương cũng có 12 cạnh bằng nhau',
+            'đỉnh': 'Hình hộp chữ nhật (và hình lập phương) có 8 đỉnh.<br>Đây là 8 góc của hình hộp.',
+            'mặt': 'Hình hộp chữ nhật có 6 mặt:<br>• 3 cặp mặt đối diện song song và bằng nhau<br>• Mặt trên-dưới (hình chữ nhật $a \\times b$)<br>• Mặt trước-sau ($a \\times c$)<br>• Mặt trái-phải ($b \\times c$)',
+        };
+
+        function toggleChatbot() {
+            const win = document.getElementById('chatbot-window');
+            const toggle = document.getElementById('chatbot-toggle');
+            if (win.style.display === 'flex') {
+                win.style.display = 'none';
+                toggle.innerHTML = '💬<span class="chatbot-label">Chatbot Hỗ Trợ</span>';
+            } else {
+                win.style.display = 'flex';
+                toggle.innerHTML = '✖<span class="chatbot-label">Đóng</span>';
+            }
+        }
+
+        function addBotMessage(text) {
+            const container = document.getElementById('chatbot-messages');
+            const div = document.createElement('div');
+            div.className = 'chat-message bot';
+            div.innerHTML = `<div class="bot-avatar">💬</div><div class="message-content">${text}</div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            if (window.MathJax) MathJax.typeset();
+        }
+
+        function addUserMessage(text) {
+            const container = document.getElementById('chatbot-messages');
+            const div = document.createElement('div');
+            div.className = 'chat-message user';
+            div.innerHTML = `<div class="message-content">${text}</div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function getBotResponse(question) {
+            const q = question.toLowerCase().trim();
+            for (const [keyword, answer] of Object.entries(CHATBOT_KNOWLEDGE)) {
+                if (q.includes(keyword)) return answer;
+            }
+            if (q.includes('ví dụ')) return '📌 Ví dụ tính toán:<br>• Hộp $3\\times4\\times5$: $V=60, S=94 \\text{ cm}^2$<br>• Lập phương cạnh $4$: $V=64, S=96 \\text{ cm}^2$';
+            if (q.includes('bài tập') || q.includes('làm')) return '💡 Mẹo làm bài:<br>• Xác định hình nào (hộp hay lập phương)<br>• Nhớ đúng công thức V và S<br>• Lập phương: $a=b=c$, hộp: $a,b,c$ khác nhau';
+            return '🤔 Chưa hiểu câu hỏi.<br>Bạn có thể hỏi:<br>• <em>"Công thức thể tích hình hộp?"</em><br>• <em>"Diện tích hình lập phương?"</em><br>• <em>"Hình hộp có mấy mặt?"</em>';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatbot-input');
+            const question = input.value.trim();
+            if (!question) return;
+            addUserMessage(question);
+            input.value = '';
+            setTimeout(() => addBotMessage(getBotResponse(question)), 500);
+        }
+
+        function sendQuickQuestion(question) {
+            addUserMessage(question);
+            setTimeout(() => addBotMessage(getBotResponse(question)), 500);
+        }
+
+        // ===================== BỔ SUNG: STATS & LIKE & PROGRESS =====================
+        const STORAGE_KEY = 'bai36_hinh_hop_chu_nhat';
+
+        function loadStorage() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+            catch(e) { return {}; }
+        }
+        function saveStorage(data) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+        }
+
+        function initStats() {
+            const data = loadStorage();
+
+            data.visits = (data.visits || 0) + 1;
+            saveStorage(data);
+            document.getElementById('visit-count').textContent = data.visits;
+
+            const attempts = data.scores || [];
+            document.getElementById('attempt-count').textContent = attempts.length;
+            if (attempts.length > 0) {
+                const best = Math.max(...attempts.map(s => s.score));
+                document.getElementById('best-score').textContent = best.toFixed(1);
+            }
+
+            // Like — hiển thị trạng thái đã like chưa (localStorage)
+            if (data.liked) {
+                document.getElementById('like-btn').classList.add('liked');
+            }
+            // Load số like toàn cầu từ Firebase
+            loadGlobalLikes();
+
+            renderProgress(attempts);
+        }
+
+        // ── Like toàn cầu (Firebase) ──────────────────────────────────
+        const FIREBASE_LIKE_URL = 'https://toan7-tieu-son-default-rtdb.firebaseio.com/likes/bai-36.json';
+
+        async function loadGlobalLikes() {
+            try {
+                const res = await fetch(FIREBASE_LIKE_URL);
+                const val = await res.json();
+                document.getElementById('like-count').textContent = (typeof val === 'number' ? val : 0).toLocaleString('vi-VN');
+            } catch(e) {}
+        }
+
+        async function changeGlobalLike(delta) {
+            const MAX_RETRY = 5;
+            for (let i = 0; i < MAX_RETRY; i++) {
+                try {
+                    const readRes = await fetch(FIREBASE_LIKE_URL, { headers: { 'X-Firebase-ETag': 'true' } });
+                    const etag = readRes.headers.get('ETag');
+                    const current = await readRes.json();
+                    const newVal = Math.max(0, (typeof current === 'number' ? current : 0) + delta);
+                    const writeRes = await fetch(FIREBASE_LIKE_URL, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'if-match': etag },
+                        body: JSON.stringify(newVal)
+                    });
+                    if (writeRes.ok) {
+                        document.getElementById('like-count').textContent = newVal.toLocaleString('vi-VN');
+                        return;
+                    }
+                } catch(e) { return; }
+            }
+        }
+
+        async function toggleLike() {
+            const data = loadStorage();
+            const btn = document.getElementById('like-btn');
+            if (data.liked) {
+                data.liked = false;
+                btn.classList.remove('liked');
+                saveStorage(data);
+                await changeGlobalLike(-1);
+            } else {
+                data.liked = true;
+                btn.classList.add('liked');
+                saveStorage(data);
+                confetti({ particleCount: 60, spread: 60, origin: { y: 0.2 } });
+                await changeGlobalLike(+1);
+            }
+        }
+        // ── Kết thúc Like toàn cầu ───────────────────────────────────
+
+        function saveScore(score) {
+            const data = loadStorage();
+            if (!data.scores) data.scores = [];
+            data.scores.push({ score: parseFloat(score.toFixed(1)), time: new Date().toLocaleDateString('vi-VN') });
+            if (data.scores.length > 10) data.scores = data.scores.slice(-10);
+            const attempts = data.scores.length;
+            const best = Math.max(...data.scores.map(s => s.score));
+            document.getElementById('attempt-count').textContent = attempts;
+            document.getElementById('best-score').textContent = best.toFixed(1);
+            saveStorage(data);
+            renderProgress(data.scores);
+        }
+
+        function renderProgress(attempts) {
+            const panel = document.getElementById('progress-panel');
+            const chart = document.getElementById('progress-chart');
+            const statsDiv = document.getElementById('progress-stats');
+            const trendDiv = document.getElementById('trend-display');
+
+            if (!attempts || attempts.length === 0) {
+                panel.classList.add('hidden');
+                return;
+            }
+            panel.classList.remove('hidden');
+
+            const maxScore = 10;
+            chart.innerHTML = attempts.map((s, i) => {
+                const pct = Math.max(4, (s.score / maxScore) * 100);
+                let color = '#ef4444';
+                if (s.score >= 9) color = '#10b981';
+                else if (s.score >= 7) color = '#3b82f6';
+                else if (s.score >= 5) color = '#f59e0b';
+                return `
+                    <div class="bar-wrap">
+                        <div class="bar-score">${s.score}</div>
+                        <div class="bar" style="height:${pct}%;background:${color};"></div>
+                        <div class="bar-label">L${i+1}</div>
+                    </div>
+                `;
+            }).join('');
+
+            const scores = attempts.map(s => s.score);
+            const avg = (scores.reduce((a,b) => a+b,0) / scores.length).toFixed(1);
+            const best = Math.max(...scores).toFixed(1);
+            const latest = scores[scores.length-1].toFixed(1);
+            statsDiv.innerHTML = `
+                <div class="bg-blue-50 rounded-xl p-3 border border-blue-100"><div class="font-black text-blue-700 text-lg">${avg}</div><div class="text-slate-500 text-xs">Điểm TB</div></div>
+                <div class="bg-green-50 rounded-xl p-3 border border-green-100"><div class="font-black text-green-700 text-lg">${best}</div><div class="text-slate-500 text-xs">Cao nhất</div></div>
+                <div class="bg-orange-50 rounded-xl p-3 border border-orange-100"><div class="font-black text-orange-700 text-lg">${latest}</div><div class="text-slate-500 text-xs">Lần này</div></div>
+            `;
+
+            if (scores.length >= 2) {
+                const diff = scores[scores.length-1] - scores[scores.length-2];
+                if (diff > 0) trendDiv.innerHTML = `<span class="trend-badge trend-up">📈 Tăng +${diff.toFixed(1)} điểm</span>`;
+                else if (diff < 0) trendDiv.innerHTML = `<span class="trend-badge trend-down">📉 Giảm ${diff.toFixed(1)} điểm</span>`;
+                else trendDiv.innerHTML = `<span class="trend-badge trend-same">➡️ Giữ nguyên</span>`;
+            } else {
+                trendDiv.innerHTML = `<span class="trend-badge trend-same">🆕 Lần đầu làm bài</span>`;
+            }
+        }
+        // ===================== KẾT THÚC BỔ SUNG STATS =====================
+
+        window.onload = function() { init(); };
+    </script>
+
+    <!-- FIREBASE GLOBAL VIEW COUNTER -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            var FIREBASE_URL = 'https://toan7-tieu-son-default-rtdb.firebaseio.com';
+            var PAGE_KEY = 'bai-36';
+            var VISITED_KEY = 'toan7_firebase_visited_bai36';
+            var badge = document.getElementById('global-view-badge');
+
+            async function getCount(key) {
+                try {
+                    var res = await fetch(FIREBASE_URL + '/views/' + key + '.json');
+                    var data = await res.json();
+                    return data || 0;
+                } catch(e) { return 0; }
+            }
+
+            async function incrementCount(key) {
+                const url = FIREBASE_URL + '/views/' + key + '.json';
+                const MAX_RETRY = 5;
+                for (var i = 0; i < MAX_RETRY; i++) {
+                    try {
+                        var readRes = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' } });
+                        var etag = readRes.headers.get('ETag');
+                        var current = await readRes.json();
+                        var newVal = (typeof current === 'number' ? current : 0) + 1;
+                        var writeRes = await fetch(url, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'if-match': etag },
+                            body: JSON.stringify(newVal)
+                        });
+                        if (writeRes.ok) return newVal;
+                    } catch(e) { return await getCount(key); }
+                }
+                return await getCount(key);
+            }
+
+            var count;
+            if (!localStorage.getItem(VISITED_KEY)) {
+                localStorage.setItem(VISITED_KEY, '1');
+                count = await incrementCount(PAGE_KEY);
+            } else {
+                count = await getCount(PAGE_KEY);
+            }
+
+            if (badge) badge.textContent = '👥 ' + count.toLocaleString('vi-VN') + ' người đã truy cập bài này';
+        });
+    </script>
+    <!-- END FIREBASE GLOBAL VIEW COUNTER -->
+</body>
+</html>
